@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import Backpack from '../images/Backpack.png';
 import calendar from '../images/calendar.png';
 import eggs_event from '../images/eggs_event-points-icon.png';
@@ -8,6 +9,7 @@ import starlet from '../images/starlet.png';
 import avatar from '../images/avatar.png';
 
 const MainContent = ({ activeTab }) => {
+  const { user, balance, transactions, signMessage, callContract } = useAuth();
   const stats = [
     { label: 'Energy', value: '85/100', icon: '⚡' },
     { label: 'Steps', value: '12,450', icon: '👟' },
@@ -93,26 +95,114 @@ const MainContent = ({ activeTab }) => {
 
   const renderProfileContent = () => (
     <div className="fade-in">
-      <div className="card">
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <img src={avatar} alt="Profile" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid #00d4ff' }} />
-          <h2 style={{ marginTop: '1rem', color: '#00d4ff' }}>Player Profile</h2>
+      {user ? (
+        <>
+          <div className="card">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <img src={avatar} alt="Profile" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid #00d4ff' }} />
+              <h2 style={{ marginTop: '1rem', color: '#00d4ff' }}>{user.name}</h2>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem' }}>
+                {user.address}
+              </div>
+            </div>
+          </div>
+
+          {balance && (
+            <div className="card">
+              <h2 style={{ marginBottom: '1rem', color: '#00d4ff' }}>Wallet Balance</h2>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-value">💰 {balance.gst}</div>
+                  <div className="stat-label">GST</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">⭐ {balance.gmt}</div>
+                  <div className="stat-label">GMT</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">💵 {balance.usdc}</div>
+                  <div className="stat-label">USDC</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">🔗 {balance.matic}</div>
+                  <div className="stat-label">MATIC</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="card">
+            <h2 style={{ marginBottom: '1rem', color: '#00d4ff' }}>Quick Actions</h2>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button 
+                className="btn btn-secondary"
+                onClick={async () => {
+                  try {
+                    await signMessage('Hello STEPN!');
+                    alert('Message signed successfully!');
+                  } catch (error) {
+                    alert('Failed to sign message');
+                  }
+                }}
+              >
+                Sign Message
+              </button>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  // Mock contract call
+                  alert('Contract call feature coming soon!');
+                }}
+              >
+                Transfer GST
+              </button>
+            </div>
+          </div>
+
+          {transactions.length > 0 && (
+            <div className="card">
+              <h2 style={{ marginBottom: '1rem', color: '#00d4ff' }}>Recent Transactions</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {transactions.map((tx) => (
+                  <div key={tx.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '0.75rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: '500' }}>{tx.type}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>
+                        {new Date(tx.timestamp).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div style={{ 
+                      color: tx.amount.startsWith('+') ? '#00ff88' : '#ff6b6b',
+                      fontWeight: '600'
+                    }}>
+                      {tx.amount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="card">
+          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔐</div>
+            <h2 style={{ marginBottom: '1rem', color: '#00d4ff' }}>Connect Your Wallet</h2>
+            <div style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem' }}>
+              Connect your FSL wallet to view your profile and manage your assets
+            </div>
+            <button className="btn">Connect Wallet</button>
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <span>Username</span>
-            <span style={{ color: '#00d4ff' }}>STEPN_Player</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <span>Total Steps</span>
-            <span style={{ color: '#00d4ff' }}>1,234,567</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <span>Total GST Earned</span>
-            <span style={{ color: '#00d4ff' }}>45,678</span>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 
