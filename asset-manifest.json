@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.css": "/GameHubPayment/static/css/main.2a4f1a73.css",
+    "main.js": "/GameHubPayment/static/js/main.c48e8d36.js",
+    "static/js/453.ec6a1386.chunk.js": "/GameHubPayment/static/js/453.ec6a1386.chunk.js",
+    "static/media/calendar.png": "/GameHubPayment/static/media/calendar.deb3adf73191b312d9b2.png",
+    "static/media/Backpack.png": "/GameHubPayment/static/media/Backpack.796a1cc5f1d751b73aef.png",
+    "static/media/bank_step_coin.png": "/GameHubPayment/static/media/bank_step_coin.03673377f82706998b96.png",
+    "static/media/fsl_point.png": "/GameHubPayment/static/media/fsl_point.3e44128da658a4241a45.png",
+    "index.html": "/GameHubPayment/index.html",
+    "main.2a4f1a73.css.map": "/GameHubPayment/static/css/main.2a4f1a73.css.map",
+    "main.c48e8d36.js.map": "/GameHubPayment/static/js/main.c48e8d36.js.map",
+    "453.ec6a1386.chunk.js.map": "/GameHubPayment/static/js/453.ec6a1386.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2a4f1a73.css",
+    "static/js/main.c48e8d36.js"
+  ]
+}
