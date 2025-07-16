@@ -9,7 +9,7 @@ import starlet from '../images/starlet.png';
 import avatar from '../images/avatar.png';
 
 const MainContent = ({ activeTab }) => {
-  const { user, balance, transactions, signMessage, callContract, purchaseData } = useAuth();
+  const { user, balance, transactions, signMessage, callContract, purchaseData, loading } = useAuth();
   const stats = [
     { label: 'Energy', value: '85/100', icon: '⚡' },
     { label: 'Steps', value: '12,450', icon: '👟' },
@@ -253,6 +253,25 @@ const MainContent = ({ activeTab }) => {
 
   return (
     <main className="main-content">
+      {loading && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          color: 'white'
+        }}>
+          <div className="loading-spinner" style={{ marginBottom: '1rem' }}></div>
+          <p>Loading purchase data...</p>
+        </div>
+      )}
       {renderContent()}
     </main>
   );

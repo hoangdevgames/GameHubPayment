@@ -151,24 +151,66 @@ class FSLAuthService {
     try {
       this.init();
       
-      // In a real implementation, you would call FSL SDK to verify
-      // For now, we'll simulate verification
       console.log('Verifying FSL ID:', fslId);
       
-      // Simulate API call to verify FSL ID
-      const verificationResult = await this.fslAuth.verifyFSLID(fslId);
+      // Since FSL SDK doesn't have a direct verifyFSLID method,
+      // we'll simulate verification by checking if the FSL ID is valid
+      // In a real implementation, you would:
+      // 1. Call your backend API to verify the FSL ID
+      // 2. Or use FSL SDK's signIn method to verify
       
-      return {
-        success: true,
-        verified: true,
-        userInfo: {
-          address: '0x1234567890abcdef...',
-          email: 'user@example.com',
-          fslId: fslId
-        }
-      };
+      // For now, we'll simulate a successful verification
+      // You can replace this with actual API call to your backend
+      const isValidFSLID = fslId && fslId.toString().length > 0;
+      
+      if (isValidFSLID) {
+        // Simulate successful verification
+        return {
+          success: true,
+          verified: true,
+          userInfo: {
+            address: '0x' + Math.random().toString(36).substr(2, 40),
+            email: 'user@example.com',
+            fslId: fslId
+          }
+        };
+      } else {
+        throw new Error('Invalid FSL ID');
+      }
     } catch (error) {
       console.error('FSL ID verification failed:', error);
+      return {
+        success: false,
+        verified: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Alternative: Verify FSL ID through backend API
+  async verifyFSLIDWithBackend(fslId) {
+    try {
+      // Replace with your actual backend API endpoint
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/verify-fsl`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fslId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          success: true,
+          verified: data.verified,
+          userInfo: data.userInfo
+        };
+      } else {
+        throw new Error('Backend verification failed');
+      }
+    } catch (error) {
+      console.error('Backend FSL ID verification failed:', error);
       return {
         success: false,
         verified: false,
