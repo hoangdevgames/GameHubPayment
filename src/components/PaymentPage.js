@@ -79,6 +79,22 @@ const PaymentPage = () => {
     }, 2000);
   };
 
+  // Format amount for display
+  const formatAmount = (amount, currency = 'USD') => {
+    if (currency === 'GMT') {
+      return `${amount} GMT`;
+    }
+    return `$${parseFloat(amount).toFixed(2)}`;
+  };
+
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (user?.name) return user.name;
+    if (user?.telegramUsername) return `@${user.telegramUsername}`;
+    if (user?.userProfile?.firstName) return user.userProfile.firstName;
+    return 'User';
+  };
+
   return (
     <div className="payment-page">
       <div className="App-header">
@@ -87,9 +103,63 @@ const PaymentPage = () => {
       </div>
       
       <div className="container">
+        {/* Purchase Summary */}
+        {purchaseData && (
+          <div className="purchase-summary">
+            <h2>Purchase Summary</h2>
+            <div className="summary-card">
+              <div className="summary-item">
+                <span className="summary-label">Product:</span>
+                <span className="summary-value">{purchaseData.productName || 'Starlets Package'}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Quantity:</span>
+                <span className="summary-value">{purchaseData.quantity || 1}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Amount:</span>
+                <span className="summary-value amount">
+                  {formatAmount(purchaseData.amount, purchaseData.currency || 'USD')}
+                </span>
+              </div>
+              {purchaseData.description && (
+                <div className="summary-item">
+                  <span className="summary-label">Description:</span>
+                  <span className="summary-value">{purchaseData.description}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* User Information */}
+        {user && (
+          <div className="user-info">
+            <h3>Account Information</h3>
+            <div className="user-card">
+              <div className="user-avatar">
+                <img src="/images/avatar.png" alt="Avatar" onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }} />
+                <div className="avatar-fallback">👤</div>
+              </div>
+              <div className="user-details">
+                <div className="user-name">{getUserDisplayName()}</div>
+                <div className="user-platform">
+                  {user.platform === 'telegram' ? '📱 Telegram' : '📱 LINE'}
+                </div>
+                {user.fslId && (
+                  <div className="user-fslid">FSL ID: {user.fslId}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <h2>Complete Your Payment</h2>
         <p className="payment-description">
-          Enter your payment details to complete the transaction
+          Choose your preferred payment method to complete the transaction
         </p>
         
         <form onSubmit={handleSubmit} className="payment-form">
@@ -157,75 +227,89 @@ const PaymentPage = () => {
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="cardNumber">Card Number</label>
-            <input
-              type="text"
-              id="cardNumber"
-              name="cardNumber"
-              value={formData.cardNumber}
-              onChange={handleInputChange}
-              placeholder="1234 5678 9012 3456"
-              maxLength="19"
-              required
-            />
-          </div>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="expiryDate">Expiry Date</label>
-              <input
-                type="text"
-                id="expiryDate"
-                name="expiryDate"
-                value={formData.expiryDate}
-                onChange={handleInputChange}
-                placeholder="MM/YY"
-                maxLength="5"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="cvv">CVV</label>
-              <input
-                type="text"
-                id="cvv"
-                name="cvv"
-                value={formData.cvv}
-                onChange={handleInputChange}
-                placeholder="123"
-                maxLength="4"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="cardholderName">Cardholder Name</label>
-            <input
-              type="text"
-              id="cardholderName"
-              name="cardholderName"
-              value={formData.cardholderName}
-              onChange={handleInputChange}
-              placeholder="John Doe"
-              required
-            />
-          </div>
+          {paymentMethod === 'card' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="cardNumber">Card Number</label>
+                <input
+                  type="text"
+                  id="cardNumber"
+                  name="cardNumber"
+                  value={formData.cardNumber}
+                  onChange={handleInputChange}
+                  placeholder="1234 5678 9012 3456"
+                  maxLength="19"
+                  required
+                />
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="expiryDate">Expiry Date</label>
+                  <input
+                    type="text"
+                    id="expiryDate"
+                    name="expiryDate"
+                    value={formData.expiryDate}
+                    onChange={handleInputChange}
+                    placeholder="MM/YY"
+                    maxLength="5"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="cvv">CVV</label>
+                  <input
+                    type="text"
+                    id="cvv"
+                    name="cvv"
+                    value={formData.cvv}
+                    onChange={handleInputChange}
+                    placeholder="123"
+                    maxLength="4"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="cardholderName">Cardholder Name</label>
+                <input
+                  type="text"
+                  id="cardholderName"
+                  name="cardholderName"
+                  value={formData.cardholderName}
+                  onChange={handleInputChange}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+            </>
+          )}
           
           <button 
             type="submit" 
             className="submit-button"
             disabled={loading}
           >
-            {loading ? 'Processing...' : 'Pay Now'}
+            {loading ? (
+              <span>
+                <span className="loading-spinner"></span>
+                Processing...
+              </span>
+            ) : (
+              `Pay ${formatAmount(formData.amount, paymentMethod === 'gmt' ? 'GMT' : 'USD')}`
+            )}
           </button>
         </form>
         
         <div className="security-info">
           <p>🔒 Your payment information is encrypted and secure</p>
           <p>💳 We accept Visa, Mastercard, and American Express</p>
+          {paymentMethod === 'gmt' && (
+            <p>⚡ Solana-GMT payments are processed on-chain for maximum security</p>
+          )}
         </div>
       </div>
     </div>
