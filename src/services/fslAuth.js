@@ -137,7 +137,7 @@ class FSLAuthService {
     }
   }
 
-  // Call Solana contract (GMT payment)
+  // Call Solana contract (GMT payment) - Dùng URL-based approach
   async callSolanaContract(contractParams) {
     try {
       this.init();
@@ -149,22 +149,76 @@ class FSLAuthService {
       
       console.log('Calling Solana contract with user:', this.currentUser);
       
-      // Tạo transfer instruction cho GMT token
-      const transferInstruction = {
-        programId: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC mint
-        keys: [
-          { pubkey: this.currentUser.address, isSigner: true, isWritable: true },
-          { pubkey: 'MERCHANT_ADDRESS', isSigner: false, isWritable: true }, // Thay bằng merchant address
+      // Dùng URL-based approach theo documentation
+      const args = {
+        contractAddress: '0x7DdEFA1890f3d5B8c4C4C4C4C4C4C4C4C4C4C4C4', // GMT token contract
+        methodName: 'transfer',
+        params: [
+          'MERCHANT_ADDRESS', // Thay bằng merchant address thực
+          contractParams.amount * Math.pow(10, 6) // Convert to wei
         ],
-        data: Buffer.from([2, ...new Uint8Array(8)]) // Transfer instruction
+        abi: [
+          {
+            constant: false,
+            inputs: [
+              { name: '_to', type: 'address' },
+              { name: '_value', type: 'uint256' },
+            ],
+            name: 'transfer',
+            outputs: [{ name: '', type: 'bool' }],
+            payable: false,
+            stateMutability: 'nonpayable',
+            type: 'function',
+          },
+        ],
+        gasLimit: '100000',
+        to: 'MERCHANT_ADDRESS',
+        chainId: 137, // Polygon mainnet
       };
 
-      const result = await this.fslAuth.callSolInstructions({
-        instructions: [transferInstruction],
-        keypairs: [],
+      const url = `https://id.fsl.com/authorization/call-data?arguments=${JSON.stringify({
+        ...args,
+        appKey: 'MiniGame', // Thay bằng App Key thực
+      })}`;
+
+      console.log('Opening FSL authorization URL:', url);
+
+      // Mở popup để user authorize
+      const popup = window.open(
+        url,
+        'fslAuthWindow',
+        `left=${window.screen.width / 2 - 200},top=${
+          window.screen.height / 2 - 500
+        },width=500,height=800,popup=1`
+      );
+
+      // Listen for result
+      return new Promise((resolve, reject) => {
+        const handleMessage = (e) => {
+          if (e.data.type === 'fsl_auth') {
+            console.log('FSL Auth result:', e.data.data);
+            window.removeEventListener('message', handleMessage);
+            
+            if (e.data.data.success) {
+              resolve({
+                hash: e.data.data.transactionHash || 'mock_tx_hash',
+                success: true
+              });
+            } else {
+              reject(new Error(e.data.data.error || 'Payment failed'));
+            }
+          }
+        };
+        
+        window.addEventListener('message', handleMessage, false);
+        
+        // Timeout after 5 minutes
+        setTimeout(() => {
+          window.removeEventListener('message', handleMessage);
+          reject(new Error('Payment timeout'));
+        }, 300000);
       });
 
-      return result;
     } catch (error) {
       console.error('Solana contract call error:', error);
       throw error;
