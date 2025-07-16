@@ -145,6 +145,44 @@ class FSLAuthService {
       }
     ];
   }
+
+  // Verify FSL ID
+  async verifyFSLID(fslId) {
+    try {
+      this.init();
+      
+      // In a real implementation, you would call FSL SDK to verify
+      // For now, we'll simulate verification
+      console.log('Verifying FSL ID:', fslId);
+      
+      // Simulate API call to verify FSL ID
+      const verificationResult = await this.fslAuth.verifyFSLID(fslId);
+      
+      return {
+        success: true,
+        verified: true,
+        userInfo: {
+          address: '0x1234567890abcdef...',
+          email: 'user@example.com',
+          fslId: fslId
+        }
+      };
+    } catch (error) {
+      console.error('FSL ID verification failed:', error);
+      return {
+        success: false,
+        verified: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Sign out
+  signOut() {
+    this.user = null;
+    this.isInitialized = false;
+    console.log('User signed out');
+  }
 }
 
 // Create singleton instance

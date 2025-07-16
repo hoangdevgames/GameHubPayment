@@ -9,7 +9,7 @@ import starlet from '../images/starlet.png';
 import avatar from '../images/avatar.png';
 
 const MainContent = ({ activeTab }) => {
-  const { user, balance, transactions, signMessage, callContract } = useAuth();
+  const { user, balance, transactions, signMessage, callContract, purchaseData } = useAuth();
   const stats = [
     { label: 'Energy', value: '85/100', icon: '⚡' },
     { label: 'Steps', value: '12,450', icon: '👟' },
@@ -128,6 +128,36 @@ const MainContent = ({ activeTab }) => {
                   <div className="stat-label">MATIC</div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {purchaseData && (
+            <div className="card" style={{ border: '2px solid #00d4ff', background: 'rgba(0, 212, 255, 0.1)' }}>
+              <h2 style={{ marginBottom: '1rem', color: '#00d4ff' }}>🎮 Purchase from GamingHub</h2>
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span>Product:</span>
+                  <span style={{ fontWeight: '600' }}>{purchaseData.amount} Starlets</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span>Payment Method:</span>
+                  <span style={{ fontWeight: '600', color: '#00d4ff' }}>Solana-GMT</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span>Platform:</span>
+                  <span style={{ fontWeight: '600' }}>{user?.platform === 'tg' ? 'Telegram' : 'LINE'}</span>
+                </div>
+              </div>
+              <button 
+                className="btn"
+                style={{ width: '100%', marginTop: '1rem' }}
+                onClick={() => {
+                  // Navigate to payment page
+                  window.location.href = '/payment';
+                }}
+              >
+                Complete Payment
+              </button>
             </div>
           )}
 

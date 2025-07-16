@@ -81,6 +81,26 @@
   font-weight: 600;
 }
 
+.status-pending {
+  color: #ffc107 !important;
+  font-weight: 600;
+}
+
+.status-syncing {
+  color: #17a2b8 !important;
+  font-weight: 600;
+}
+
+.status-completed {
+  color: #28a745 !important;
+  font-weight: 600;
+}
+
+.status-failed {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
 .action-buttons {
   display: flex;
   gap: 15px;

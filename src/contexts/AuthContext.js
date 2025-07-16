@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [purchaseData, setPurchaseData] = useState(null);
 
   // Check if user is already authenticated on app load
   useEffect(() => {
@@ -24,7 +25,71 @@ export const AuthProvider = ({ children }) => {
       setUser(currentUser);
       loadUserData();
     }
+    
+    // Check for incoming data from GamingHub
+    checkIncomingData();
   }, []);
+
+  const checkIncomingData = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userDataParam = urlParams.get('userData');
+    const purchaseDataParam = urlParams.get('purchaseData');
+    const source = urlParams.get('source');
+    
+    if (source === 'gaminghub' && userDataParam && purchaseDataParam) {
+      try {
+        const userData = JSON.parse(atob(userDataParam));
+        const purchaseInfo = JSON.parse(atob(purchaseDataParam));
+        
+        console.log('Received data from GamingHub:', { userData, purchaseInfo });
+        
+        // Auto-login with received data
+        autoLoginWithGamingHubData(userData, purchaseInfo);
+        
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (error) {
+        console.error('Failed to parse incoming data:', error);
+      }
+    }
+  };
+
+  const autoLoginWithGamingHubData = async (userData, purchaseInfo) => {
+    setLoading(true);
+    try {
+      // Verify FSL ID first
+      const verificationResult = await fslAuthService.verifyFSLID(userData.fslId);
+      
+      if (verificationResult.success && verificationResult.verified) {
+        // Set user data
+        const user = {
+          id: userData.fslId,
+          address: verificationResult.userInfo?.address || '0x...',
+          name: userData.telegramFirstName || 'STEPN Player',
+          isConnected: true,
+          platform: userData.platform,
+          telegramUID: userData.telegramUID,
+          telegramUsername: userData.telegramUsername,
+          userProfile: userData.userProfile
+        };
+        
+        setUser(user);
+        setPurchaseData(purchaseInfo);
+        
+        // Load user data
+        await loadUserData();
+        
+        console.log('Auto-login successful with GamingHub data');
+      } else {
+        console.error('FSL ID verification failed');
+        throw new Error('FSL ID verification failed');
+      }
+    } catch (error) {
+      console.error('Auto-login failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -93,6 +158,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     balance,
     transactions,
+    purchaseData,
     signIn,
     signOut,
     signMessage,
