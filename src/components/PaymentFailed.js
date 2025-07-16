@@ -1,48 +1,83 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './PaymentFailed.css';
 
 const PaymentFailed = () => {
+  const navigate = useNavigate();
+  const { purchaseData } = useAuth();
+
+  const handleRetry = () => {
+    navigate('/payment');
+  };
+
+  const handleBackToGamingHub = () => {
+    if (purchaseData?.returnUrl) {
+      window.location.href = purchaseData.returnUrl;
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
-    <div className="failed-page">
-      <div className="App-header">
-        <h1 className="App-title">GameHub Payment</h1>
-        <p className="App-subtitle">Payment Failed</p>
+    <div className="payment-failed-container">
+      {/* Background */}
+      <div className="failed-background">
+        <div className="background-gradient"></div>
       </div>
-      
-      <div className="container">
+
+      {/* Failed Content */}
+      <div className="failed-content">
         <div className="failed-icon">
-          <div className="crossmark">✕</div>
+          <div className="error-circle">
+            <div className="error-mark">✕</div>
+          </div>
         </div>
-        
-        <h2>Payment Failed</h2>
-        <p className="failed-message">
-          Unfortunately, your payment could not be processed. Please check your payment details and try again.
-        </p>
-        
+
+        <h1 className="failed-title">PAYMENT FAILED</h1>
+        <div className="failed-subtitle">Your payment could not be processed</div>
+
+        {purchaseData && (
+          <div className="purchase-summary">
+            <div className="summary-item">
+              <span className="summary-label">Product:</span>
+              <span className="summary-value">{purchaseData.amount} Starlets</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Amount:</span>
+              <span className="summary-value amount">
+                {purchaseData.currency === 'GMT' ? `${purchaseData.amount} GMT` : `$${purchaseData.amount}`}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="failed-message">
+          <p>We encountered an issue processing your payment.</p>
+          <p>Please check your payment method and try again.</p>
+        </div>
+
         <div className="error-details">
-          <h3>Possible Reasons</h3>
+          <h3>Possible reasons:</h3>
           <ul>
             <li>Insufficient funds in your account</li>
-            <li>Invalid card information</li>
-            <li>Card has expired</li>
-            <li>Transaction declined by your bank</li>
             <li>Network connectivity issues</li>
+            <li>Payment method restrictions</li>
+            <li>Transaction timeout</li>
           </ul>
         </div>
-        
-        <div className="action-buttons">
-          <Link to="/" className="btn btn-primary">
+
+        <div className="failed-actions">
+          <button className="retry-button" onClick={handleRetry}>
             Try Again
-          </Link>
-          <button className="btn btn-secondary" onClick={() => window.history.back()}>
-            Go Back
+          </button>
+          <button className="back-button" onClick={handleBackToGamingHub}>
+            Return to GamingHub
           </button>
         </div>
-        
+
         <div className="support-info">
-          <p>Still having issues? Contact our support team at support@gamehub.com</p>
-          <p>Or call us at +1 (555) 123-4567</p>
+          <p>Need help? Contact support at support@gamehub.com</p>
         </div>
       </div>
     </div>

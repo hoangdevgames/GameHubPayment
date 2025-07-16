@@ -1,9 +1,16 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import avatar from '../images/avatar.png';
 
-const Header = () => {
+const Header = ({ activeTab, setActiveTab }) => {
   const { user, signIn, signOut, loading } = useAuth();
+  const location = useLocation();
+
+  // Hide header on payment pages
+  if (location.pathname === '/payment' || location.pathname === '/success' || location.pathname === '/failed') {
+    return null;
+  }
 
   const handleAuthClick = async () => {
     if (user) {

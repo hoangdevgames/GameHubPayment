@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Backpack from '../images/Backpack.png';
 import calendar from '../images/calendar.png';
@@ -10,6 +11,13 @@ import avatar from '../images/avatar.png';
 
 const MainContent = ({ activeTab }) => {
   const { user, balance, transactions, signMessage, callContract, purchaseData, loading } = useAuth();
+  const location = useLocation();
+
+  // Hide main content on payment pages
+  if (location.pathname === '/payment' || location.pathname === '/success' || location.pathname === '/failed') {
+    return null;
+  }
+
   const stats = [
     { label: 'Energy', value: '85/100', icon: '⚡' },
     { label: 'Steps', value: '12,450', icon: '👟' },

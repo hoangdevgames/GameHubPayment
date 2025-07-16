@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [purchaseData, setPurchaseData] = useState(null);
+  const [shouldRedirectToPayment, setShouldRedirectToPayment] = useState(false);
 
   // Check if user is already authenticated on app load
   useEffect(() => {
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }) => {
         
         console.log('Received data from GamingHub:', { userData, purchaseInfo });
         
-        // Auto-login with received data
+        // Auto-login with received data and redirect to payment
         autoLoginWithGamingHubData(userData, purchaseInfo);
         
         // Clear URL parameters
@@ -82,6 +83,9 @@ export const AuthProvider = ({ children }) => {
         await loadUserData();
         
         console.log('Auto-login successful with GamingHub data');
+        
+        // Set flag to redirect to payment page
+        setShouldRedirectToPayment(true);
       } else {
         console.error('FSL ID verification failed:', verificationResult.error);
         // Don't throw error, just log it and continue with mock data
@@ -103,6 +107,9 @@ export const AuthProvider = ({ children }) => {
         setPurchaseData(purchaseInfo);
         
         console.log('Auto-login completed with mock verification (demo mode)');
+        
+        // Set flag to redirect to payment page
+        setShouldRedirectToPayment(true);
       }
     } catch (error) {
       console.error('Auto-login failed:', error);
@@ -147,6 +154,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setBalance(null);
     setTransactions([]);
+    setPurchaseData(null);
+    setShouldRedirectToPayment(false);
   };
 
   const signMessage = async (message) => {
@@ -175,17 +184,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const clearRedirectFlag = () => {
+    setShouldRedirectToPayment(false);
+  };
+
   const value = {
     user,
     loading,
     balance,
     transactions,
     purchaseData,
+    shouldRedirectToPayment,
     signIn,
     signOut,
     signMessage,
     callContract,
     refreshUserData,
+    clearRedirectFlag,
     isAuthenticated: !!user
   };
 

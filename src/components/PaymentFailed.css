@@ -1,141 +1,307 @@
-.failed-page {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+/* Payment Failed Container */
+.payment-failed-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
 }
 
-.failed-icon {
+/* Background */
+.failed-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+.background-gradient {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.1) 0%, transparent 70%);
+}
+
+/* Failed Content */
+.failed-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
   text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Failed Icon */
+.failed-icon {
   margin-bottom: 30px;
 }
 
-.crossmark {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+.error-circle {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  color: white;
-  margin: 0 auto;
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
   animation: shake 0.5s ease-in-out;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+.error-mark {
+  color: white;
+  font-size: 50px;
+  font-weight: bold;
+  animation: error-appear 0.5s ease-in-out 0.2s both;
 }
 
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes error-appear {
+  0% {
+    transform: scale(0) rotate(45deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Failed Title */
+.failed-title {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.failed-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+}
+
+/* Purchase Summary */
+.purchase-summary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.summary-value {
+  font-weight: 700;
+  color: white;
+  font-size: 14px;
+}
+
+.summary-value.amount {
+  color: #ff6b6b;
+  font-size: 16px;
+}
+
+/* Failed Message */
 .failed-message {
-  color: #666;
-  font-size: 1.1rem;
   margin-bottom: 30px;
   line-height: 1.6;
 }
 
+.failed-message p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Error Details */
 .error-details {
-  background: #fff5f5;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 8px;
   margin-bottom: 30px;
+  width: 100%;
+  max-width: 400px;
   text-align: left;
-  border-left: 4px solid #dc3545;
 }
 
 .error-details h3 {
-  margin: 0 0 15px 0;
-  color: #dc3545;
-  font-size: 1.1rem;
+  color: #ff6b6b;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .error-details ul {
+  list-style: none;
+  padding: 0;
   margin: 0;
-  padding-left: 20px;
 }
 
 .error-details li {
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
   margin-bottom: 8px;
-  line-height: 1.4;
+  padding-left: 20px;
+  position: relative;
+}
+
+.error-details li:before {
+  content: "•";
+  color: #ff6b6b;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
 }
 
 .error-details li:last-child {
   margin-bottom: 0;
 }
 
-.action-buttons {
+/* Failed Actions */
+.failed-actions {
   display: flex;
+  flex-direction: column;
   gap: 15px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 400px;
 }
 
-.btn {
-  padding: 12px 24px;
+.retry-button {
+  background: linear-gradient(135deg, #00d4ff 0%, #667eea 100%);
+  color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
   transition: all 0.3s ease;
-  flex: 1;
-  min-width: 150px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
+.retry-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
 }
 
-.btn-secondary {
-  background: #6c757d;
+.back-button {
+  background: rgba(255, 255, 255, 0.1);
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.btn-secondary:hover {
-  background: #5a6268;
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
+/* Support Info */
 .support-info {
-  padding: 15px;
-  background: #fff3cd;
-  border-radius: 6px;
-  border-left: 4px solid #ffc107;
+  margin-top: 20px;
 }
 
 .support-info p {
-  margin: 5px 0;
-  color: #856404;
-  font-size: 0.9rem;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
 }
 
-@media (max-width: 768px) {
-  .action-buttons {
-    flex-direction: column;
+/* Responsive Design */
+@media (max-width: 500px) {
+  .failed-content {
+    padding: 30px 15px;
   }
   
-  .btn {
-    flex: none;
-    width: 100%;
+  .failed-title {
+    font-size: 24px;
   }
   
-  .failed-message {
-    font-size: 1rem;
+  .error-circle {
+    width: 80px;
+    height: 80px;
   }
   
+  .error-mark {
+    font-size: 40px;
+  }
+  
+  .purchase-summary,
   .error-details {
     padding: 15px;
+  }
+  
+  .summary-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .failed-actions {
+    gap: 10px;
+  }
+  
+  .retry-button,
+  .back-button {
+    padding: 12px 20px;
+    font-size: 14px;
   }
 } 

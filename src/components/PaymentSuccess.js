@@ -1,105 +1,101 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import telegramPaymentService from '../services/telegramPayment';
 import './PaymentSuccess.css';
 
 const PaymentSuccess = () => {
-  const { user, purchaseData } = useAuth();
-  const [syncStatus, setSyncStatus] = useState('pending');
-  const [transactionId, setTransactionId] = useState('');
+  const navigate = useNavigate();
+  const { purchaseData } = useAuth();
 
   useEffect(() => {
-    if (purchaseData && user) {
-      syncPurchaseToGamingHub();
-    }
-  }, [purchaseData, user]);
-
-  const syncPurchaseToGamingHub = async () => {
-    try {
-      setSyncStatus('syncing');
-      
-      const userData = {
-        fslId: user.id,
-        telegramUID: user.telegramUID,
-        platform: user.platform
-      };
-      
-      const result = await telegramPaymentService.syncPurchaseToGamingHub(purchaseData, userData);
-      
-      if (result.success) {
-        setSyncStatus('completed');
-        setTransactionId(telegramPaymentService.generateTransactionId());
+    // Auto-redirect back to GamingHub after 5 seconds
+    const timer = setTimeout(() => {
+      if (purchaseData?.returnUrl) {
+        window.location.href = purchaseData.returnUrl;
       } else {
-        setSyncStatus('failed');
+        navigate('/');
       }
-    } catch (error) {
-      console.error('Failed to sync purchase:', error);
-      setSyncStatus('failed');
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [purchaseData, navigate]);
+
+  const handleBackToGamingHub = () => {
+    if (purchaseData?.returnUrl) {
+      window.location.href = purchaseData.returnUrl;
+    } else {
+      navigate('/');
     }
   };
+
   return (
-    <div className="success-page">
-      <div className="App-header">
-        <h1 className="App-title">GameHub Payment</h1>
-        <p className="App-subtitle">Payment Successful</p>
+    <div className="payment-success-container">
+      {/* Background */}
+      <div className="success-background">
+        <div className="background-gradient"></div>
       </div>
-      
-      <div className="container">
+
+      {/* Success Content */}
+      <div className="success-content">
         <div className="success-icon">
-          <div className="checkmark">✓</div>
+          <div className="checkmark-circle">
+            <div className="checkmark">✓</div>
+          </div>
         </div>
-        
-        <h2>Payment Successful!</h2>
-        <p className="success-message">
-          Your payment has been processed successfully. You will receive a confirmation email shortly.
-        </p>
-        
-        <div className="transaction-details">
-          <h3>Transaction Details</h3>
-          <div className="detail-row">
-            <span>Transaction ID:</span>
-            <span>{transactionId || Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
-          </div>
-          <div className="detail-row">
-            <span>Payment Status:</span>
-            <span className="status-success">Completed</span>
-          </div>
-          {purchaseData && (
-            <div className="detail-row">
-              <span>Product:</span>
-              <span>{purchaseData.amount} Starlets</span>
+
+        <h1 className="success-title">PAYMENT SUCCESSFUL!</h1>
+        <div className="success-subtitle">Your purchase has been completed</div>
+
+        {purchaseData && (
+          <div className="purchase-summary">
+            <div className="summary-item">
+              <span className="summary-label">Product:</span>
+              <span className="summary-value">{purchaseData.amount} Starlets</span>
             </div>
-          )}
-          <div className="detail-row">
-            <span>Date:</span>
-            <span>{new Date().toLocaleDateString()}</span>
-          </div>
-          {purchaseData && (
-            <div className="detail-row">
-              <span>GamingHub Sync:</span>
-              <span className={`status-${syncStatus}`}>
-                {syncStatus === 'pending' && '⏳ Pending'}
-                {syncStatus === 'syncing' && '🔄 Syncing...'}
-                {syncStatus === 'completed' && '✅ Completed'}
-                {syncStatus === 'failed' && '❌ Failed'}
+            <div className="summary-item">
+              <span className="summary-label">Amount:</span>
+              <span className="summary-value amount">
+                {purchaseData.currency === 'GMT' ? `${purchaseData.amount} GMT` : `$${purchaseData.amount}`}
               </span>
             </div>
-          )}
+            {purchaseData.quantity > 1 && (
+              <div className="summary-item">
+                <span className="summary-label">Quantity:</span>
+                <span className="summary-value">{purchaseData.quantity} packages</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="success-message">
+          <p>Your Starlets have been added to your account.</p>
+          <p>You can now use them in FSL Game Hub!</p>
         </div>
-        
-        <div className="action-buttons">
-          <Link to="/" className="btn btn-primary">
-            Make Another Payment
-          </Link>
-          <button className="btn btn-secondary" onClick={() => window.print()}>
-            Print Receipt
+
+        <div className="success-actions">
+          <button className="back-button" onClick={handleBackToGamingHub}>
+            Return to GamingHub
           </button>
         </div>
-        
-        <div className="support-info">
-          <p>Need help? Contact our support team at support@gamehub.com</p>
+
+        <div className="auto-redirect">
+          <p>Redirecting automatically in 5 seconds...</p>
         </div>
+      </div>
+
+      {/* Confetti Animation */}
+      <div className="confetti-container">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="confetti"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 3}s`
+            }}
+          />
+        ))}
       </div>
     </div>
   );

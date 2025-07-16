@@ -1,103 +1,263 @@
-.payment-page {
+/* Payment Page Container */
+.payment-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background */
+.payment-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+.background-gradient {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
 }
 
-/* Purchase Summary Styles */
-.purchase-summary {
-  margin-bottom: 30px;
-}
-
-.purchase-summary h2 {
-  color: #333;
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-}
-
-.summary-card {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 1px solid #dee2e6;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.summary-item {
+/* Header */
+.payment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #e9ecef;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.summary-item:last-child {
-  border-bottom: none;
+.back-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
-.summary-label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.9rem;
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.summary-value {
-  color: #333;
-  font-weight: 500;
-}
-
-.summary-value.amount {
-  font-size: 1.2rem;
+.header-title {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 18px;
   font-weight: 700;
-  color: #28a745;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* User Information Styles */
-.user-info {
-  margin-bottom: 30px;
+.header-spacer {
+  width: 40px;
 }
 
-.user-info h3 {
-  color: #333;
-  margin-bottom: 15px;
-  font-size: 1.3rem;
+/* Main Content */
+.payment-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 30px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.user-card {
+/* Product Display */
+.product-display-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  padding: 0 20px;
+  overflow: visible;
+}
+
+.product-display {
+  position: relative;
+  width: 290px;
+  height: 130px;
   display: flex;
   align-items: center;
-  background: white;
-  border: 1px solid #dee2e6;
+  justify-content: center;
+  overflow: visible;
+}
+
+.product-background {
+  position: absolute;
+  width: 115%;
+  height: 115%;
+  left: -7.5%;
+  top: -7.5%;
+  border-radius: 12px;
+  transform: rotate(180deg);
+}
+
+.product-bg-gradient {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.product-icon {
+  position: relative;
+  z-index: 1;
+  margin-right: 50px;
+  bottom: -40px;
+}
+
+.starlet-icon {
+  width: 80px;
+  height: 80px;
+  font-size: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Floating Elements */
+.floating-elements {
+  position: absolute;
+  width: 130%;
+  height: 130%;
+  pointer-events: none;
+  z-index: 2;
+  left: -15%;
+  top: -15%;
+}
+
+.floating-star {
+  position: absolute;
+  font-size: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.floating-star.s1 {
+  top: 10%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.floating-star.s2 {
+  top: 30%;
+  right: 15%;
+  animation-delay: 0.5s;
+}
+
+.floating-star.s3 {
+  bottom: 20%;
+  left: 10%;
+  animation-delay: 1s;
+}
+
+.floating-star.s4 {
+  bottom: 40%;
+  right: 25%;
+  animation-delay: 1.5s;
+}
+
+.floating-star.s5 {
+  top: 50%;
+  left: 50%;
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(180deg);
+  }
+}
+
+/* Product Details */
+.product-details {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1;
+}
+
+.product-amount,
+.product-quantity {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.x-mark {
+  color: #00d4ff;
+  margin-right: 4px;
+}
+
+/* Product Description */
+.product-description {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+  max-width: 300px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* User Info Card */
+.user-info-card {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
 }
 
 .user-avatar {
-  position: relative;
   margin-right: 15px;
 }
 
-.user-avatar img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #667eea;
-}
-
-.avatar-fallback {
-  display: none;
+.avatar-placeholder {
   width: 50px;
   height: 50px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #667eea;
+  font-size: 24px;
+  border: 2px solid #00d4ff;
 }
 
 .user-details {
@@ -106,37 +266,197 @@
 
 .user-name {
   font-weight: 600;
-  color: #333;
-  font-size: 1.1rem;
+  font-size: 16px;
   margin-bottom: 4px;
 }
 
 .user-platform {
-  color: #666;
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
   margin-bottom: 2px;
 }
 
 .user-fslid {
-  color: #667eea;
-  font-size: 0.8rem;
+  color: #00d4ff;
+  font-size: 12px;
   font-family: monospace;
-  background: #f8f9fa;
+  background: rgba(0, 212, 255, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
   display: inline-block;
 }
 
-/* Loading Spinner */
-.loading-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+/* Payment Methods */
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.payment-method-title {
+  text-align: center;
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #00d4ff;
+  margin-bottom: 10px;
+}
+
+.payment-method-button {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.payment-method-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.payment-method-button.selected {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: #00d4ff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.payment-method-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.method-icon {
+  font-size: 24px;
+  margin-right: 15px;
+  width: 40px;
+  text-align: center;
+}
+
+.method-content {
+  flex: 1;
+}
+
+.method-name {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.method-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #00d4ff;
+  margin-bottom: 4px;
+}
+
+.method-description {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.method-check {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  background: #00d4ff;
   border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Security Info */
+.security-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.security-icon {
+  font-size: 14px;
+}
+
+/* Loading States */
+.payment-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  color: white;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #00d4ff;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
 }
 
 @keyframes spin {
@@ -145,161 +465,39 @@
   }
 }
 
-.payment-description {
-  color: #666;
-  margin-bottom: 30px;
-  font-size: 1.1rem;
-}
-
-.payment-form {
-  text-align: left;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.submit-button {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.security-info {
-  margin-top: 30px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
-}
-
-.security-info p {
-  margin: 5px 0;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.payment-method-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.payment-method-option {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.payment-method-option:hover {
-  border-color: #667eea;
-  background-color: #f8f9fa;
-}
-
-.payment-method-option input[type="radio"] {
-  margin-right: 15px;
-  transform: scale(1.2);
-}
-
-.payment-method-option input[type="radio"]:checked + .payment-method-label {
-  color: #667eea;
-}
-
-.payment-method-label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
+/* Responsive Design */
+@media (max-width: 500px) {
+  .payment-main-content {
+    padding: 15px;
+    gap: 20px;
   }
   
-  .payment-description {
-    font-size: 1rem;
+  .product-display {
+    width: 250px;
+    height: 110px;
   }
   
-  .form-group input {
-    padding: 10px 12px;
+  .starlet-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 45px;
   }
   
-  .submit-button {
-    padding: 12px;
-    font-size: 1rem;
+  .product-amount,
+  .product-quantity {
+    font-size: 12px;
+    padding: 6px 10px;
   }
   
-  .user-card {
-    flex-direction: column;
-    text-align: center;
+  .payment-method-button {
+    padding: 15px;
   }
   
-  .user-avatar {
-    margin-right: 0;
-    margin-bottom: 10px;
+  .method-name {
+    font-size: 13px;
   }
   
-  .summary-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  .method-amount {
+    font-size: 16px;
   }
 } 

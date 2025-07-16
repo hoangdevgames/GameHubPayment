@@ -1,178 +1,253 @@
-.success-page {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+/* Payment Success Container */
+.payment-success-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
 }
 
-.success-icon {
+/* Background */
+.success-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+.background-gradient {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.1) 0%, transparent 70%);
+}
+
+/* Success Content */
+.success-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
   text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Success Icon */
+.success-icon {
   margin-bottom: 30px;
 }
 
-.checkmark {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+.checkmark-circle {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  color: white;
-  margin: 0 auto;
-  animation: scaleIn 0.5s ease-out;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+  animation: pulse 2s ease-in-out infinite;
 }
 
-@keyframes scaleIn {
+.checkmark {
+  color: white;
+  font-size: 50px;
+  font-weight: bold;
+  animation: checkmark 0.5s ease-in-out 0.5s both;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes checkmark {
   0% {
-    transform: scale(0);
+    transform: scale(0) rotate(-45deg);
     opacity: 0;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
     opacity: 1;
   }
 }
 
-.success-message {
-  color: #666;
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-  line-height: 1.6;
+/* Success Title */
+.success-title {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.transaction-details {
-  background: #f8f9fa;
+.success-subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+}
+
+/* Purchase Summary */
+.purchase-summary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 8px;
   margin-bottom: 30px;
-  text-align: left;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
 }
 
-.transaction-details h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 1.1rem;
-}
-
-.detail-row {
+.summary-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.detail-row:last-child {
+.summary-item:last-child {
   border-bottom: none;
 }
 
-.detail-row span:first-child {
+.summary-label {
   font-weight: 600;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
 }
 
-.detail-row span:last-child {
-  color: #333;
+.summary-value {
+  font-weight: 700;
+  color: white;
+  font-size: 14px;
 }
 
-.status-success {
-  color: #28a745 !important;
-  font-weight: 600;
+.summary-value.amount {
+  color: #00ff88;
+  font-size: 16px;
 }
 
-.status-pending {
-  color: #ffc107 !important;
-  font-weight: 600;
-}
-
-.status-syncing {
-  color: #17a2b8 !important;
-  font-weight: 600;
-}
-
-.status-completed {
-  color: #28a745 !important;
-  font-weight: 600;
-}
-
-.status-failed {
-  color: #dc3545 !important;
-  font-weight: 600;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 15px;
+/* Success Message */
+.success-message {
   margin-bottom: 30px;
-  flex-wrap: wrap;
+  line-height: 1.6;
 }
 
-.btn {
-  padding: 12px 24px;
+.success-message p {
+  margin: 8px 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Success Actions */
+.success-actions {
+  margin-bottom: 20px;
+}
+
+.back-button {
+  background: linear-gradient(135deg, #00d4ff 0%, #667eea 100%);
+  color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
   transition: all 0.3s ease;
-  flex: 1;
-  min-width: 150px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
+.back-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
 }
 
-.btn-secondary {
-  background: #6c757d;
-  color: white;
+/* Auto Redirect */
+.auto-redirect {
+  margin-top: 20px;
 }
 
-.btn-secondary:hover {
-  background: #5a6268;
-  transform: translateY(-2px);
+.auto-redirect p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
 }
 
-.support-info {
-  padding: 15px;
-  background: #e3f2fd;
-  border-radius: 6px;
-  border-left: 4px solid #2196f3;
+/* Confetti Animation */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.support-info p {
-  margin: 0;
-  color: #1976d2;
-  font-size: 0.9rem;
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+  animation: confetti-fall linear infinite;
+  border-radius: 2px;
 }
 
-@media (max-width: 768px) {
-  .action-buttons {
-    flex-direction: column;
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 500px) {
+  .success-content {
+    padding: 30px 15px;
   }
   
-  .btn {
-    flex: none;
-    width: 100%;
+  .success-title {
+    font-size: 24px;
   }
   
-  .detail-row {
+  .checkmark-circle {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .checkmark {
+    font-size: 40px;
+  }
+  
+  .purchase-summary {
+    padding: 15px;
+  }
+  
+  .summary-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .success-message {
-    font-size: 1rem;
+    gap: 4px;
   }
 } 
