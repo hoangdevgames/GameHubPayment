@@ -1,4 +1,5 @@
 import FSLAuthorization from 'fsl-authorization';
+import { Buffer } from 'buffer';
 
 class FSLAuthService {
   constructor() {
