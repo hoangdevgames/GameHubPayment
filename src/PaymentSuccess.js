@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import './PaymentSuccess.css';
 
-const PaymentSuccess = () => {
-  const navigate = useNavigate();
+const PaymentSuccess = ({ onReturn }) => {
   const { purchaseData } = useAuth();
 
   useEffect(() => {
@@ -13,18 +11,18 @@ const PaymentSuccess = () => {
       if (purchaseData?.returnUrl) {
         window.location.href = purchaseData.returnUrl;
       } else {
-        navigate('/');
+        onReturn && onReturn();
       }
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [purchaseData, navigate]);
+  }, [purchaseData, onReturn]);
 
   const handleReturn = () => {
     if (purchaseData?.returnUrl) {
       window.location.href = purchaseData.returnUrl;
     } else {
-      navigate('/');
+      onReturn && onReturn();
     }
   };
 

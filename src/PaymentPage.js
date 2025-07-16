@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import './PaymentPage.css';
 
-const PaymentPage = () => {
-  const navigate = useNavigate();
+const PaymentPage = ({ onSuccess, onFailed }) => {
   const { user, purchaseData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('gmt');
@@ -12,9 +10,10 @@ const PaymentPage = () => {
   // Redirect back to GamingHub if no purchase data
   useEffect(() => {
     if (!purchaseData) {
-      navigate('/');
+      // Nếu không có purchase data, quay về home
+      onFailed && onFailed();
     }
-  }, [purchaseData, navigate]);
+  }, [purchaseData, onFailed]);
 
   const handlePaymentMethod = async (method) => {
     setPaymentMethod(method);
@@ -33,7 +32,7 @@ const PaymentPage = () => {
     // Simulate Solana-GMT payment processing
     setTimeout(() => {
       setLoading(false);
-      navigate('/success');
+      onSuccess && onSuccess();
     }, 3000);
   };
 
@@ -44,7 +43,7 @@ const PaymentPage = () => {
     // Simulate card payment processing
     setTimeout(() => {
       setLoading(false);
-      navigate('/success');
+      onSuccess && onSuccess();
     }, 2000);
   };
 
@@ -53,7 +52,7 @@ const PaymentPage = () => {
     if (purchaseData?.returnUrl) {
       window.location.href = purchaseData.returnUrl;
     } else {
-      navigate('/');
+      onFailed && onFailed();
     }
   };
 

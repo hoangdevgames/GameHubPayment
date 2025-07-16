@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Header from './Header';
 import MainContent from './MainContent';
@@ -12,42 +11,60 @@ import './App.css';
 const AppContent = () => {
   const { shouldRedirectToPayment, clearRedirectFlag } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
+  const [showPaymentView, setShowPaymentView] = useState(false);
+  const [showSuccessView, setShowSuccessView] = useState(false);
+  const [showFailedView, setShowFailedView] = useState(false);
 
-  // Auto-redirect to payment page when coming from GamingHub
+  // Auto-show payment view when coming from GamingHub
   useEffect(() => {
     if (shouldRedirectToPayment) {
       clearRedirectFlag();
-      // Sửa lại để luôn redirect đúng path trên GitHub Pages
-      window.location.href = `${process.env.PUBLIC_URL}/payment`;
+      setShowPaymentView(true);
+      setActiveTab('payment');
     }
   }, [shouldRedirectToPayment, clearRedirectFlag]);
 
+  const renderActiveView = () => {
+    if (showPaymentView) {
+      return <PaymentPage onSuccess={() => setShowSuccessView(true)} onFailed={() => setShowFailedView(true)} />;
+    }
+    
+    if (showSuccessView) {
+      return <PaymentSuccess onReturn={() => setShowSuccessView(false)} />;
+    }
+    
+    if (showFailedView) {
+      return <PaymentFailed onRetry={() => setShowFailedView(false)} onReturn={() => setShowFailedView(false)} />;
+    }
+
+    switch (activeTab) {
+      case 'home':
+        return <MainContent activeTab={activeTab} />;
+      case 'payment':
+        return <PaymentPage onSuccess={() => setShowSuccessView(true)} onFailed={() => setShowFailedView(true)} />;
+      default:
+        return <MainContent activeTab={activeTab} />;
+    }
+  };
+
   return (
     <div className="App">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-      <Routes>
-        <Route path="/" element={
-          <>
-            <MainContent activeTab={activeTab} />
-            <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-          </>
-        } />
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/success" element={<PaymentSuccess />} />
-        <Route path="/failed" element={<PaymentFailed />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {!showPaymentView && !showSuccessView && !showFailedView && (
+        <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      )}
+      {renderActiveView()}
+      {!showPaymentView && !showSuccessView && !showFailedView && (
+        <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      )}
     </div>
   );
 };
 
 const App = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 
