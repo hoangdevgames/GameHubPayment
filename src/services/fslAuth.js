@@ -3,180 +3,58 @@ import FSLAuthorization from 'fsl-authorization';
 class FSLAuthService {
   constructor() {
     this.fslAuth = null;
+    this.currentUser = null;
     this.isInitialized = false;
-    this.user = null;
   }
 
-  // Initialize FSL Authorization
   init() {
     if (this.isInitialized) return;
 
     this.fslAuth = FSLAuthorization.init({
       responseType: 'code',
-      appKey: 'demo-app-key', // Replace with your actual app key
-      redirectUri: window.location.origin,
-      scope: 'wallet', // 'basic' | 'wallet'
-      state: 'stepn-app-state',
+      appKey: 'MiniGame', // Thay bằng App Key thực của bạn
+      redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
+      scope: 'basic,wallet',
+      state: 'gamehub_payment',
       usePopup: true,
       isApp: true,
+      domain: 'https://gm3.joysteps.io/'
     });
 
     this.isInitialized = true;
-    console.log('FSL Authorization initialized');
+    console.log('FSL Auth Service initialized');
   }
 
-  // Sign in with FSL ID
-  async signIn() {
-    try {
-      this.init();
-      
-      const result = await this.fslAuth.signInV2();
-      
-      if (result && result.code) {
-        // In a real app, you would send this code to your backend
-        // to exchange for user information
-        console.log('Sign in successful:', result);
-        
-        // For demo purposes, we'll create a mock user
-        this.user = {
-          id: 'demo-user-id',
-          address: '0x1234567890abcdef...',
-          name: 'STEPN Player',
-          isConnected: true
-        };
-        
-        return this.user;
-      }
-    } catch (error) {
-      console.error('Sign in failed:', error);
-      throw error;
-    }
-  }
-
-  // Sign out
-  signOut() {
-    this.user = null;
-    console.log('User signed out');
-  }
-
-  // Get current user
-  getCurrentUser() {
-    return this.user;
-  }
-
-  // Check if user is authenticated
-  isAuthenticated() {
-    return this.user && this.user.isConnected;
-  }
-
-  // Sign a message
-  async signMessage(message) {
-    try {
-      if (!this.isAuthenticated()) {
-        throw new Error('User not authenticated');
-      }
-
-      const result = await this.fslAuth.callEvmSign({
-        chainId: 137, // Polygon mainnet
-        msg: message,
-        chain: 'Polygon',
-      });
-
-      console.log('Message signed:', result);
-      return result;
-    } catch (error) {
-      console.error('Message signing failed:', error);
-      throw error;
-    }
-  }
-
-  // Call smart contract
-  async callContract(contractParams) {
-    try {
-      if (!this.isAuthenticated()) {
-        throw new Error('User not authenticated');
-      }
-
-      const result = await this.fslAuth.callEvmContract(contractParams);
-      console.log('Contract call result:', result);
-      return result;
-    } catch (error) {
-      console.error('Contract call failed:', error);
-      throw error;
-    }
-  }
-
-  // Get wallet balance (mock function)
-  async getBalance() {
-    if (!this.isAuthenticated()) {
-      return null;
-    }
-
-    // Mock balance - in real app, you'd call blockchain API
-    return {
-      gst: '2,340',
-      gmt: '150',
-      usdc: '500.00',
-      matic: '0.5'
+  // Set user data từ GamingHub
+  setUserFromGamingHub(userData) {
+    this.currentUser = {
+      id: userData.fslId,
+      address: userData.address || '0x' + Math.random().toString(36).substr(2, 40),
+      name: userData.telegramFirstName || userData.name || 'FSL User',
+      isConnected: true,
+      platform: userData.platform,
+      telegramUID: userData.telegramUID,
+      telegramUsername: userData.telegramUsername,
+      userProfile: userData.userProfile
     };
+    console.log('User set from GamingHub:', this.currentUser);
   }
 
-  // Get transaction history (mock function)
-  async getTransactionHistory() {
-    if (!this.isAuthenticated()) {
-      return [];
-    }
-
-    // Mock transaction history
-    return [
-      {
-        id: '1',
-        type: 'walk',
-        amount: '+15 GST',
-        timestamp: new Date().toISOString(),
-        status: 'completed'
-      },
-      {
-        id: '2',
-        type: 'transfer',
-        amount: '-50 GST',
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-        status: 'completed'
-      }
-    ];
-  }
-
-  // Verify FSL ID
+  // Verify FSL ID (đã có từ GamingHub)
   async verifyFSLID(fslId) {
     try {
       this.init();
       
-      console.log('Verifying FSL ID:', fslId);
-      
-      // Since FSL SDK doesn't have a direct verifyFSLID method,
-      // we'll simulate verification by checking if the FSL ID is valid
-      // In a real implementation, you would:
-      // 1. Call your backend API to verify the FSL ID
-      // 2. Or use FSL SDK's signIn method to verify
-      
-      // For now, we'll simulate a successful verification
-      // You can replace this with actual API call to your backend
-      const isValidFSLID = fslId && fslId.toString().length > 0;
-      
-      if (isValidFSLID) {
-        // Simulate successful verification
-        return {
-          success: true,
-          verified: true,
-          userInfo: {
-            address: '0x' + Math.random().toString(36).substr(2, 40),
-            email: 'user@example.com',
-            fslId: fslId
-          }
-        };
-      } else {
-        throw new Error('Invalid FSL ID');
-      }
+      // Trong thực tế, bạn sẽ verify FSL ID với backend
+      // Ở đây tôi giả lập verification thành công
+      return {
+        success: true,
+        verified: true,
+        userInfo: {
+          address: '0x' + Math.random().toString(36).substr(2, 40),
+          fslId: fslId
+        }
+      };
     } catch (error) {
       console.error('FSL ID verification failed:', error);
       return {
@@ -187,47 +65,183 @@ class FSLAuthService {
     }
   }
 
-  // Alternative: Verify FSL ID through backend API
-  async verifyFSLIDWithBackend(fslId) {
+  // Sign in với FSL
+  async signIn() {
     try {
-      // Replace with your actual backend API endpoint
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/verify-fsl`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fslId })
+      this.init();
+      
+      const result = await this.fslAuth.signInV2();
+      if (result.code) {
+        // Lưu user data
+        this.currentUser = {
+          id: result.fslId || 'demo_fsl_id',
+          address: result.address || '0x' + Math.random().toString(36).substr(2, 40),
+          name: result.name || 'FSL User',
+          isConnected: true
+        };
+        
+        return this.currentUser;
+      }
+      throw new Error('Sign in failed');
+    } catch (error) {
+      console.error('FSL Sign in error:', error);
+      throw error;
+    }
+  }
+
+  // Get current user
+  getCurrentUser() {
+    return this.currentUser;
+  }
+
+  // Sign out
+  signOut() {
+    this.currentUser = null;
+    console.log('User signed out');
+  }
+
+  // Get balance (mock data)
+  async getBalance() {
+    return {
+      gmt: Math.random() * 1000,
+      sol: Math.random() * 10,
+      usdc: Math.random() * 500
+    };
+  }
+
+  // Get transaction history (mock data)
+  async getTransactionHistory() {
+    return [
+      {
+        id: 1,
+        type: 'payment',
+        amount: 100,
+        currency: 'GMT',
+        status: 'completed',
+        timestamp: new Date().toISOString()
+      }
+    ];
+  }
+
+  // Sign message
+  async signMessage(message) {
+    try {
+      this.init();
+      
+      const result = await this.fslAuth.signSolMessage({ msg: message });
+      return result;
+    } catch (error) {
+      console.error('Sign message error:', error);
+      throw error;
+    }
+  }
+
+  // Call Solana contract (GMT payment)
+  async callSolanaContract(contractParams) {
+    try {
+      this.init();
+      
+      // Kiểm tra user đã được set chưa
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please set user data first.');
+      }
+      
+      console.log('Calling Solana contract with user:', this.currentUser);
+      
+      // Tạo transfer instruction cho GMT token
+      const transferInstruction = {
+        programId: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC mint
+        keys: [
+          { pubkey: this.currentUser.address, isSigner: true, isWritable: true },
+          { pubkey: 'MERCHANT_ADDRESS', isSigner: false, isWritable: true }, // Thay bằng merchant address
+        ],
+        data: Buffer.from([2, ...new Uint8Array(8)]) // Transfer instruction
+      };
+
+      const result = await this.fslAuth.callSolInstructions({
+        instructions: [transferInstruction],
+        keypairs: [],
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          success: true,
-          verified: data.verified,
-          userInfo: data.userInfo
-        };
-      } else {
-        throw new Error('Backend verification failed');
-      }
+      return result;
     } catch (error) {
-      console.error('Backend FSL ID verification failed:', error);
+      console.error('Solana contract call error:', error);
+      throw error;
+    }
+  }
+
+  // Process GMT payment
+  async processGMTPayment(purchaseData) {
+    try {
+      console.log('Processing GMT payment for:', purchaseData);
+      console.log('Current user:', this.currentUser);
+      
+      // Kiểm tra user đã được set chưa
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please set user data first.');
+      }
+      
+      // 1. Verify user has enough balance
+      const balance = await this.getBalance();
+      const requiredAmount = purchaseData.amount * 0.1; // Giả sử 1 Starlet = 0.1 GMT
+      
+      if (balance.gmt < requiredAmount) {
+        throw new Error('Insufficient GMT balance');
+      }
+
+      // 2. Create payment transaction
+      const paymentParams = {
+        amount: requiredAmount,
+        recipient: 'MERCHANT_ADDRESS', // Thay bằng merchant address thực
+        token: 'GMT',
+        purchaseId: `purchase_${Date.now()}`,
+        ...purchaseData
+      };
+
+      // 3. Execute payment
+      const result = await this.callSolanaContract(paymentParams);
+      
+      // 4. Return transaction result
+      return {
+        success: true,
+        transactionHash: result.hash || 'mock_tx_hash',
+        amount: requiredAmount,
+        currency: 'GMT',
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('GMT payment failed:', error);
       return {
         success: false,
-        verified: false,
         error: error.message
       };
     }
   }
 
-  // Sign out
-  signOut() {
-    this.user = null;
-    this.isInitialized = false;
-    console.log('User signed out');
+  // Process card payment (mock)
+  async processCardPayment(purchaseData) {
+    try {
+      console.log('Processing card payment for:', purchaseData);
+      
+      // Simulate card payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      return {
+        success: true,
+        transactionId: `card_${Date.now()}`,
+        amount: purchaseData.amount,
+        currency: 'USD',
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Card payment failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 }
 
-// Create singleton instance
 const fslAuthService = new FSLAuthService();
-
 export default fslAuthService; 

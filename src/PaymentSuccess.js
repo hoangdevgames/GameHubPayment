@@ -1,21 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import './PaymentSuccess.css';
 
-const PaymentSuccess = ({ onReturn }) => {
+const PaymentSuccess = ({ onReturn, transactionData }) => {
   const { purchaseData } = useAuth();
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
     // Auto-redirect back to GamingHub after 5 seconds
-    const timer = setTimeout(() => {
-      if (purchaseData?.returnUrl) {
-        window.location.href = purchaseData.returnUrl;
-      } else {
-        onReturn && onReturn();
-      }
-    }, 5000);
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (purchaseData?.returnUrl) {
+            window.location.href = purchaseData.returnUrl;
+          } else {
+            onReturn && onReturn();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => clearInterval(timer);
   }, [purchaseData, onReturn]);
 
   const handleReturn = () => {
@@ -77,12 +84,39 @@ const PaymentSuccess = ({ onReturn }) => {
           </div>
         )}
 
+        {/* Transaction Details */}
+        {transactionData && (
+          <div className="transaction-details">
+            <div className="transaction-title">Transaction Details</div>
+            <div className="transaction-item">
+              <span className="transaction-label">Transaction ID:</span>
+              <span className="transaction-value">{transactionData.transactionHash || transactionData.transactionId}</span>
+            </div>
+            <div className="transaction-item">
+              <span className="transaction-label">Amount Paid:</span>
+              <span className="transaction-value">
+                {transactionData.amount} {transactionData.currency}
+              </span>
+            </div>
+            <div className="transaction-item">
+              <span className="transaction-label">Payment Method:</span>
+              <span className="transaction-value">
+                {transactionData.currency === 'GMT' ? 'Solana-GMT' : 'Credit Card'}
+              </span>
+            </div>
+            <div className="transaction-item">
+              <span className="transaction-label">Status:</span>
+              <span className="transaction-value success">Completed</span>
+            </div>
+          </div>
+        )}
+
         <button className="return-button" onClick={handleReturn}>
           RETURN TO GAME HUB
         </button>
 
         <div className="auto-redirect">
-          Auto-redirecting in 5 seconds...
+          Auto-redirecting in {countdown} seconds...
         </div>
       </div>
     </div>

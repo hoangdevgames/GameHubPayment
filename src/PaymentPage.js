@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
+import fslAuthService from './services/fslAuth';
 import './PaymentPage.css';
 
 const PaymentPage = ({ onSuccess, onFailed }) => {
   const { user, purchaseData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('gmt');
+  const [error, setError] = useState(null);
 
   // Redirect back to GamingHub if no purchase data
   useEffect(() => {
@@ -17,6 +19,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
 
   const handlePaymentMethod = async (method) => {
     setPaymentMethod(method);
+    setError(null);
     
     if (method === 'gmt') {
       await handleSolanaGMTPayment();
@@ -27,24 +30,50 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
 
   const handleSolanaGMTPayment = async () => {
     setLoading(true);
-    console.log('Processing Solana-GMT payment for:', purchaseData);
+    setError(null);
     
-    // Simulate Solana-GMT payment processing
-    setTimeout(() => {
+    try {
+      console.log('Processing Solana-GMT payment for:', purchaseData);
+      
+      // Sử dụng FSL SDK để xử lý payment
+      const result = await fslAuthService.processGMTPayment(purchaseData);
+      
+      if (result.success) {
+        console.log('GMT payment successful:', result);
+        setLoading(false);
+        onSuccess && onSuccess(result);
+      } else {
+        throw new Error(result.error || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Solana-GMT payment error:', error);
+      setError(error.message);
       setLoading(false);
-      onSuccess && onSuccess();
-    }, 3000);
+    }
   };
 
   const handleCardPayment = async () => {
     setLoading(true);
-    console.log('Processing card payment for:', purchaseData);
+    setError(null);
     
-    // Simulate card payment processing
-    setTimeout(() => {
+    try {
+      console.log('Processing card payment for:', purchaseData);
+      
+      // Sử dụng FSL SDK để xử lý card payment
+      const result = await fslAuthService.processCardPayment(purchaseData);
+      
+      if (result.success) {
+        console.log('Card payment successful:', result);
+        setLoading(false);
+        onSuccess && onSuccess(result);
+      } else {
+        throw new Error(result.error || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Card payment error:', error);
+      setError(error.message);
       setLoading(false);
-      onSuccess && onSuccess();
-    }, 2000);
+    }
   };
 
   const handleBack = () => {
@@ -155,6 +184,14 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           </div>
         )}
 
+        {/* Error Message */}
+        {error && (
+          <div className="error-message">
+            <div className="error-icon">⚠️</div>
+            <div className="error-text">{error}</div>
+          </div>
+        )}
+
         {/* Payment Methods */}
         <div className="payment-methods">
           <div className="payment-method-title">SELECT PAYMENT METHOD</div>
@@ -167,7 +204,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
             <div className="method-icon">⚡</div>
             <div className="method-content">
               <div className="method-name">PAY WITH SOLANA-GMT</div>
-              <div className="method-amount">{formatAmount(purchaseData.amount, 'GMT')}</div>
+              <div className="method-amount">{formatAmount(purchaseData.amount * 0.1, 'GMT')}</div>
               <div className="method-description">Pay with GMT tokens on Solana blockchain</div>
             </div>
             <div className="method-check">

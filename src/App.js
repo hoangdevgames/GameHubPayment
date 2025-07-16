@@ -14,6 +14,7 @@ const AppContent = () => {
   const [showPaymentView, setShowPaymentView] = useState(false);
   const [showSuccessView, setShowSuccessView] = useState(false);
   const [showFailedView, setShowFailedView] = useState(false);
+  const [transactionData, setTransactionData] = useState(null);
 
   // Auto-show payment view when coming from GamingHub
   useEffect(() => {
@@ -26,22 +27,45 @@ const AppContent = () => {
 
   const renderActiveView = () => {
     if (showPaymentView) {
-      return <PaymentPage onSuccess={() => setShowSuccessView(true)} onFailed={() => setShowFailedView(true)} />;
+      return <PaymentPage 
+        onSuccess={(data) => {
+          setTransactionData(data);
+          setShowSuccessView(true);
+          setShowPaymentView(false);
+        }} 
+        onFailed={() => setShowFailedView(true)} 
+      />;
     }
     
     if (showSuccessView) {
-      return <PaymentSuccess onReturn={() => setShowSuccessView(false)} />;
+      return <PaymentSuccess 
+        onReturn={() => {
+          setShowSuccessView(false);
+          setTransactionData(null);
+        }} 
+        transactionData={transactionData}
+      />;
     }
     
     if (showFailedView) {
-      return <PaymentFailed onRetry={() => setShowFailedView(false)} onReturn={() => setShowFailedView(false)} />;
+      return <PaymentFailed 
+        onRetry={() => setShowFailedView(false)} 
+        onReturn={() => setShowFailedView(false)} 
+      />;
     }
 
     switch (activeTab) {
       case 'home':
         return <MainContent activeTab={activeTab} />;
       case 'payment':
-        return <PaymentPage onSuccess={() => setShowSuccessView(true)} onFailed={() => setShowFailedView(true)} />;
+        return <PaymentPage 
+          onSuccess={(data) => {
+            setTransactionData(data);
+            setShowSuccessView(true);
+            setShowPaymentView(false);
+          }} 
+          onFailed={() => setShowFailedView(true)} 
+        />;
       default:
         return <MainContent activeTab={activeTab} />;
     }

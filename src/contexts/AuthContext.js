@@ -60,6 +60,9 @@ export const AuthProvider = ({ children }) => {
   const autoLoginWithGamingHubData = async (userData, purchaseInfo) => {
     setLoading(true);
     try {
+      // Set user data vào FSL Auth Service trước
+      fslAuthService.setUserFromGamingHub(userData);
+      
       // Verify FSL ID first
       const verificationResult = await fslAuthService.verifyFSLID(userData.fslId);
       

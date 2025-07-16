@@ -458,6 +458,30 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Error Message */
+.error-message {
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.error-text {
+  color: #ff3b30;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 /* Responsive Design */
 @media (max-width: 500px) {
   .payment-main-content {
