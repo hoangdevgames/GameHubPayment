@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Header from './components/Header';
-import MainContent from './components/MainContent';
-import BottomNavigation from './components/BottomNavigation';
-import PaymentPage from './components/PaymentPage';
-import PaymentSuccess from './components/PaymentSuccess';
-import PaymentFailed from './components/PaymentFailed';
+import Header from './Header';
+import MainContent from './MainContent';
+import BottomNavigation from './BottomNavigation';
+import PaymentPage from './PaymentPage';
+import PaymentSuccess from './PaymentSuccess';
+import PaymentFailed from './PaymentFailed';
 import './App.css';
 
 const AppContent = () => {
@@ -17,7 +17,8 @@ const AppContent = () => {
   useEffect(() => {
     if (shouldRedirectToPayment) {
       clearRedirectFlag();
-      window.location.href = '/payment';
+      // Sửa lại để luôn redirect đúng path trên GitHub Pages
+      window.location.href = `${process.env.PUBLIC_URL}/payment`;
     }
   }, [shouldRedirectToPayment, clearRedirectFlag]);
 

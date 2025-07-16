@@ -19,176 +19,10 @@
   z-index: -1;
 }
 
-.background-gradient {
+.success-gradient {
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at 50% 50%, rgba(0, 255, 0, 0.1) 0%, transparent 70%);
-}
-
-/* Success Content */
-.success-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-  max-width: 500px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Success Icon */
-.success-icon {
-  margin-bottom: 30px;
-}
-
-.checkmark-circle {
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.checkmark {
-  color: white;
-  font-size: 50px;
-  font-weight: bold;
-  animation: checkmark 0.5s ease-in-out 0.5s both;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-@keyframes checkmark {
-  0% {
-    transform: scale(0) rotate(-45deg);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-/* Success Title */
-.success-title {
-  font-family: "PP Neue Machina", sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 10px;
-  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.success-subtitle {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 30px;
-}
-
-/* Purchase Summary */
-.purchase-summary {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 30px;
-  width: 100%;
-  max-width: 400px;
-  backdrop-filter: blur(10px);
-}
-
-.summary-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.summary-item:last-child {
-  border-bottom: none;
-}
-
-.summary-label {
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-}
-
-.summary-value {
-  font-weight: 700;
-  color: white;
-  font-size: 14px;
-}
-
-.summary-value.amount {
-  color: #00ff88;
-  font-size: 16px;
-}
-
-/* Success Message */
-.success-message {
-  margin-bottom: 30px;
-  line-height: 1.6;
-}
-
-.success-message p {
-  margin: 8px 0;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* Success Actions */
-.success-actions {
-  margin-bottom: 20px;
-}
-
-.back-button {
-  background: linear-gradient(135deg, #00d4ff 0%, #667eea 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 15px 30px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.back-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
-}
-
-/* Auto Redirect */
-.auto-redirect {
-  margin-top: 20px;
-}
-
-.auto-redirect p {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  font-style: italic;
 }
 
 /* Confetti Animation */
@@ -222,32 +56,157 @@
   }
 }
 
+/* Main Content */
+.success-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+/* Success Icon */
+.success-icon {
+  margin-bottom: 30px;
+}
+
+.checkmark-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.checkmark {
+  font-size: 60px;
+  color: white;
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Success Title */
+.success-title {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Success Message */
+.success-message {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  max-width: 400px;
+  margin-bottom: 30px;
+}
+
+/* Purchase Summary */
+.purchase-summary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+  min-width: 300px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.summary-value {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+/* Return Button */
+.return-button {
+  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  border: none;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #0f0f23;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.return-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+}
+
+/* Auto Redirect */
+.auto-redirect {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
 /* Responsive Design */
 @media (max-width: 500px) {
-  .success-content {
-    padding: 30px 15px;
-  }
-  
   .success-title {
     font-size: 24px;
   }
   
+  .success-message {
+    font-size: 14px;
+  }
+  
   .checkmark-circle {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
   }
   
   .checkmark {
-    font-size: 40px;
+    font-size: 50px;
   }
   
   .purchase-summary {
-    padding: 15px;
-  }
-  
-  .summary-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    min-width: 280px;
   }
 } 

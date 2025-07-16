@@ -47,8 +47,13 @@ export const AuthProvider = ({ children }) => {
         // Auto-login with received data and redirect to payment
         autoLoginWithGamingHubData(userData, purchaseInfo);
         
-        // Clear URL parameters
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Clear URL parameters nhưng giữ nguyên path
+        const url = new URL(window.location.href);
+        url.searchParams.delete('userData');
+        url.searchParams.delete('purchaseData');
+        url.searchParams.delete('source');
+        url.searchParams.delete('timestamp');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
       } catch (error) {
         console.error('Failed to parse incoming data:', error);
         // Show user-friendly error message

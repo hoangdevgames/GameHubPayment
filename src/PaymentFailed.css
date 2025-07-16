@@ -1,0 +1,221 @@
+/* Payment Failed Container */
+.payment-failed-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background */
+.failed-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+.failed-gradient {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 70%);
+}
+
+/* Error Animation */
+.error-animation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.error-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(255, 71, 87, 0.3);
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+.error-x {
+  font-size: 60px;
+  color: white;
+  font-weight: bold;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Main Content */
+.failed-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+/* Failed Title */
+.failed-title {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Failed Message */
+.failed-message {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  max-width: 400px;
+  margin-bottom: 30px;
+}
+
+/* Purchase Summary */
+.purchase-summary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+  min-width: 300px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.summary-value {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff4757;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.retry-button {
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  border: none;
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+}
+
+.return-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 15px 30px;
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.return-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Auto Redirect */
+.auto-redirect {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 500px) {
+  .failed-title {
+    font-size: 24px;
+  }
+  
+  .failed-message {
+    font-size: 14px;
+  }
+  
+  .error-circle {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .error-x {
+    font-size: 50px;
+  }
+  
+  .purchase-summary {
+    min-width: 280px;
+  }
+  
+  .action-buttons {
+    max-width: 280px;
+  }
+} 
