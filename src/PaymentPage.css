@@ -1,5 +1,5 @@
 /* Payment Page Container */
-.payment-page-container {
+.payment-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -9,26 +9,9 @@
   overflow: hidden;
 }
 
-/* Background */
-.payment-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-}
-
-.background-gradient {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
-}
-
 /* Header */
 .payment-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
   background: rgba(0, 0, 0, 0.8);
@@ -47,216 +30,68 @@
   padding: 8px;
   border-radius: 8px;
   transition: background-color 0.3s ease;
+  margin-right: 16px;
 }
 
 .back-button:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.header-title {
+.back-button img {
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-content h1 {
   font-family: "PP Neue Machina", sans-serif;
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin: 0 0 4px 0;
 }
 
-.header-spacer {
-  width: 40px;
-}
-
-/* Main Content */
-.payment-main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  gap: 30px;
-  max-width: 500px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Product Display */
-.product-display-container {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  justify-content: center;
-  padding: 0 20px;
-  overflow: visible;
-}
-
-.product-display {
-  position: relative;
-  width: 290px;
-  height: 130px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
-}
-
-.product-background {
-  position: absolute;
-  width: 115%;
-  height: 115%;
-  left: -7.5%;
-  top: -7.5%;
-  border-radius: 12px;
-  transform: rotate(180deg);
-}
-
-.product-bg-gradient {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-}
-
-.product-icon {
-  position: relative;
-  z-index: 1;
-  margin-right: 50px;
-  bottom: -40px;
-}
-
-.starlet-icon {
-  width: 80px;
-  height: 80px;
-  font-size: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-/* Floating Elements */
-.floating-elements {
-  position: absolute;
-  width: 130%;
-  height: 130%;
-  pointer-events: none;
-  z-index: 2;
-  left: -15%;
-  top: -15%;
-}
-
-.floating-star {
-  position: absolute;
-  font-size: 20px;
-  animation: float 3s ease-in-out infinite;
-}
-
-.floating-star.s1 {
-  top: 10%;
-  left: 20%;
-  animation-delay: 0s;
-}
-
-.floating-star.s2 {
-  top: 30%;
-  right: 15%;
-  animation-delay: 0.5s;
-}
-
-.floating-star.s3 {
-  bottom: 20%;
-  left: 10%;
-  animation-delay: 1s;
-}
-
-.floating-star.s4 {
-  bottom: 40%;
-  right: 25%;
-  animation-delay: 1.5s;
-}
-
-.floating-star.s5 {
-  top: 50%;
-  left: 50%;
-  animation-delay: 2s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(180deg);
-  }
-}
-
-/* Product Details */
-.product-details {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 1;
-}
-
-.product-amount,
-.product-quantity {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-family: "PP Neue Machina", sans-serif;
+.header-content p {
   font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.x-mark {
-  color: #00d4ff;
-  margin-right: 4px;
-}
-
-/* Product Description */
-.product-description {
-  text-align: center;
-  font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
-  line-height: 1.4;
-  max-width: 300px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  margin: 0;
 }
 
-/* User Info Card */
-.user-info-card {
+/* Payment Details */
+.payment-details {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 15px;
-  width: 100%;
-  max-width: 400px;
-  backdrop-filter: blur(10px);
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .user-avatar {
-  margin-right: 15px;
-}
-
-.avatar-placeholder {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
+  overflow: hidden;
+  margin-right: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-details {
@@ -266,72 +101,110 @@
 .user-name {
   font-family: "PP Neue Machina", sans-serif;
   font-size: 16px;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
-.user-platform {
+.user-id {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.purchase-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.purchase-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-name {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.item-quantity {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.purchase-total {
+  text-align: right;
+}
+
+.total-label {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.user-fslid {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+.total-amount {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #00d4ff;
 }
 
 /* Payment Methods */
 .payment-methods {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  max-width: 400px;
+  padding: 0 20px;
+  margin-bottom: 20px;
 }
 
 .payment-method-title {
   font-family: "PP Neue Machina", sans-serif;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  text-align: center;
 }
 
 .payment-method-button {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 15px;
+  color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 100%;
+  text-align: left;
 }
 
 .payment-method-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
 .payment-method-button.selected {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 212, 255, 0.1);
+  border-color: #00d4ff;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
 }
 
 .payment-method-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .method-icon {
   font-size: 24px;
-  margin-right: 15px;
+  margin-right: 16px;
   width: 40px;
   text-align: center;
 }
@@ -343,28 +216,35 @@
 .method-name {
   font-family: "PP Neue Machina", sans-serif;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
+  margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: white;
-  margin-bottom: 5px;
 }
 
 .method-amount {
   font-family: "PP Neue Machina", sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #00d4ff;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .method-description {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4px;
+}
+
+.method-balance {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
 }
 
 .method-check {
-  width: 30px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -373,35 +253,98 @@
 .checkmark {
   width: 20px;
   height: 20px;
+  background: #00d4ff;
   border-radius: 50%;
-  background: #00ff88;
-  color: #0f0f23;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
   font-size: 12px;
   font-weight: bold;
+}
+
+/* Payment Method Specific Styles */
+.gmt-button.selected {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: #ffc107;
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+}
+
+.sol-button.selected {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+  box-shadow: 0 0 20px rgba(220, 53, 69, 0.3);
+}
+
+.usdc-button.selected {
+  background: rgba(40, 167, 69, 0.1);
+  border-color: #28a745;
+  box-shadow: 0 0 20px rgba(40, 167, 69, 0.3);
+}
+
+.card-button.selected {
+  background: rgba(108, 117, 125, 0.1);
+  border-color: #6c757d;
+  box-shadow: 0 0 20px rgba(108, 117, 125, 0.3);
 }
 
 /* Security Info */
 .security-info {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.security-item {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  padding: 16px 20px;
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  border-radius: 8px;
+  margin: 0 20px 20px 20px;
 }
 
 .security-icon {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.security-text {
+  flex: 1;
+}
+
+.security-title {
+  font-family: "PP Neue Machina", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #28a745;
+  margin-bottom: 4px;
+}
+
+.security-description {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+/* Error Display */
+.payment-error {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: 8px;
+  margin: 0 20px 20px 20px;
+}
+
+.error-icon {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.error-message {
+  flex: 1;
   font-size: 14px;
+  color: #dc3545;
+  font-weight: 500;
 }
 
 /* Loading States */
@@ -410,12 +353,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+  min-height: 200px;
   color: white;
 }
 
-.loading-overlay {
+.payment-loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -423,34 +365,21 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-}
-
-.loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
+  color: white;
 }
 
 .loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid #00d4ff;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #00d4ff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-}
-
-.loading-text {
-  font-family: "PP Neue Machina", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: white;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -458,52 +387,19 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Error Message */
-.error-message {
-  background: rgba(255, 59, 48, 0.1);
-  border: 1px solid rgba(255, 59, 48, 0.3);
-  border-radius: 12px;
-  padding: 16px;
-  margin: 16px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.error-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.error-text {
-  color: #ff3b30;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
 /* Responsive Design */
 @media (max-width: 500px) {
-  .payment-main-content {
-    padding: 15px;
-    gap: 20px;
+  .payment-page {
+    padding: 0;
   }
   
-  .product-display {
-    width: 250px;
-    height: 110px;
+  .payment-details {
+    margin: 10px;
+    padding: 16px;
   }
   
-  .starlet-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 45px;
-  }
-  
-  .product-amount,
-  .product-quantity {
-    font-size: 12px;
-    padding: 6px 10px;
+  .payment-methods {
+    padding: 0 10px;
   }
   
   .payment-method-button {
@@ -515,6 +411,12 @@
   }
   
   .method-amount {
-    font-size: 14px;
+    font-size: 16px;
+  }
+  
+  .security-info,
+  .payment-error {
+    margin: 0 10px 10px 10px;
+    padding: 12px;
   }
 } 

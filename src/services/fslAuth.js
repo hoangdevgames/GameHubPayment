@@ -8,22 +8,28 @@ class FSLAuthService {
     this.isInitialized = false;
   }
 
-  init() {
-    if (this.isInitialized) return;
+  async init() {
+    if (this.isInitialized && this.fslAuth) return this.fslAuth;
 
-    this.fslAuth = FSLAuthorization.init({
-      responseType: 'code',
-      appKey: 'MiniGame', // Thay bằng App Key thực của bạn
-      redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
-      scope: 'basic,wallet',
-      state: 'gamehub_payment',
-      usePopup: true,
-      isApp: false,
-      domain: 'https://gm3.joysteps.io/',
-    });
+    try {
+      this.fslAuth = await FSLAuthorization.init({
+        responseType: 'code',
+        appKey: 'MiniGame', // Thay bằng App Key thực của bạn
+        redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
+        scope: 'basic,wallet',
+        state: 'gamehub_payment',
+        usePopup: true,
+        isApp: false,
+        domain: 'https://gm3.joysteps.io/',
+      });
 
-    this.isInitialized = true;
-    console.log('FSL Auth Service initialized');
+      this.isInitialized = true;
+      console.log('FSL Auth Service initialized successfully');
+      return this.fslAuth;
+    } catch (error) {
+      console.error('Failed to initialize FSL Auth:', error);
+      throw error;
+    }
   }
 
   // Set user data từ GamingHub
@@ -44,7 +50,7 @@ class FSLAuthService {
   // Verify FSL ID (đã có từ GamingHub)
   async verifyFSLID(fslId) {
     try {
-      this.init();
+      await this.init();
       
       // Trong thực tế, bạn sẽ verify FSL ID với backend
       // Ở đây tôi giả lập verification thành công
@@ -69,9 +75,9 @@ class FSLAuthService {
   // Sign in với FSL
   async signIn() {
     try {
-      this.init();
+      const fslAuth = await this.init();
       
-      const result = await this.fslAuth.signInV2();
+      const result = await fslAuth.signInV2();
       if (result.code) {
         // Lưu user data
         this.currentUser = {
@@ -96,18 +102,34 @@ class FSLAuthService {
   }
 
   // Sign out
-  signOut() {
-    this.currentUser = null;
-    console.log('User signed out');
+  async signOut() {
+    try {
+      if (this.fslAuth) {
+        await this.fslAuth.signOut();
+      }
+      this.currentUser = null;
+      console.log('User signed out');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   }
 
-  // Get balance (mock data)
+  // Get balance using FSL SDK
   async getBalance() {
-    return {
-      gmt: Math.random() * 1000,
-      sol: Math.random() * 10,
-      usdc: Math.random() * 500
-    };
+    try {
+      await this.init();
+      
+      // Trong thực tế, bạn sẽ gọi API để lấy balance thực
+      // Ở đây tôi giả lập balance data
+      return {
+        gmt: Math.random() * 1000,
+        sol: Math.random() * 10,
+        usdc: Math.random() * 500
+      };
+    } catch (error) {
+      console.error('Get balance error:', error);
+      throw error;
+    }
   }
 
   // Get transaction history (mock data)
@@ -124,12 +146,15 @@ class FSLAuthService {
     ];
   }
 
-  // Sign message
+  // Sign message using FSL SDK
   async signMessage(message) {
     try {
-      this.init();
+      const fslAuth = await this.init();
       
-      const result = await this.fslAuth.signSolMessage({ msg: message });
+      const result = await fslAuth.signSolMessage({ 
+        msg: message,
+        domain: 'https://gm3.joysteps.io/'
+      });
       return result;
     } catch (error) {
       console.error('Sign message error:', error);
@@ -137,95 +162,7 @@ class FSLAuthService {
     }
   }
 
-  // Call Solana contract (GMT payment) - Dùng URL-based approach
-  async callSolanaContract(contractParams) {
-    try {
-      this.init();
-      
-      // Kiểm tra user đã được set chưa
-      if (!this.currentUser) {
-        throw new Error('User not initialized. Please set user data first.');
-      }
-      
-      console.log('Calling Solana contract with user:', this.currentUser);
-      
-      // Dùng URL-based approach theo documentation
-      const args = {
-        contractAddress: '0x7DdEFA1890f3d5B8c4C4C4C4C4C4C4C4C4C4C4C4', // GMT token contract
-        methodName: 'transfer',
-        params: [
-          'MERCHANT_ADDRESS', // Thay bằng merchant address thực
-          contractParams.amount * Math.pow(10, 6) // Convert to wei
-        ],
-        abi: [
-          {
-            constant: false,
-            inputs: [
-              { name: '_to', type: 'address' },
-              { name: '_value', type: 'uint256' },
-            ],
-            name: 'transfer',
-            outputs: [{ name: '', type: 'bool' }],
-            payable: false,
-            stateMutability: 'nonpayable',
-            type: 'function',
-          },
-        ],
-        gasLimit: '100000',
-        to: 'MERCHANT_ADDRESS',
-        chainId: 137, // Polygon mainnet
-      };
-
-      const url = `https://gm3.joysteps.io/authorization/call-data?arguments=${JSON.stringify({
-        ...args,
-        appKey: 'MiniGame', // Thay bằng App Key thực
-      })}`;
-
-      console.log('Opening FSL authorization URL:', url);
-
-      // Mở popup để user authorize
-      const popup = window.open(
-        url,
-        'fslAuthWindow',
-        `left=${window.screen.width / 2 - 200},top=${
-          window.screen.height / 2 - 500
-        },width=500,height=800,popup=1`
-      );
-
-      // Listen for result
-      return new Promise((resolve, reject) => {
-        const handleMessage = (e) => {
-          if (e.data.type === 'fsl_auth') {
-            console.log('FSL Auth result:', e.data.data);
-            window.removeEventListener('message', handleMessage);
-            
-            if (e.data.data.success) {
-              resolve({
-                hash: e.data.data.transactionHash || 'mock_tx_hash',
-                success: true
-              });
-            } else {
-              reject(new Error(e.data.data.error || 'Payment failed'));
-            }
-          }
-        };
-        
-        window.addEventListener('message', handleMessage, false);
-        
-        // Timeout after 5 minutes
-        setTimeout(() => {
-          window.removeEventListener('message', handleMessage);
-          reject(new Error('Payment timeout'));
-        }, 300000);
-      });
-
-    } catch (error) {
-      console.error('Solana contract call error:', error);
-      throw error;
-    }
-  }
-
-  // Process GMT payment
+  // Process GMT payment using EVM contract call
   async processGMTPayment(purchaseData) {
     try {
       console.log('Processing GMT payment for:', purchaseData);
@@ -235,6 +172,8 @@ class FSLAuthService {
       if (!this.currentUser) {
         throw new Error('User not initialized. Please set user data first.');
       }
+
+      const fslAuth = await this.init();
       
       // 1. Verify user has enough balance
       const balance = await this.getBalance();
@@ -244,25 +183,58 @@ class FSLAuthService {
         throw new Error('Insufficient GMT balance');
       }
 
-      // 2. Create payment transaction
-      const paymentParams = {
-        amount: requiredAmount,
-        recipient: 'MERCHANT_ADDRESS', // Thay bằng merchant address thực
-        token: 'GMT',
-        purchaseId: `purchase_${Date.now()}`,
-        ...purchaseData
-      };
+      // 2. GMT Token Contract ABI (ERC-20 transfer function)
+      const gmtTokenABI = [
+        {
+          constant: false,
+          inputs: [
+            { name: '_to', type: 'address' },
+            { name: '_value', type: 'uint256' },
+          ],
+          name: 'transfer',
+          outputs: [{ name: '', type: 'bool' }],
+          payable: false,
+          stateMutability: 'nonpayable',
+          type: 'function',
+        },
+      ];
 
-      // 3. Execute payment
-      const result = await this.callSolanaContract(paymentParams);
+      // 3. GMT Token Contract Address (thay bằng address thực)
+      const gmtTokenAddress = '0x7DdEFA1890f3d5B8c4C4C4C4C4C4C4C4C4C4C4C4';
       
-      // 4. Return transaction result
+      // 4. Merchant address (thay bằng merchant address thực)
+      const merchantAddress = '0x1234567890123456789012345678901234567890';
+      
+      // 5. Convert amount to wei (GMT has 6 decimals)
+      const amountInWei = (requiredAmount * Math.pow(10, 6)).toString();
+
+      // 6. Call EVM contract using FSL SDK
+      const result = await fslAuth.callEvmContract({
+        contractAddress: gmtTokenAddress,
+        methodName: 'transfer',
+        abi: gmtTokenABI,
+        chainId: 137, // Polygon mainnet (thay bằng chain ID thực)
+        chain: 'polygon',
+        value: '0', // No ETH value, only GMT tokens
+        gasLimit: '100000',
+        params: [merchantAddress, amountInWei],
+        to: gmtTokenAddress,
+        rpc: 'https://polygon-rpc.com', // Thay bằng RPC URL thực
+        domain: 'https://gm3.joysteps.io/',
+        uid: this.currentUser.id,
+        onlySign: false // Execute transaction, not just sign
+      });
+
+      console.log('GMT payment transaction result:', result);
+      
+      // 7. Return transaction result
       return {
         success: true,
-        transactionHash: result.hash || 'mock_tx_hash',
+        transactionHash: result.transactionHash || result.hash || 'mock_tx_hash',
         amount: requiredAmount,
         currency: 'GMT',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        purchaseData: purchaseData
       };
     } catch (error) {
       console.error('GMT payment failed:', error);
@@ -273,12 +245,159 @@ class FSLAuthService {
     }
   }
 
-  // Process card payment (mock)
+  // Process Solana payment using Solana instructions
+  async processSolanaPayment(purchaseData) {
+    try {
+      console.log('Processing Solana payment for:', purchaseData);
+      console.log('Current user:', this.currentUser);
+      
+      // Kiểm tra user đã được set chưa
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please set user data first.');
+      }
+
+      const fslAuth = await this.init();
+      
+      // 1. Verify user has enough SOL balance
+      const balance = await this.getBalance();
+      const requiredAmount = purchaseData.amount * 0.001; // Giả sử 1 Starlet = 0.001 SOL
+      
+      if (balance.sol < requiredAmount) {
+        throw new Error('Insufficient SOL balance');
+      }
+
+      // 2. Create Solana transfer instruction
+      // Trong thực tế, bạn sẽ tạo instruction thực để transfer SOL
+      const transferInstruction = {
+        programId: '11111111111111111111111111111111', // System Program
+        keys: [
+          { pubkey: this.currentUser.address, isSigner: true, isWritable: true },
+          { pubkey: 'MERCHANT_SOLANA_ADDRESS', isSigner: false, isWritable: true }
+        ],
+        data: Buffer.from([2, 0, 0, 0, ...new Uint8Array(new Uint64Array([requiredAmount * Math.pow(10, 9)]).buffer)])
+      };
+
+      // 3. Call Solana instructions using FSL SDK
+      const result = await fslAuth.callSolInstructions({
+        instructions: [transferInstruction],
+        rpc: 'https://api.mainnet-beta.solana.com', // Thay bằng RPC URL thực
+        unitLimit: 200000,
+        unitPrice: 5000,
+        domain: 'https://gm3.joysteps.io/',
+        uid: this.currentUser.id,
+        onlySign: false // Execute transaction, not just sign
+      });
+
+      console.log('Solana payment transaction result:', result);
+      
+      // 4. Return transaction result
+      return {
+        success: true,
+        transactionHash: result.transactionHash || result.signature || 'mock_tx_hash',
+        amount: requiredAmount,
+        currency: 'SOL',
+        timestamp: new Date().toISOString(),
+        purchaseData: purchaseData
+      };
+    } catch (error) {
+      console.error('Solana payment failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Process USDC payment using EVM contract call
+  async processUSDCPayment(purchaseData) {
+    try {
+      console.log('Processing USDC payment for:', purchaseData);
+      console.log('Current user:', this.currentUser);
+      
+      // Kiểm tra user đã được set chưa
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please set user data first.');
+      }
+
+      const fslAuth = await this.init();
+      
+      // 1. Verify user has enough USDC balance
+      const balance = await this.getBalance();
+      const requiredAmount = purchaseData.amount; // 1 Starlet = 1 USDC
+      
+      if (balance.usdc < requiredAmount) {
+        throw new Error('Insufficient USDC balance');
+      }
+
+      // 2. USDC Token Contract ABI (ERC-20 transfer function)
+      const usdcTokenABI = [
+        {
+          constant: false,
+          inputs: [
+            { name: '_to', type: 'address' },
+            { name: '_value', type: 'uint256' },
+          ],
+          name: 'transfer',
+          outputs: [{ name: '', type: 'bool' }],
+          payable: false,
+          stateMutability: 'nonpayable',
+          type: 'function',
+        },
+      ];
+
+      // 3. USDC Token Contract Address (thay bằng address thực)
+      const usdcTokenAddress = '0xA0b86a33E6441b8c4C4C4C4C4C4C4C4C4C4C4C4C4';
+      
+      // 4. Merchant address (thay bằng merchant address thực)
+      const merchantAddress = '0x1234567890123456789012345678901234567890';
+      
+      // 5. Convert amount to wei (USDC has 6 decimals)
+      const amountInWei = (requiredAmount * Math.pow(10, 6)).toString();
+
+      // 6. Call EVM contract using FSL SDK
+      const result = await fslAuth.callEvmContract({
+        contractAddress: usdcTokenAddress,
+        methodName: 'transfer',
+        abi: usdcTokenABI,
+        chainId: 137, // Polygon mainnet (thay bằng chain ID thực)
+        chain: 'polygon',
+        value: '0', // No ETH value, only USDC tokens
+        gasLimit: '100000',
+        params: [merchantAddress, amountInWei],
+        to: usdcTokenAddress,
+        rpc: 'https://polygon-rpc.com', // Thay bằng RPC URL thực
+        domain: 'https://gm3.joysteps.io/',
+        uid: this.currentUser.id,
+        onlySign: false // Execute transaction, not just sign
+      });
+
+      console.log('USDC payment transaction result:', result);
+      
+      // 7. Return transaction result
+      return {
+        success: true,
+        transactionHash: result.transactionHash || result.hash || 'mock_tx_hash',
+        amount: requiredAmount,
+        currency: 'USDC',
+        timestamp: new Date().toISOString(),
+        purchaseData: purchaseData
+      };
+    } catch (error) {
+      console.error('USDC payment failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Process card payment (mock - không có trong FSL SDK)
   async processCardPayment(purchaseData) {
     try {
       console.log('Processing card payment for:', purchaseData);
       
-      // Simulate card payment processing
+      // Card payment không có trong FSL SDK, sử dụng mock
+      // Trong thực tế, bạn sẽ integrate với payment gateway
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       return {
@@ -286,7 +405,8 @@ class FSLAuthService {
         transactionId: `card_${Date.now()}`,
         amount: purchaseData.amount,
         currency: 'USD',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        purchaseData: purchaseData
       };
     } catch (error) {
       console.error('Card payment failed:', error);
@@ -294,6 +414,43 @@ class FSLAuthService {
         success: false,
         error: error.message
       };
+    }
+  }
+
+  // Verify transaction signature
+  async verifyTransaction(signature, message) {
+    try {
+      await this.init();
+      
+      // Sử dụng FSL SDK để verify signature
+      const verifiedAddress = FSLAuthorization.evmVerifyMessage(message, signature);
+      return {
+        success: true,
+        verifiedAddress: verifiedAddress,
+        isValid: verifiedAddress.toLowerCase() === this.currentUser.address.toLowerCase()
+      };
+    } catch (error) {
+      console.error('Transaction verification failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Get user's wallet addresses
+  async getWalletAddresses() {
+    try {
+      await this.init();
+      
+      // Trong thực tế, bạn sẽ lấy addresses từ FSL SDK
+      return {
+        evm: this.currentUser?.address || '0x0000000000000000000000000000000000000000',
+        solana: this.currentUser?.solanaAddress || '0000000000000000000000000000000000000000000000000000000000000000'
+      };
+    } catch (error) {
+      console.error('Get wallet addresses error:', error);
+      throw error;
     }
   }
 }
