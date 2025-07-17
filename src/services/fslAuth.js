@@ -12,16 +12,16 @@ class FSLAuthService {
     if (this.isInitialized && this.fslAuth) return this.fslAuth;
 
     try {
-      this.fslAuth = await FSLAuthorization.init({
-        responseType: 'code',
-        appKey: 'MiniGame', // Thay bằng App Key thực của bạn
-        redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
-        scope: 'basic,wallet',
-        state: 'gamehub_payment',
-        usePopup: true,
-        isApp: false,
-        domain: 'https://gm3.joysteps.io/',
-      });
+          this.fslAuth = await FSLAuthorization.init({
+      responseType: 'code',
+      appKey: 'MiniGame', // Thay bằng App Key thực của bạn
+      redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
+      scope: 'basic,wallet',
+      state: 'gamehub_payment',
+      usePopup: true,
+      isApp: false,
+      domain: 'https://gm3.joysteps.io',
+    });
 
       this.isInitialized = true;
       console.log('FSL Auth Service initialized successfully');
@@ -153,7 +153,7 @@ class FSLAuthService {
       
       const result = await fslAuth.signSolMessage({ 
         msg: message,
-        domain: 'https://gm3.joysteps.io/'
+        domain: 'https://gm3.joysteps.io'
       });
       return result;
     } catch (error) {
@@ -220,7 +220,7 @@ class FSLAuthService {
         params: [merchantAddress, amountInWei],
         to: gmtTokenAddress,
         rpc: 'https://polygon-rpc.com', // Thay bằng RPC URL thực
-        domain: 'https://gm3.joysteps.io/',
+        domain: 'https://gm3.joysteps.io',
         uid: this.currentUser.id,
         onlySign: false // Execute transaction, not just sign
       });
@@ -268,13 +268,33 @@ class FSLAuthService {
 
       // 2. Create Solana transfer instruction
       // Trong thực tế, bạn sẽ tạo instruction thực để transfer SOL
+      
+      // Helper function to convert number to 8-byte little-endian buffer
+      const numberToBytes = (num) => {
+        const buffer = new ArrayBuffer(8);
+        const view = new DataView(buffer);
+        // Convert to 64-bit integer and handle large numbers safely
+        const value = Math.floor(num);
+        if (value > Number.MAX_SAFE_INTEGER) {
+          // For very large numbers, split into high and low 32-bit parts
+          const high = Math.floor(value / Math.pow(2, 32));
+          const low = value % Math.pow(2, 32);
+          view.setUint32(0, low, true); // little-endian
+          view.setUint32(4, high, true); // little-endian
+        } else {
+          // For smaller numbers, use regular 64-bit conversion
+          view.setFloat64(0, value, true); // little-endian
+        }
+        return new Uint8Array(buffer);
+      };
+      
       const transferInstruction = {
         programId: '11111111111111111111111111111111', // System Program
         keys: [
           { pubkey: this.currentUser.address, isSigner: true, isWritable: true },
           { pubkey: 'MERCHANT_SOLANA_ADDRESS', isSigner: false, isWritable: true }
         ],
-        data: Buffer.from([2, 0, 0, 0, ...new Uint8Array(new Uint64Array([requiredAmount * Math.pow(10, 9)]).buffer)])
+        data: Buffer.from([2, 0, 0, 0, ...numberToBytes(requiredAmount * Math.pow(10, 9))])
       };
 
       // 3. Call Solana instructions using FSL SDK
@@ -283,7 +303,7 @@ class FSLAuthService {
         rpc: 'https://api.mainnet-beta.solana.com', // Thay bằng RPC URL thực
         unitLimit: 200000,
         unitPrice: 5000,
-        domain: 'https://gm3.joysteps.io/',
+        domain: 'https://gm3.joysteps.io',
         uid: this.currentUser.id,
         onlySign: false // Execute transaction, not just sign
       });
@@ -366,7 +386,7 @@ class FSLAuthService {
         params: [merchantAddress, amountInWei],
         to: usdcTokenAddress,
         rpc: 'https://polygon-rpc.com', // Thay bằng RPC URL thực
-        domain: 'https://gm3.joysteps.io/',
+        domain: 'https://gm3.joysteps.io',
         uid: this.currentUser.id,
         onlySign: false // Execute transaction, not just sign
       });
