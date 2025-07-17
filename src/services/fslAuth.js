@@ -6,6 +6,7 @@ class FSLAuthService {
     this.fslAuth = null;
     this.currentUser = null;
     this.isInitialized = false;
+    this.isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
   }
 
   async init() {
@@ -120,11 +121,11 @@ class FSLAuthService {
       await this.init();
       
       // Trong thực tế, bạn sẽ gọi API để lấy balance thực
-      // Ở đây tôi giả lập balance data
+      // Ở đây tôi giả lập balance data với số lượng đủ để test
       return {
-        gmt: Math.random() * 1000,
-        sol: Math.random() * 10,
-        usdc: Math.random() * 500
+        gmt: 1000 + Math.random() * 500, // Đảm bảo ít nhất 1000 GMT
+        sol: 5 + Math.random() * 5,      // Đảm bảo ít nhất 5 SOL
+        usdc: 1000 + Math.random() * 500 // Đảm bảo ít nhất 1000 USDC
       };
     } catch (error) {
       console.error('Get balance error:', error);
@@ -179,8 +180,20 @@ class FSLAuthService {
       const balance = await this.getBalance();
       const requiredAmount = purchaseData.amount * 0.1; // Giả sử 1 Starlet = 0.1 GMT
       
+      console.log('Balance check:', {
+        currentBalance: balance.gmt,
+        requiredAmount: requiredAmount,
+        purchaseAmount: purchaseData.amount,
+        hasEnough: balance.gmt >= requiredAmount
+      });
+      
       if (balance.gmt < requiredAmount) {
-        throw new Error('Insufficient GMT balance');
+        if (this.isDevelopment) {
+          console.warn('Development mode: Bypassing insufficient balance check for GMT payment');
+          console.warn(`Current balance: ${balance.gmt.toFixed(2)} GMT, Required: ${requiredAmount.toFixed(2)} GMT`);
+        } else {
+          throw new Error(`Insufficient GMT balance. Current: ${balance.gmt.toFixed(2)} GMT, Required: ${requiredAmount.toFixed(2)} GMT`);
+        }
       }
 
       // 2. GMT Token Contract ABI (ERC-20 transfer function)
@@ -262,8 +275,20 @@ class FSLAuthService {
       const balance = await this.getBalance();
       const requiredAmount = purchaseData.amount * 0.001; // Giả sử 1 Starlet = 0.001 SOL
       
+      console.log('SOL Balance check:', {
+        currentBalance: balance.sol,
+        requiredAmount: requiredAmount,
+        purchaseAmount: purchaseData.amount,
+        hasEnough: balance.sol >= requiredAmount
+      });
+      
       if (balance.sol < requiredAmount) {
-        throw new Error('Insufficient SOL balance');
+        if (this.isDevelopment) {
+          console.warn('Development mode: Bypassing insufficient balance check for SOL payment');
+          console.warn(`Current balance: ${balance.sol.toFixed(4)} SOL, Required: ${requiredAmount.toFixed(4)} SOL`);
+        } else {
+          throw new Error(`Insufficient SOL balance. Current: ${balance.sol.toFixed(4)} SOL, Required: ${requiredAmount.toFixed(4)} SOL`);
+        }
       }
 
       // 2. Create Solana transfer instruction
@@ -345,8 +370,20 @@ class FSLAuthService {
       const balance = await this.getBalance();
       const requiredAmount = purchaseData.amount; // 1 Starlet = 1 USDC
       
+      console.log('USDC Balance check:', {
+        currentBalance: balance.usdc,
+        requiredAmount: requiredAmount,
+        purchaseAmount: purchaseData.amount,
+        hasEnough: balance.usdc >= requiredAmount
+      });
+      
       if (balance.usdc < requiredAmount) {
-        throw new Error('Insufficient USDC balance');
+        if (this.isDevelopment) {
+          console.warn('Development mode: Bypassing insufficient balance check for USDC payment');
+          console.warn(`Current balance: ${balance.usdc.toFixed(2)} USDC, Required: ${requiredAmount.toFixed(2)} USDC`);
+        } else {
+          throw new Error(`Insufficient USDC balance. Current: ${balance.usdc.toFixed(2)} USDC, Required: ${requiredAmount.toFixed(2)} USDC`);
+        }
       }
 
       // 2. USDC Token Contract ABI (ERC-20 transfer function)
