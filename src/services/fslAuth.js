@@ -18,8 +18,8 @@ class FSLAuthService {
       scope: 'basic,wallet',
       state: 'gamehub_payment',
       usePopup: true,
-      isApp: true,
-      domain: 'https://gm3.joysteps.io/'
+      isApp: false,
+      domain: 'https://gm3.joysteps.io/',
     });
 
     this.isInitialized = true;
@@ -176,7 +176,7 @@ class FSLAuthService {
         chainId: 137, // Polygon mainnet
       };
 
-      const url = `https://id.fsl.com/authorization/call-data?arguments=${JSON.stringify({
+      const url = `https://gm3.joysteps.io/authorization/call-data?arguments=${JSON.stringify({
         ...args,
         appKey: 'MiniGame', // Thay bằng App Key thực
       })}`;

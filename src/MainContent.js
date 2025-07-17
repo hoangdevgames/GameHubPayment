@@ -10,7 +10,7 @@ const MainContent = ({ activeTab }) => {
       <div className="welcome-section">
         <h1 className="welcome-title">Welcome to GameHub Payment</h1>
         <p className="welcome-subtitle">
-          Secure payment processing for FSL Game Hub
+          Secure payment processing for FSL Game Hub!
         </p>
       </div>
 
@@ -19,7 +19,7 @@ const MainContent = ({ activeTab }) => {
           <div className="feature-icon">⚡</div>
           <h3 className="feature-title">Fast Processing</h3>
           <p className="feature-description">
-            Lightning-fast payment processing with blockchain technology
+            Lightning-fast payment processing with blockchain technology!
           </p>
         </div>
 
@@ -27,7 +27,7 @@ const MainContent = ({ activeTab }) => {
           <div className="feature-icon">🔒</div>
           <h3 className="feature-title">Secure</h3>
           <p className="feature-description">
-            Bank-level security with encrypted transactions
+            Bank-level security with encrypted transactions!
           </p>
         </div>
 

@@ -105,7 +105,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     return (
       <div className="payment-loading">
         <div className="loading-spinner"></div>
-        <p>Loading payment information...</p>
+        <p>Loading payment information....</p>
       </div>
     );
   }
