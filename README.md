@@ -9,6 +9,7 @@ A modern React-based payment gateway application designed for gaming platforms. 
 - **Multiple Payment States**: Success and failure handling pages
 - **Modern UI/UX**: Beautiful gradient design with smooth animations
 - **Cross-browser Compatibility**: Works on all modern browsers
+- **GMT Token Support**: Multi-chain GMT payment support (Solana, Ethereum, BNB Smart Chain)
 
 ## Technology Stack
 
@@ -103,6 +104,27 @@ To integrate with real payment processors:
 2. Add your payment API endpoints
 3. Implement proper error handling
 4. Add security measures (HTTPS, token validation, etc.)
+
+### GMT Token Payment Support
+The application supports GMT token payments across multiple blockchains:
+
+#### Supported Networks
+- **Solana**: Uses SPL Token instructions with address `7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx`
+- **Ethereum**: Uses ERC-20 contract calls with address `0xe3c408BD53c31C085a1746AF401A4042954ff740`
+- **BNB Smart Chain**: Uses ERC-20 contract calls with address `0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1`
+
+#### Usage
+```javascript
+// Solana GMT payment (default)
+const result = await fslAuthService.processGMTPayment(purchaseData);
+
+// EVM-based GMT payment (Ethereum/BNB)
+const result = await fslAuthService.processGMTPaymentEVM(purchaseData, 'ethereum');
+const result = await fslAuthService.processGMTPaymentEVM(purchaseData, 'bnb');
+
+// Universal GMT payment (supports all networks)
+const result = await fslAuthService.processGMTUniversalPayment(purchaseData, 'solana');
+```
 
 ## Browser Support
 

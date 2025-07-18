@@ -1,6 +1,19 @@
 import FSLAuthorization from 'fsl-authorization';
 import { Buffer } from 'buffer';
 
+/**
+ * FSL Authentication Service with GMT Payment Support
+ * 
+ * GMT Token Addresses:
+ * - Solana: 7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx
+ * - Ethereum: 0xe3c408BD53c31C085a1746AF401A4042954ff740
+ * - BNB Smart Chain: 0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1
+ * 
+ * Payment Methods:
+ * - processGMTPayment(): Solana GMT payments using SPL Token instructions
+ * - processGMTPaymentEVM(): EVM-based GMT payments (Ethereum/BNB)
+ * - processGMTUniversalPayment(): Universal method supporting all networks
+ */
 class FSLAuthService {
   constructor() {
     this.fslAuth = null;
@@ -163,10 +176,10 @@ class FSLAuthService {
     }
   }
 
-  // Process GMT payment using EVM contract call
+  // Process GMT payment using Solana SPL Token instructions
   async processGMTPayment(purchaseData) {
     try {
-      console.log('Processing GMT payment for:', purchaseData);
+      console.log('Processing Solana GMT payment for:', purchaseData);
       console.log('Current user:', this.currentUser);
       
       // Kiểm tra user đã được set chưa
@@ -176,11 +189,120 @@ class FSLAuthService {
 
       const fslAuth = await this.init();
       
-      // 1. Verify user has enough balance
+      // 1. Verify user has enough GMT balance
       const balance = await this.getBalance();
       const requiredAmount = purchaseData.amount * 0.1; // Giả sử 1 Starlet = 0.1 GMT
       
-      console.log('Balance check:', {
+      console.log('GMT Balance check:', {
+        currentBalance: balance.gmt,
+        requiredAmount: requiredAmount,
+        purchaseAmount: purchaseData.amount,
+        hasEnough: balance.gmt >= requiredAmount
+      });
+      
+      if (balance.gmt < requiredAmount) {
+        if (this.isDevelopment) {
+          console.warn('Development mode: Bypassing insufficient balance check for GMT payment');
+          console.warn(`Current balance: ${balance.gmt.toFixed(2)} GMT, Required: ${requiredAmount.toFixed(2)} GMT`);
+        } else {
+          throw new Error(`Insufficient GMT balance. Current: ${balance.gmt.toFixed(2)} GMT, Required: ${requiredAmount.toFixed(2)} GMT`);
+        }
+      }
+
+      // 2. Solana GMT Token Address (STEPN GMT on Solana)
+      // Official STEPN GMT token address on Solana network
+      const gmtTokenAddress = '7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx';
+      
+      // 3. Merchant address (thay bằng merchant address thực)
+      const merchantAddress = 'MERCHANT_SOLANA_ADDRESS'; // Replace with actual merchant Solana address
+      
+      // 4. Convert amount to token units (GMT has 6 decimals on Solana)
+      const amountInTokenUnits = Math.floor(requiredAmount * Math.pow(10, 6));
+
+      // 5. Create SPL Token transfer instruction
+      // SPL Token Program ID
+      const splTokenProgramId = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+      
+      // Helper function to convert number to 8-byte little-endian buffer
+      const numberToBytes = (num) => {
+        const buffer = new ArrayBuffer(8);
+        const view = new DataView(buffer);
+        // Convert to 64-bit integer and handle large numbers safely
+        const value = Math.floor(num);
+        if (value > Number.MAX_SAFE_INTEGER) {
+          // For very large numbers, split into high and low 32-bit parts
+          const high = Math.floor(value / Math.pow(2, 32));
+          const low = value % Math.pow(2, 32);
+          view.setUint32(0, low, true); // little-endian
+          view.setUint32(4, high, true); // little-endian
+        } else {
+          // For smaller numbers, use regular 64-bit conversion
+          view.setFloat64(0, value, true); // little-endian
+        }
+        return new Uint8Array(buffer);
+      };
+
+      // SPL Token transfer instruction (instruction index 3 for transfer)
+      const transferInstruction = {
+        programId: splTokenProgramId,
+        keys: [
+          { pubkey: this.currentUser.address, isSigner: true, isWritable: true }, // Source account (user's token account)
+          { pubkey: merchantAddress, isSigner: false, isWritable: true }, // Destination account (merchant's token account)
+          { pubkey: this.currentUser.address, isSigner: true, isWritable: false }, // Authority (user)
+        ],
+        data: Buffer.from([3, ...numberToBytes(amountInTokenUnits)]) // Instruction 3 = transfer
+      };
+
+      // 6. Call Solana instructions using FSL SDK
+      const result = await fslAuth.callSolInstructions({
+        instructions: [transferInstruction],
+        rpc: 'https://api.mainnet-beta.solana.com', // Solana mainnet RPC
+        unitLimit: 200000,
+        unitPrice: 5000,
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
+        onlySign: false // Execute transaction, not just sign
+      });
+
+      console.log('Solana GMT payment transaction result:', result);
+      
+      // 7. Return transaction result
+      return {
+        success: true,
+        transactionHash: result.transactionHash || result.signature || 'mock_tx_hash',
+        amount: requiredAmount,
+        currency: 'GMT',
+        timestamp: new Date().toISOString(),
+        purchaseData: purchaseData,
+        network: 'Solana'
+      };
+    } catch (error) {
+      console.error('Solana GMT payment failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Process GMT payment using EVM contract call (for Ethereum and BNB Smart Chain)
+  async processGMTPaymentEVM(purchaseData, network = 'ethereum') {
+    try {
+      console.log(`Processing ${network} GMT payment for:`, purchaseData);
+      console.log('Current user:', this.currentUser);
+      
+      // Kiểm tra user đã được set chưa
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please set user data first.');
+      }
+
+      const fslAuth = await this.init();
+      
+      // 1. Verify user has enough GMT balance
+      const balance = await this.getBalance();
+      const requiredAmount = purchaseData.amount * 0.1; // Giả sử 1 Starlet = 0.1 GMT
+      
+      console.log('GMT Balance check:', {
         currentBalance: balance.gmt,
         requiredAmount: requiredAmount,
         purchaseAmount: purchaseData.amount,
@@ -212,13 +334,37 @@ class FSLAuthService {
         },
       ];
 
-      // 3. GMT Token Contract Address (thay bằng address thực)
-      const gmtTokenAddress = '0x7DdEFA1890f3d5B8c4C4C4C4C4C4C4C4C4C4C4C4';
+      // 3. GMT Token Contract Addresses for different networks
+      // Official STEPN GMT token addresses on different blockchains
+      const gmtTokenAddresses = {
+        ethereum: '0xe3c408BD53c31C085a1746AF401A4042954ff740', // Ethereum mainnet
+        bnb: '0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1'     // BNB Smart Chain
+      };
+
+      const gmtTokenAddress = gmtTokenAddresses[network];
+      if (!gmtTokenAddress) {
+        throw new Error(`Unsupported network: ${network}. Supported networks: ethereum, bnb`);
+      }
       
-      // 4. Merchant address (thay bằng merchant address thực)
-      const merchantAddress = '0x1234567890123456789012345678901234567890';
+      // 4. Network configurations
+      const networkConfigs = {
+        ethereum: {
+          chainId: 1,
+          chain: 'ethereum',
+          rpc: 'https://mainnet.infura.io/v3/YOUR_PROJECT_ID', // Replace with your Infura project ID
+          merchantAddress: '0x1234567890123456789012345678901234567890' // Replace with actual merchant address
+        },
+        bnb: {
+          chainId: 56,
+          chain: 'bnb',
+          rpc: 'https://bsc-dataseed.binance.org/',
+          merchantAddress: '0x1234567890123456789012345678901234567890' // Replace with actual merchant address
+        }
+      };
+
+      const config = networkConfigs[network];
       
-      // 5. Convert amount to wei (GMT has 6 decimals)
+      // 5. Convert amount to wei (GMT has 6 decimals on EVM chains)
       const amountInWei = (requiredAmount * Math.pow(10, 6)).toString();
 
       // 6. Call EVM contract using FSL SDK
@@ -226,19 +372,19 @@ class FSLAuthService {
         contractAddress: gmtTokenAddress,
         methodName: 'transfer',
         abi: gmtTokenABI,
-        chainId: 137, // Polygon mainnet (thay bằng chain ID thực)
-        chain: 'polygon',
+        chainId: config.chainId,
+        chain: config.chain,
         value: '0', // No ETH value, only GMT tokens
         gasLimit: '100000',
-        params: [merchantAddress, amountInWei],
+        params: [config.merchantAddress, amountInWei],
         to: gmtTokenAddress,
-        rpc: 'https://polygon-rpc.com', // Thay bằng RPC URL thực
+        rpc: config.rpc,
         domain: 'https://gm3.joysteps.io',
         uid: this.currentUser.id,
         onlySign: false // Execute transaction, not just sign
       });
 
-      console.log('GMT payment transaction result:', result);
+      console.log(`${network} GMT payment transaction result:`, result);
       
       // 7. Return transaction result
       return {
@@ -247,10 +393,11 @@ class FSLAuthService {
         amount: requiredAmount,
         currency: 'GMT',
         timestamp: new Date().toISOString(),
-        purchaseData: purchaseData
+        purchaseData: purchaseData,
+        network: network
       };
     } catch (error) {
-      console.error('GMT payment failed:', error);
+      console.error(`${network} GMT payment failed:`, error);
       return {
         success: false,
         error: error.message
@@ -488,6 +635,48 @@ class FSLAuthService {
       };
     } catch (error) {
       console.error('Transaction verification failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Get GMT token address for different networks
+  getGMTTokenAddress(network = 'solana') {
+    const gmtTokenAddresses = {
+      solana: '7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx',
+      ethereum: '0xe3c408BD53c31C085a1746AF401A4042954ff740',
+      bnb: '0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1'
+    };
+    
+    return gmtTokenAddresses[network] || null;
+  }
+
+  // Get supported networks for GMT payments
+  getSupportedGMTNetworks() {
+    return ['solana', 'ethereum', 'bnb'];
+  }
+
+  // Universal GMT payment method that supports all networks
+  async processGMTUniversalPayment(purchaseData, network = 'solana') {
+    try {
+      console.log(`Processing universal GMT payment on ${network} for:`, purchaseData);
+      
+      // Validate network
+      const supportedNetworks = this.getSupportedGMTNetworks();
+      if (!supportedNetworks.includes(network)) {
+        throw new Error(`Unsupported network: ${network}. Supported networks: ${supportedNetworks.join(', ')}`);
+      }
+
+      // Route to appropriate payment method based on network
+      if (network === 'solana') {
+        return await this.processGMTPayment(purchaseData);
+      } else {
+        return await this.processGMTPaymentEVM(purchaseData, network);
+      }
+    } catch (error) {
+      console.error(`Universal GMT payment failed on ${network}:`, error);
       return {
         success: false,
         error: error.message
