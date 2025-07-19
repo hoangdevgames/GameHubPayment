@@ -5,7 +5,7 @@ import { Buffer } from 'buffer';
  * FSL Authentication Service with GMT Payment Support
  * 
  * GMT Token Addresses:
- * - Solana: 7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx
+ * - Solana: CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi
  * - Ethereum: 0xe3c408BD53c31C085a1746AF401A4042954ff740
  * - BNB Smart Chain: 0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1
  * 
@@ -211,7 +211,7 @@ class FSLAuthService {
 
       // 2. Solana GMT Token Address (STEPN GMT on Solana)
       // Official STEPN GMT token address on Solana network
-      const gmtTokenAddress = '7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx';
+      const gmtTokenAddress = 'CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi';
       
       // 3. Merchant address (thay bằng merchant address thực)
       const merchantAddress = 'MERCHANT_SOLANA_ADDRESS'; // Replace with actual merchant Solana address
@@ -645,7 +645,7 @@ class FSLAuthService {
   // Get GMT token address for different networks
   getGMTTokenAddress(network = 'solana') {
     const gmtTokenAddresses = {
-      solana: '7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx',
+      solana: 'CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi',
       ethereum: '0xe3c408BD53c31C085a1746AF401A4042954ff740',
       bnb: '0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1'
     };
