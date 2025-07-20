@@ -81,27 +81,10 @@ class TelegramPaymentService {
       return {
         balance: balance.sol || 0,
         currency: 'SOL',
-        walletAddress: walletAddress || fslAuthService.getCurrentUser()?.solanaAddress
+        walletAddress: 'FSL_SDK_WALLET' // FSL SDK handles wallet integration
       };
     } catch (error) {
       console.error('Error getting SOL balance:', error);
-      throw error;
-    }
-  }
-
-  // Get USDC balance using FSL SDK
-  async getUSDCBalance(walletAddress) {
-    try {
-      // Use FSL SDK to get real balance
-      const balance = await fslAuthService.getBalance();
-      
-      return {
-        balance: balance.usdc || 0,
-        currency: 'USDC',
-        walletAddress: walletAddress || fslAuthService.getCurrentUser()?.address
-      };
-    } catch (error) {
-      console.error('Error getting USDC balance:', error);
       throw error;
     }
   }
@@ -134,84 +117,6 @@ class TelegramPaymentService {
       }
     } catch (error) {
       console.error('Solana-GMT payment failed:', error);
-      throw error;
-    }
-  }
-
-  // Process Solana payment using FSL SDK
-  async processSolanaPayment(amount, walletAddress) {
-    try {
-      console.log('Processing Solana payment:', { amount, walletAddress });
-      
-      // Use FSL SDK for SOL payment
-      const purchaseData = {
-        amount: amount,
-        productType: 'starlets',
-        currency: 'SOL',
-        quantity: 1
-      };
-
-      const result = await fslAuthService.processSolanaPayment(purchaseData);
-      
-      if (result.success) {
-        return {
-          success: true,
-          transactionHash: result.transactionHash,
-          amount: result.amount,
-          currency: 'SOL',
-          timestamp: result.timestamp
-        };
-      } else {
-        throw new Error(result.error || 'Payment failed');
-      }
-    } catch (error) {
-      console.error('Solana payment failed:', error);
-      throw error;
-    }
-  }
-
-  // Process USDC payment using FSL SDK
-  async processUSDCPayment(amount, walletAddress) {
-    try {
-      console.log('Processing USDC payment:', { amount, walletAddress });
-      
-      // Use FSL SDK for USDC payment
-      const purchaseData = {
-        amount: amount,
-        productType: 'starlets',
-        currency: 'USDC',
-        quantity: 1
-      };
-
-      const result = await fslAuthService.processUSDCPayment(purchaseData);
-      
-      if (result.success) {
-        return {
-          success: true,
-          transactionHash: result.transactionHash,
-          amount: result.amount,
-          currency: 'USDC',
-          timestamp: result.timestamp
-        };
-      } else {
-        throw new Error(result.error || 'Payment failed');
-      }
-    } catch (error) {
-      console.error('USDC payment failed:', error);
-      throw error;
-    }
-  }
-
-  // Get user's wallet addresses using FSL SDK
-  async getWalletAddresses() {
-    try {
-      const addresses = await fslAuthService.getWalletAddresses();
-      return {
-        evm: addresses.evm,
-        solana: addresses.solana
-      };
-    } catch (error) {
-      console.error('Error getting wallet addresses:', error);
       throw error;
     }
   }

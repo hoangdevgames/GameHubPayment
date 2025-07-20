@@ -1,230 +1,179 @@
-# Troubleshooting Guide - GameHubPayment Integration
+# Troubleshooting Guide - Solana GMT Payment Integration
 
-## Common Issues and Solutions
+## Issue: "Non-base58 character" Error
 
-### 1. FSL ID Verification Error
+### Problem Description
+When clicking confirm on the FSL authorization page, you encounter:
+```
+Error: Non-base58 character
+    at Object.ye [as decode] (index-C0PMOEIh.js:2250:255759)
+    at new Es (index-C0PMOEIh.js:2250:351536)
+    at c.assignPublicKey (index-C0PMOEIh.js:3004:156107)
+```
 
-**Error:** `this.fslAuth.verifyFSLID is not a function`
+### Root Cause
+This error occurs because the previous implementation was trying to manually handle Solana addresses instead of using FSL SDK's built-in wallet integration. The issue was caused by:
 
-**Cause:** The FSL SDK doesn't have a `verifyFSLID` method. This was a mock implementation.
+1. **Manual Address Handling**: Trying to pass Solana addresses from GamingHub instead of using FSL SDK
+2. **Incorrect Flow**: Not using FSL SDK's `callSolInstructions` method properly
+3. **Complex Integration**: Over-engineering the wallet integration
 
-**Solution:** 
-- ✅ **Fixed**: Updated `fslAuth.js` to use mock verification instead of calling non-existent SDK method
-- The system now simulates verification for demo purposes
-- In production, replace with actual backend API call
+### Solutions Implemented
 
-**Code Fix:**
+#### 1. Use FSL SDK's Built-in Wallet Integration
+- **Before**: Manually passing Solana addresses from GamingHub
+- **After**: Let FSL SDK handle all wallet operations automatically
+
 ```javascript
-// In fslAuth.js - verifyFSLID method
-async verifyFSLID(fslId) {
-  try {
-    this.init();
-    
-    // Simulate verification (replace with actual API call)
-    const isValidFSLID = fslId && fslId.toString().length > 0;
-    
-    if (isValidFSLID) {
-      return {
-        success: true,
-        verified: true,
-        userInfo: {
-          address: '0x' + Math.random().toString(36).substr(2, 40),
-          email: 'user@example.com',
-          fslId: fslId
-        }
-      };
-    }
-  } catch (error) {
-    return { success: false, verified: false, error: error.message };
-  }
-}
+// Before (incorrect - manual address handling)
+solanaAddress: userData.solanaAddress || null
+
+// After (correct - FSL SDK handles everything)
+// No need to track Solana addresses manually
 ```
 
-### 2. Missing Favicon and Logo Files
+#### 2. Proper FSL SDK Usage
+- **Use `callSolInstructions`**: Let FSL SDK handle wallet integration
+- **Automatic Signing**: FSL SDK handles transaction signing
+- **Built-in Wallet**: No need for external wallet addresses
 
-**Error:** `Failed to load resource: favicon.ico` and `logo192.png`
-
-**Cause:** These files don't exist in the public folder.
-
-**Solution:**
-- ✅ **Fixed**: Updated `manifest.json` and `index.html` to use inline SVG icons
-- No more 404 errors for missing icon files
-
-**Code Fix:**
-```html
-<!-- In index.html -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>" />
-```
-
-### 3. Auto-login Failure
-
-**Error:** `Auto-login failed: Error: FSL ID verification failed`
-
-**Cause:** Verification fails but the app crashes instead of gracefully handling the error.
-
-**Solution:**
-- ✅ **Fixed**: Added graceful error handling in `AuthContext.js`
-- App continues with mock data instead of crashing
-- User can still use the payment system
-
-**Code Fix:**
 ```javascript
-// In AuthContext.js - autoLoginWithGamingHubData
-if (verificationResult.success && verificationResult.verified) {
-  // Success case
-} else {
-  // Graceful fallback with mock data
-  const user = {
-    id: userData.fslId,
-    address: '0x' + Math.random().toString(36).substr(2, 40),
-    // ... other user data
-  };
-  setUser(user);
-  setPurchaseData(purchaseInfo);
-}
+// Correct FSL SDK usage
+const result = await fslAuth.callSolInstructions({
+  instructions: [transferInstruction],
+  rpc: 'https://api.mainnet-beta.solana.com',
+  unitLimit: 200000,
+  unitPrice: 5000,
+  domain: 'https://gm3.joysteps.io',
+  uid: this.currentUser.id,
+  onlySign: false // Execute transaction
+});
 ```
 
-### 4. Button Not Visible in GamingHub
+#### 3. Simplified Data Transfer
+- **Removed**: Solana address from GamingHub → GameHubPayment transfer
+- **Kept**: Only essential user data (FSL ID, Telegram info)
+- **Reason**: FSL SDK handles wallet integration automatically
 
-**Error:** "PAY WITH SOLANA-GMT" button not visible
+#### 4. Enhanced Error Handling
+- **Removed**: Dependency on external Solana addresses
+- **Added**: Better error messages for FSL SDK operations
+- **Added**: Debug logging for FSL SDK calls
 
-**Cause:** CSS had `display: none` for `.bmk-gmt-button`
+### Testing Steps
 
-**Solution:**
-- ✅ **Fixed**: Updated `Buy.css` to show the button with proper styling
-- Added `!important` declarations to override any conflicting styles
-
-**Code Fix:**
-```css
-.bmk-gmt-button {
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%) !important;
-  color: white !important;
-  display: flex !important;
-  /* ... other styles */
-}
-```
-
-## Testing the Integration
-
-### 1. Test URL Structure
-```
-https://hoangdevgames.github.io/GameHubPayment/?userData=eyJmc2xJZCI6IjY0OTgwODMiLCJ0ZWxlZ3JhbVVJRCI6IjUwMDA3NTI4MDciLCJwbGF0Zm9ybSI6InRlbGVncmFtIn0=&purchaseData=eyJhbW91bnQiOjUwMCwicHJvZHVjdFR5cGUiOiJzdGFybGV0cyIsImN1cnJlbmN5IjoiZ210In0=&timestamp=1234567890&source=gaminghub
-```
-
-### 2. Expected Behavior
-1. ✅ Page loads without errors
-2. ✅ Loading indicator appears briefly
-3. ✅ Purchase data displays in profile tab
-4. ✅ "Complete Payment" button works
-5. ✅ No console errors
-
-### 3. Debug Steps
+#### 1. Verify FSL SDK Integration
 ```javascript
-// Check incoming data
-console.log('URL params:', window.location.search);
-
-// Check FSL verification
-console.log('FSL verification result:', verificationResult);
-
-// Check user state
-console.log('User data:', user);
-console.log('Purchase data:', purchaseData);
+// Check in browser console
+console.log('FSL Auth initialized:', !!fslAuth);
+console.log('User FSL ID:', this.currentUser.id);
 ```
 
-## Production Deployment
+#### 2. Test Payment Flow
+1. **GamingHub**: Click "PAY WITH SOLANA-GMT"
+2. **GameHubPayment**: Should receive user data with FSL ID
+3. **FSL Auth**: Should open FSL authorization popup
+4. **Transaction**: Should execute using FSL SDK's wallet
 
-### 1. Environment Variables
-```bash
-# Add to .env file
-REACT_APP_BACKEND_URL=https://your-backend-api.com
-REACT_APP_FSL_APP_KEY=your-actual-fsl-app-key
-```
-
-### 2. Backend API Integration
-Replace mock verification with actual API call:
+#### 3. Debug Logging
+The system now includes comprehensive logging:
 ```javascript
-// In fslAuth.js
-async verifyFSLIDWithBackend(fslId) {
-  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/verify-fsl`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fslId })
-  });
-  
-  if (response.ok) {
-    const data = await response.json();
-    return { success: true, verified: data.verified, userInfo: data.userInfo };
-  }
-}
+console.log('Setting user from GamingHub with data:', userData);
+console.log('User set from GamingHub:', this.currentUser);
+console.log('Processing Solana GMT payment for:', purchaseData);
+console.log('Solana GMT payment transaction result:', result);
 ```
 
-### 3. Error Monitoring
-Add proper error tracking:
+### Configuration Requirements
+
+#### 1. FSL SDK Configuration
 ```javascript
-// In AuthContext.js
-catch (error) {
-  console.error('Auto-login failed:', error);
-  // Send to error tracking service (Sentry, etc.)
-  // Show user-friendly error message
-}
+const fslAuth = await FSLAuthorization.init({
+  responseType: 'code',
+  appKey: 'MiniGame',
+  redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
+  scope: 'basic,wallet',
+  state: 'gamehub_payment',
+  usePopup: true,
+  isApp: false,
+  domain: 'https://gm3.joysteps.io',
+});
 ```
 
-## Performance Optimization
-
-### 1. Code Splitting
+#### 2. GMT Token Configuration
 ```javascript
-// Lazy load components
-const PaymentPage = React.lazy(() => import('./components/PaymentPage'));
-const PaymentSuccess = React.lazy(() => import('./components/PaymentSuccess'));
+// Solana GMT Token Address (STEPN GMT)
+const gmtTokenAddress = 'CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi';
+
+// SPL Token Program ID
+const splTokenProgramId = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 ```
 
-### 2. Bundle Size
-- Remove unused dependencies
-- Use dynamic imports for large libraries
-- Optimize images and assets
+### Common Issues and Solutions
 
-### 3. Caching
-- Implement service worker for offline support
-- Cache API responses
-- Use React.memo for expensive components
-
-## Security Considerations
-
-### 1. Data Validation
+#### Issue 1: "User not initialized"
+**Solution**: Ensure FSL ID is passed from GamingHub
 ```javascript
-// Validate incoming data
-const validateUserData = (userData) => {
-  return userData && userData.fslId && userData.telegramUID;
-};
+// Check in GamingHub
+console.log('User FSL ID:', shared.userProfile?.fslId);
 ```
 
-### 2. URL Parameter Sanitization
+#### Issue 2: FSL authorization fails
+**Solution**: Verify FSL SDK configuration and domain settings
 ```javascript
-// Sanitize URL parameters
-const sanitizeParam = (param) => {
-  return param ? decodeURIComponent(param).replace(/[<>]/g, '') : '';
-};
+// Check domain matches
+domain: 'https://gm3.joysteps.io'
 ```
 
-### 3. HTTPS Only
-- Ensure all API calls use HTTPS
-- Set secure cookies
-- Use CSP headers
+#### Issue 3: Transaction fails with insufficient balance
+**Solution**: Check GMT balance on Solana network
+```javascript
+// GMT balance check
+const balance = await fslAuthService.getBalance();
+console.log('GMT Balance:', balance.gmt);
+```
 
-## Support
+### Monitoring and Debugging
 
-If you encounter issues not covered in this guide:
+#### 1. Browser Console Logs
+Monitor these logs for debugging:
+- `Setting user from GamingHub with data:`
+- `User set from GamingHub:`
+- `Processing Solana GMT payment for:`
+- `Solana GMT payment transaction result:`
 
-1. Check browser console for errors
-2. Verify network connectivity
-3. Test with different browsers
-4. Check FSL SDK documentation
-5. Contact development team
+#### 2. Network Requests
+Check these network calls:
+- FSL authorization requests
+- Solana RPC calls via FSL SDK
+- Transaction submissions
 
-## Version History
+#### 3. Error Tracking
+Common error patterns:
+- `Non-base58 character`: Should be resolved with FSL SDK
+- `User not initialized`: Check FSL ID transfer
+- `Insufficient GMT balance`: Balance issue
 
-- **v0.1.0**: Initial integration
-- **v0.1.1**: Fixed FSL verification error
-- **v0.1.2**: Fixed missing icon files
-- **v0.1.3**: Added graceful error handling
-- **v0.1.4**: Fixed button visibility issues 
+### Key Benefits of New Approach
+
+1. **Simplified Integration**: No need to manage Solana addresses
+2. **FSL SDK Native**: Uses FSL SDK's built-in wallet integration
+3. **Automatic Signing**: FSL SDK handles all transaction signing
+4. **Better Security**: Leverages FSL's secure wallet infrastructure
+5. **Reduced Complexity**: Fewer moving parts, fewer failure points
+
+### Next Steps
+
+1. **Test the Integration**: Verify the complete payment flow works
+2. **Monitor Logs**: Check browser console for any remaining issues
+3. **Update Documentation**: Keep this guide updated with new findings
+4. **Performance Optimization**: Consider adding retry mechanisms for failed transactions
+
+### Support
+
+If issues persist:
+1. Check browser console logs
+2. Verify FSL SDK configuration
+3. Confirm FSL ID is being passed correctly
+4. Test with different user accounts
+5. Contact development team with specific error messages 

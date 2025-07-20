@@ -35,17 +35,21 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
   };
 
   const handlePaymentMethod = async (method) => {
-    setPaymentMethod(method);
+    setLoading(true);
     setError(null);
     
-    if (method === 'gmt') {
-      await handleGMTPayment();
-    } else if (method === 'sol') {
-      await handleSolanaPayment();
-    } else if (method === 'usdc') {
-      await handleUSDCPayment();
-    } else if (method === 'card') {
-      await handleCardPayment();
+    try {
+      switch (method) {
+        case 'gmt':
+          await handleGMTPayment();
+          break;
+        default:
+          throw new Error('Unsupported payment method');
+      }
+    } catch (error) {
+      console.error('Payment method error:', error);
+      setError(error.message);
+      setLoading(false);
     }
   };
 
@@ -56,7 +60,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     try {
       console.log('Processing GMT payment for:', purchaseData);
       
-      // Sử dụng FSL SDK để xử lý GMT payment
+      // Sử dụng FSL SDK để xử lý GMT payment trên Solana
       const result = await fslAuthService.processGMTPayment(purchaseData);
       
       if (result.success) {
@@ -68,78 +72,6 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
       }
     } catch (error) {
       console.error('GMT payment error:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
-
-  const handleSolanaPayment = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Processing Solana payment for:', purchaseData);
-      
-      // Sử dụng FSL SDK để xử lý Solana payment
-      const result = await fslAuthService.processSolanaPayment(purchaseData);
-      
-      if (result.success) {
-        console.log('Solana payment successful:', result);
-        setLoading(false);
-        onSuccess && onSuccess(result);
-      } else {
-        throw new Error(result.error || 'Payment failed');
-      }
-    } catch (error) {
-      console.error('Solana payment error:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
-
-  const handleUSDCPayment = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Processing USDC payment for:', purchaseData);
-      
-      // Sử dụng FSL SDK để xử lý USDC payment
-      const result = await fslAuthService.processUSDCPayment(purchaseData);
-      
-      if (result.success) {
-        console.log('USDC payment successful:', result);
-        setLoading(false);
-        onSuccess && onSuccess(result);
-      } else {
-        throw new Error(result.error || 'Payment failed');
-      }
-    } catch (error) {
-      console.error('USDC payment error:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
-
-  const handleCardPayment = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Processing card payment for:', purchaseData);
-      
-      // Sử dụng FSL SDK để xử lý card payment
-      const result = await fslAuthService.processCardPayment(purchaseData);
-      
-      if (result.success) {
-        console.log('Card payment successful:', result);
-        setLoading(false);
-        onSuccess && onSuccess(result);
-      } else {
-        throw new Error(result.error || 'Payment failed');
-      }
-    } catch (error) {
-      console.error('Card payment error:', error);
       setError(error.message);
       setLoading(false);
     }
@@ -158,10 +90,6 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
   const formatAmount = (amount, currency = 'USD') => {
     if (currency === 'GMT') {
       return `${amount} GMT`;
-    } else if (currency === 'SOL') {
-      return `${amount} SOL`;
-    } else if (currency === 'USDC') {
-      return `${amount} USDC`;
     }
     return `$${parseFloat(amount).toFixed(2)}`;
   };
@@ -184,30 +112,6 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           description: 'Pay with GMT tokens on Solana blockchain',
           icon: '⚡',
           balance: userBalance?.gmt ? `${userBalance.gmt.toFixed(2)} GMT` : null
-        };
-      case 'sol':
-        return {
-          name: 'PAY WITH SOLANA',
-          amount: formatAmount(purchaseData.amount * 0.001, 'SOL'),
-          description: 'Pay with SOL on Solana blockchain',
-          icon: '🔸',
-          balance: userBalance?.sol ? `${userBalance.sol.toFixed(4)} SOL` : null
-        };
-      case 'usdc':
-        return {
-          name: 'PAY WITH USDC',
-          amount: formatAmount(purchaseData.amount, 'USDC'),
-          description: 'Pay with USDC stablecoin',
-          icon: '💎',
-          balance: userBalance?.usdc ? `${userBalance.usdc.toFixed(2)} USDC` : null
-        };
-      case 'card':
-        return {
-          name: 'PAY WITH CREDIT CARD',
-          amount: formatAmount(purchaseData.amount, 'USD'),
-          description: 'Visa, Mastercard, American Express',
-          icon: '💳',
-          balance: null
         };
       default:
         return {
@@ -287,63 +191,6 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           </div>
           <div className="method-check">
             {paymentMethod === 'gmt' && <div className="checkmark">✓</div>}
-          </div>
-        </button>
-
-        {/* SOL Payment */}
-        <button 
-          className={`payment-method-button sol-button ${paymentMethod === 'sol' ? 'selected' : ''}`}
-          onClick={() => handlePaymentMethod('sol')}
-          disabled={loading}
-        >
-          <div className="method-icon">🔸</div>
-          <div className="method-content">
-            <div className="method-name">PAY WITH SOLANA</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount * 0.001, 'SOL')}</div>
-            <div className="method-description">Pay with SOL on Solana blockchain</div>
-            {userBalance?.sol && (
-              <div className="method-balance">Balance: {userBalance.sol.toFixed(4)} SOL</div>
-            )}
-          </div>
-          <div className="method-check">
-            {paymentMethod === 'sol' && <div className="checkmark">✓</div>}
-          </div>
-        </button>
-
-        {/* USDC Payment */}
-        <button 
-          className={`payment-method-button usdc-button ${paymentMethod === 'usdc' ? 'selected' : ''}`}
-          onClick={() => handlePaymentMethod('usdc')}
-          disabled={loading}
-        >
-          <div className="method-icon">💎</div>
-          <div className="method-content">
-            <div className="method-name">PAY WITH USDC</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount, 'USDC')}</div>
-            <div className="method-description">Pay with USDC stablecoin</div>
-            {userBalance?.usdc && (
-              <div className="method-balance">Balance: {userBalance.usdc.toFixed(2)} USDC</div>
-            )}
-          </div>
-          <div className="method-check">
-            {paymentMethod === 'usdc' && <div className="checkmark">✓</div>}
-          </div>
-        </button>
-
-        {/* Card Payment */}
-        <button 
-          className={`payment-method-button card-button ${paymentMethod === 'card' ? 'selected' : ''}`}
-          onClick={() => handlePaymentMethod('card')}
-          disabled={loading}
-        >
-          <div className="method-icon">💳</div>
-          <div className="method-content">
-            <div className="method-name">PAY WITH CREDIT CARD</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount, 'USD')}</div>
-            <div className="method-description">Visa, Mastercard, American Express</div>
-          </div>
-          <div className="method-check">
-            {paymentMethod === 'card' && <div className="checkmark">✓</div>}
           </div>
         </button>
       </div>
