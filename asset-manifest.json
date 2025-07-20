@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/GameHubPayment/static/css/main.ad616786.css",
-    "main.js": "/GameHubPayment/static/js/main.ebf6b3d6.js",
+    "main.js": "/GameHubPayment/static/js/main.de2dc481.js",
     "static/js/453.ec6a1386.chunk.js": "/GameHubPayment/static/js/453.ec6a1386.chunk.js",
     "index.html": "/GameHubPayment/index.html",
     "main.ad616786.css.map": "/GameHubPayment/static/css/main.ad616786.css.map",
-    "main.ebf6b3d6.js.map": "/GameHubPayment/static/js/main.ebf6b3d6.js.map",
+    "main.de2dc481.js.map": "/GameHubPayment/static/js/main.de2dc481.js.map",
     "453.ec6a1386.chunk.js.map": "/GameHubPayment/static/js/453.ec6a1386.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ad616786.css",
-    "static/js/main.ebf6b3d6.js"
+    "static/js/main.de2dc481.js"
   ]
 }
