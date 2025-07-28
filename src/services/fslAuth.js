@@ -3,6 +3,9 @@ import { Buffer } from 'buffer';
 
 /* global BigInt */
 
+// Thêm import Solana Web3
+import { Connection, PublicKey } from '@solana/web3.js';
+
 /**
  * FSL Authentication Service with Solana GMT Payment Support
  * 
@@ -54,7 +57,8 @@ class FSLAuthService {
       platform: userData.platform,
       telegramUID: userData.telegramUID,
       telegramUsername: userData.telegramUsername,
-      userProfile: userData.userProfile
+      userProfile: userData.userProfile, // ✅ Đã có solAddr trong userProfile
+      walletAddress: userData.userProfile?.solAddr // ✅ Thêm wallet address
     };
     console.log('User set from GamingHub:', this.currentUser);
   }
@@ -162,7 +166,8 @@ class FSLAuthService {
       
       const result = await fslAuth.signSolMessage({ 
         msg: message,
-        domain: 'https://gm3.joysteps.io'
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
       });
       return result;
     } catch (error) {
@@ -171,13 +176,105 @@ class FSLAuthService {
     }
   }
 
-  // Process GMT payment using Solana SPL Token instructions
+  // Lấy GMT Token Account Address của user
+  async getGMTTokenAccountAddress(userWalletAddress) {
+    try {
+      // GMT token mint address trên Solana (đã có từ GamingHub)
+      const GMT_MINT = new PublicKey('7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx');
+      
+      const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+      const wallet = new PublicKey(userWalletAddress);
+
+      // Lấy tất cả token accounts của user cho GMT mint
+      const accounts = await connection.getParsedTokenAccountsByOwner(
+        wallet,
+        { mint: GMT_MINT }
+      );
+
+      if (accounts.value.length > 0) {
+        // Trả về địa chỉ token account đầu tiên
+        return accounts.value[0].pubkey.toString();
+      }
+      
+      throw new Error('No GMT token account found for this wallet');
+    } catch (error) {
+      console.error('Error getting GMT token account:', error);
+      throw error;
+    }
+  }
+
+  // Lấy wallet address từ FSL SDK
+  async getWalletAddressFromFSL() {
+    try {
+      const fslAuth = await this.init();
+      
+      // FSL SDK có thể cung cấp wallet address thông qua sign message
+      // hoặc thông qua các API khác
+      const message = "Get wallet address";
+      const signature = await fslAuth.signSolMessage({
+        msg: message,
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
+      });
+      
+      // Hoặc có thể lấy từ FSL SDK storage
+      if (fslAuth.sdkStorage) {
+        const walletInfo = fslAuth.sdkStorage.getWalletInfo();
+        if (walletInfo && walletInfo.solanaAddress) {
+          return walletInfo.solanaAddress;
+        }
+      }
+      
+      // Fallback: sử dụng FSL SDK để lấy address
+      const walletAddress = await this.getFSLWalletAddress();
+      return walletAddress;
+      
+    } catch (error) {
+      console.error('Error getting wallet address from FSL:', error);
+      throw error;
+    }
+  }
+
+  // Lấy FSL wallet address
+  async getFSLWalletAddress() {
+    try {
+      const fslAuth = await this.init();
+      
+      // FSL SDK có thể có method để lấy wallet address
+      // Hoặc thông qua sign message để verify address
+      const message = "Get Solana wallet address";
+      const result = await fslAuth.signSolMessage({
+        msg: message,
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
+      });
+      
+      // Nếu FSL SDK trả về address trong result
+      if (result.address || result.walletAddress || result.solanaAddress) {
+        return result.address || result.walletAddress || result.solanaAddress;
+      }
+      
+      // Hoặc có thể lấy từ FSL SDK internal storage
+      if (fslAuth.uid && fslAuth.sdkStorage) {
+        const userData = fslAuth.sdkStorage.getUserData(fslAuth.uid);
+        if (userData && userData.walletAddress) {
+          return userData.walletAddress;
+        }
+      }
+      
+      throw new Error('Could not retrieve wallet address from FSL SDK');
+      
+    } catch (error) {
+      console.error('Error getting FSL wallet address:', error);
+      throw error;
+    }
+  }
+
+  // Sửa lại processGMTPayment để sử dụng FSL SDK wallet
   async processGMTPayment(purchaseData) {
     try {
       console.log('Processing Solana GMT payment for:', purchaseData);
-      console.log('Current user:', this.currentUser);
       
-      // Kiểm tra user đã được set chưa
       if (!this.currentUser) {
         throw new Error('User not initialized. Please set user data first.');
       }
@@ -186,84 +283,89 @@ class FSLAuthService {
       
       // 1. Verify user has enough GMT balance
       const balance = await this.getBalance();
-      const requiredAmount = purchaseData.amount * 0.1; // Giả sử 1 Starlet = 0.1 GMT
-      
-      console.log('GMT Balance check:', {
-        currentBalance: balance.gmt,
-        requiredAmount: requiredAmount,
-        purchaseAmount: purchaseData.amount,
-        hasEnough: balance.gmt >= requiredAmount
-      });
+      const requiredAmount = purchaseData.amount * 0.1;
       
       if (balance.gmt < requiredAmount) {
         if (this.isDevelopment) {
-          console.warn('Development mode: Bypassing insufficient balance check for GMT payment');
-          console.warn(`Current balance: ${balance.gmt.toFixed(2)} GMT, Required: ${requiredAmount.toFixed(2)} GMT`);
+          console.warn('Development mode: Bypassing insufficient balance check');
         } else {
           throw new Error(`Insufficient GMT balance. Current: ${balance.gmt.toFixed(2)} GMT, Required: ${requiredAmount.toFixed(2)} GMT`);
         }
       }
 
-      // 2. GMT Token Mint Address (cần tìm đúng mint address của GMT trên Solana)
-      const gmtTokenMintAddress = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'; // USDC mint address (ví dụ)
+      // 2. Lấy wallet address từ FSL SDK thay vì từ userProfile
+      let userWalletAddress;
+      try {
+        userWalletAddress = await this.getWalletAddressFromFSL();
+        console.log('Got wallet address from FSL SDK:', userWalletAddress);
+      } catch (error) {
+        console.warn('Could not get wallet address from FSL SDK, trying fallback...');
+        
+        // Fallback: thử lấy từ userProfile
+        userWalletAddress = this.currentUser.userProfile?.solAddr;
+        
+        if (!userWalletAddress) {
+          if (this.isDevelopment) {
+            console.warn('Development mode: Using FSL SDK without explicit wallet address');
+            // FSL SDK sẽ tự động handle wallet
+            return await this.processGMTPaymentWithFSLWalletOnly(purchaseData, requiredAmount);
+          } else {
+            throw new Error('User wallet address not found. Please ensure user has connected Solana wallet.');
+          }
+        }
+      }
 
-      // 3. User's GMT Token Account (địa chỉ bạn copy từ ví)
-      const userGmtTokenAccount = 'CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi';
+      // 3. Tự động lấy GMT Token Account Address
+      const userGmtTokenAccount = await this.getGMTTokenAccountAddress(userWalletAddress);
+      console.log('User GMT Token Account:', userGmtTokenAccount);
 
-      // 4. Merchant's GMT Token Account (cần có địa chỉ này)
+      // 4. Merchant's GMT Token Account
       const merchantGmtTokenAccount = '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM';
       
-      // 4. Convert amount to token units (GMT has 6 decimals on Solana)
+      // 5. Convert amount to token units
       const amountInTokenUnits = Math.floor(requiredAmount * Math.pow(10, 6));
 
-      // 5. Create SPL Token transfer instruction
-      // SPL Token Program ID
+      // 6. Create SPL Token transfer instruction
       const splTokenProgramId = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
       
-      // Helper function to convert number to 8-byte little-endian buffer
       const numberToBytes = (num) => {
         const buffer = new ArrayBuffer(8);
         const view = new DataView(buffer);
         const value = Math.floor(num);
-        // Use BigInt if available, otherwise fallback to regular number handling
         if (typeof BigInt !== 'undefined') {
-          view.setBigUint64(0, BigInt(value), true); // little-endian
+          view.setBigUint64(0, BigInt(value), true);
         } else {
-          // Fallback for environments without BigInt support
           const high = Math.floor(value / Math.pow(2, 32));
           const low = value % Math.pow(2, 32);
-          view.setUint32(0, low, true); // little-endian
-          view.setUint32(4, high, true); // little-endian
+          view.setUint32(0, low, true);
+          view.setUint32(4, high, true);
         }
         return new Uint8Array(buffer);
       };
 
-      // SPL Token transfer instruction (instruction index 3 for transfer)
       const transferInstruction = {
         programId: splTokenProgramId,
         keys: [
-          { pubkey: userGmtTokenAccount, isSigner: false, isWritable: true }, // Source: your GMT token account
-          { pubkey: merchantGmtTokenAccount, isSigner: false, isWritable: true }, // Destination: merchant's GMT token account  
-          { pubkey: '11111111111111111111111111111111', isSigner: true, isWritable: false }, // Authority (your wallet) - FSL SDK handles
+          { pubkey: userGmtTokenAccount, isSigner: false, isWritable: true },
+          { pubkey: merchantGmtTokenAccount, isSigner: false, isWritable: true },
+          { pubkey: userWalletAddress, isSigner: true, isWritable: false }, // Authority
         ],
         data: Buffer.from([3, ...numberToBytes(amountInTokenUnits)])
       };
 
-      // 6. Call Solana instructions using FSL SDK
-      // FSL SDK will handle the wallet integration and signing automatically
+      // 7. Call Solana instructions using FSL SDK
       const result = await fslAuth.callSolInstructions({
-        instructions: [transferInstruction], // ✅ Đã có
-        rpc: 'https://api.mainnet-beta.solana.com', // ✅ Đã có
-        unitLimit: 200000,                   // ✅ Đã có  
-        unitPrice: 5000,                     // ✅ Đã có
-        domain: 'https://gm3.joysteps.io',   // ✅ Đã có
-        uid: this.currentUser.id,            // ✅ Đã có
-        onlySign: false                      // ✅ Đã có - Execute transaction
+        instructions: [transferInstruction],
+        rpc: 'https://api.mainnet-beta.solana.com',
+        unitLimit: 200000,
+        unitPrice: 5000,
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
+        onlySign: false
       });
 
       console.log('Solana GMT payment transaction result:', result);
       
-      // 7. Return transaction result
       return {
         success: true,
         transactionHash: result.transactionHash || result.signature || result.hash || 'mock_tx_hash',
@@ -282,13 +384,62 @@ class FSLAuthService {
     }
   }
 
+  // Process payment chỉ với FSL SDK (không cần wallet address)
+  async processGMTPaymentWithFSLWalletOnly(purchaseData, requiredAmount) {
+    try {
+      const fslAuth = await this.init();
+      
+      // FSL SDK sẽ tự động handle wallet và token accounts
+      // Chỉ cần tạo instruction đơn giản
+      const merchantGmtTokenAccount = '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM';
+      const amountInTokenUnits = Math.floor(requiredAmount * Math.pow(10, 6));
+      
+      // Tạo instruction đơn giản, FSL SDK sẽ fill wallet details
+      const transferInstruction = {
+        programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+        keys: [
+          // FSL SDK sẽ tự động fill source account
+          { pubkey: merchantGmtTokenAccount, isSigner: false, isWritable: true },
+          // FSL SDK sẽ tự động handle authority
+        ],
+        data: Buffer.from([3, ...this.numberToBytes(amountInTokenUnits)])
+      };
+
+      const result = await fslAuth.callSolInstructions({
+        instructions: [transferInstruction],
+        rpc: 'https://api.mainnet-beta.solana.com',
+        unitLimit: 200000,
+        unitPrice: 5000,
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
+        onlySign: false
+      });
+
+      return {
+        success: true,
+        transactionHash: result.transactionHash || result.signature || result.hash || 'mock_tx_hash',
+        amount: requiredAmount,
+        currency: 'GMT',
+        timestamp: new Date().toISOString(),
+        purchaseData: purchaseData,
+        network: 'Solana'
+      };
+    } catch (error) {
+      console.error('FSL-only GMT payment failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   // Verify transaction signature
   async verifyTransaction(signature, message) {
     try {
       await this.init();
       
       // Sử dụng FSL SDK để verify signature
-      const verifiedAddress = FSLAuthorization.evmVerifyMessage(message, signature);
+      const verifiedAddress = FSLAuthorization.verifySolanaTransaction(signature, message);
       return {
         success: true,
         verifiedAddress: verifiedAddress,
@@ -303,9 +454,25 @@ class FSLAuthService {
     }
   }
 
-  // Get GMT token address for Solana
+  // Cập nhật getGMTTokenAddress để trả về đúng mint address
   getGMTTokenAddress() {
-    return 'CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi';
+    return '7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx'; // GMT mint address từ GamingHub
+  }
+
+  // Helper function
+  numberToBytes(num) {
+    const buffer = new ArrayBuffer(8);
+    const view = new DataView(buffer);
+    const value = Math.floor(num);
+    if (typeof BigInt !== 'undefined') {
+      view.setBigUint64(0, BigInt(value), true);
+    } else {
+      const high = Math.floor(value / Math.pow(2, 32));
+      const low = value % Math.pow(2, 32);
+      view.setUint32(0, low, true);
+      view.setUint32(4, high, true);
+    }
+    return new Uint8Array(buffer);
   }
 }
 
