@@ -288,6 +288,25 @@
   box-shadow: 0 0 20px rgba(108, 117, 125, 0.3);
 }
 
+/* EVM Chain Payment Button Styles - Based on FSL Integration Guide */
+.polygon-button.selected {
+  background: rgba(130, 71, 229, 0.1);
+  border-color: #8247e5;
+  box-shadow: 0 0 20px rgba(130, 71, 229, 0.3);
+}
+
+.bsc-button.selected {
+  background: rgba(243, 186, 47, 0.1);
+  border-color: #f3ba2f;
+  box-shadow: 0 0 20px rgba(243, 186, 47, 0.3);
+}
+
+.ethereum-button.selected {
+  background: rgba(98, 126, 234, 0.1);
+  border-color: #627eea;
+  box-shadow: 0 0 20px rgba(98, 126, 234, 0.3);
+}
+
 /* Security Info */
 .security-info {
   display: flex;

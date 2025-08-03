@@ -6,6 +6,7 @@ import BottomNavigation from './BottomNavigation';
 import PaymentPage from './PaymentPage';
 import PaymentSuccess from './PaymentSuccess';
 import PaymentFailed from './PaymentFailed';
+import StarletStore from './components/StarletStore';
 import './App.css';
 
 const AppContent = () => {
@@ -66,6 +67,8 @@ const AppContent = () => {
           }} 
           onFailed={() => setShowFailedView(true)} 
         />;
+      case 'starlet-store':
+        return <StarletStore />;
       default:
         return <MainContent activeTab={activeTab} />;
     }

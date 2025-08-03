@@ -6,13 +6,18 @@ import { Buffer } from 'buffer';
 // Thêm import Solana Web3
 import { Connection, PublicKey } from '@solana/web3.js';
 
+// Thêm import ethers cho EVM chains
+import { ethers } from 'ethers';
+
 /**
- * FSL Authentication Service with Solana GMT Payment Support
+ * FSL Authentication Service with Multi-Chain Payment Support
  * 
- * GMT Token Address on Solana: CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi
+ * Solana GMT Token: CS493ksQGHFqppNRTEUdcpQS2frLLjdtj4RJEFYaU7zi
  * 
  * Payment Methods:
  * - processGMTPayment(): Solana GMT payments using SPL Token instructions
+ * - purchaseStarletsWithGGUSD(): EVM chain GGUSD payments (Polygon, BSC, Ethereum)
+ * - signEvmVerificationMessage(): EVM wallet verification
  */
 class FSLAuthService {
   constructor() {
@@ -20,6 +25,59 @@ class FSLAuthService {
     this.currentUser = null;
     this.isInitialized = false;
     this.isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+
+    // EVM Chain configurations - copy từ FSL Integration Guide
+    this.GGUSD_ABI = [
+      {
+        "constant": false,
+        "inputs": [
+          {"name": "_to", "type": "address"},
+          {"name": "_value", "type": "uint256"}
+        ],
+        "name": "transfer",
+        "outputs": [{"name": "", "type": "bool"}],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [{"name": "_owner", "type": "address"}],
+        "name": "balanceOf",
+        "outputs": [{"name": "balance", "type": "uint256"}],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "decimals",
+        "outputs": [{"name": "", "type": "uint8"}],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+
+    // GGUSD Contract addresses (replace with actual addresses)
+    this.GGUSD_CONTRACTS = {
+      137: '0x...', // Polygon GGUSD contract address
+      56: '0x...',  // BSC GGUSD contract address
+      1: '0x...'    // Ethereum GGUSD contract address
+    };
+
+    this.TREASURY_ADDRESSES = {
+      137: '0x...', // Your Polygon treasury wallet
+      56: '0x...',  // Your BSC treasury wallet
+      1: '0x...'    // Your Ethereum treasury wallet
+    };
+
+    this.CHAIN_NAMES = {
+      137: 'Polygon',
+      56: 'BSC',
+      1: 'Ethereum'
+    };
   }
 
   async init() {
@@ -458,6 +516,260 @@ class FSLAuthService {
   getGMTTokenAddress() {
     return '7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx'; // GMT mint address từ GamingHub
   }
+
+  // ========== EVM CHAIN METHODS - Copy từ FSL Integration Guide ==========
+
+  // Helper function để get chain name
+  getChainName(chainId) {
+    return this.CHAIN_NAMES[chainId] || 'Unknown';
+  }
+
+  // Message Signing for EVM Verification - copy từ guide
+  async signEvmVerificationMessage(userAddress, chainId = 137) {
+    const timestamp = Date.now();
+    const message = `Verify wallet ownership for Starlet purchase\nAddress: ${userAddress}\nTimestamp: ${timestamp}\nChain: ${chainId}`;
+    
+    try {
+      const fslAuth = await this.init();
+      
+      const signature = await fslAuth.callEvmSign({
+        chainId: chainId,
+        msg: message,
+        chain: this.getChainName(chainId),
+      });
+      
+      // Verify the signature
+      const recoveredAddress = FSLAuthorization.evmVerifyMessage(message, signature);
+      
+      if (recoveredAddress.toLowerCase() === userAddress.toLowerCase()) {
+        console.log('Wallet verification successful');
+        return { signature, message, timestamp };
+      } else {
+        throw new Error('Signature verification failed');
+      }
+    } catch (error) {
+      console.error('Message signing failed:', error);
+      throw error;
+    }
+  }
+
+  // ERC-20 GGUSD Token Transfer - copy từ guide với modifications
+  async purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount, decimals = 18) {
+    const contractAddress = this.GGUSD_CONTRACTS[chainId];
+    const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
+    
+    if (!contractAddress || !treasuryAddress) {
+      throw new Error(`Unsupported chain ID: ${chainId}`);
+    }
+    
+    try {
+      const fslAuth = await this.init();
+      
+      // Convert GGUSD amount to proper decimals
+      const amountInWei = ethers.utils.parseUnits(ggusdAmount.toString(), decimals);
+      
+      const txHash = await fslAuth.callEvmContract({
+        contractAddress: contractAddress,
+        methodName: 'transfer',
+        params: [treasuryAddress, amountInWei],
+        abi: this.GGUSD_ABI,
+        gasLimit: '150000',
+        chainId: chainId,
+      });
+      
+      console.log('Payment transaction successful:', txHash);
+      
+      // Call backend to verify transaction and mint Starlets
+      await this.verifyAndMintStarlets(starletAmount, txHash, chainId);
+      
+      return {
+        success: true,
+        transactionHash: txHash,
+        amount: ggusdAmount,
+        currency: 'GGUSD',
+        chain: this.getChainName(chainId),
+        starletAmount: starletAmount,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('GGUSD payment failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Chain-specific purchase functions - copy từ guide
+  async buyStarletsPolygon(starletAmount, ggusdAmount) {
+    return await this.purchaseStarletsWithGGUSD(137, starletAmount, ggusdAmount);
+  }
+
+  async buyStarletsBSC(starletAmount, ggusdAmount) {
+    return await this.purchaseStarletsWithGGUSD(56, starletAmount, ggusdAmount);
+  }
+
+  async buyStarletsEthereum(starletAmount, ggusdAmount) {
+    return await this.purchaseStarletsWithGGUSD(1, starletAmount, ggusdAmount);
+  }
+
+  // Alternative: Using Popup Window for Contract Calls - copy từ guide
+  async purchaseWithPopup(chainId, ggusdAmount, appKey) {
+    const contractAddress = this.GGUSD_CONTRACTS[chainId];
+    const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
+    const amountInWei = ethers.utils.parseUnits(ggusdAmount.toString(), 18);
+    
+    const contractParams = {
+      contractAddress: contractAddress,
+      methodName: 'transfer',
+      params: [treasuryAddress, amountInWei],
+      abi: this.GGUSD_ABI,
+      gasLimit: '150000',
+      chainId: chainId,
+    };
+    
+    const url = `https://id.fsl.com/authorization/sign?arguments=${JSON.stringify({
+      ...contractParams,
+      appKey: appKey,
+    })}`;
+    
+    return new Promise((resolve, reject) => {
+      const popup = window.open(
+        url,
+        'contractCallWindow',
+        `left=${window.screen.width / 2 - 250},top=${window.screen.height / 2 - 400},width=500,height=800,popup=1`
+      );
+      
+      const handleMessage = (e) => {
+        if (e.data.type === 'fsl_auth') {
+          window.removeEventListener('message', handleMessage);
+          popup.close();
+          
+          if (e.data.data.error) {
+            reject(new Error(e.data.data.error));
+          } else {
+            resolve(e.data.data);
+          }
+        }
+      };
+      
+      window.addEventListener('message', handleMessage, false);
+      
+      // Handle popup being closed manually
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', handleMessage);
+          reject(new Error('User closed the popup'));
+        }
+      }, 1000);
+    });
+  }
+
+  // EIP-712 Typed Data Signing - copy từ guide
+  async signPurchaseOrder(orderData, chainId) {
+    const domain = {
+      name: 'StarletStore',
+      version: '1',
+      chainId: chainId,
+      verifyingContract: this.GGUSD_CONTRACTS[chainId],
+    };
+
+    const types = {
+      PurchaseOrder: [
+        { name: 'buyer', type: 'address' },
+        { name: 'starletAmount', type: 'uint256' },
+        { name: 'ggusdAmount', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+        { name: 'deadline', type: 'uint256' },
+      ],
+    };
+
+    try {
+      const fslAuth = await this.init();
+      
+      const signature = await fslAuth.signTypedData({
+        domain,
+        types,
+        message: orderData,
+        chainId: chainId,
+      });
+
+      // Verify signature
+      const recoveredAddress = FSLAuthorization.evmVerifyTypedData(
+        domain,
+        types,
+        orderData,
+        signature
+      );
+
+      console.log('Order signed by:', recoveredAddress);
+      return { signature, recoveredAddress };
+    } catch (error) {
+      console.error('Order signing failed:', error);
+      throw error;
+    }
+  }
+
+  // Mock backend verification function
+  async verifyAndMintStarlets(starletAmount, txHash, chainId) {
+    console.log(`Verifying transaction ${txHash} on chain ${chainId} for ${starletAmount} starlets`);
+    // In production, call your backend API here
+    // await fetch('/api/verify-purchase', { ... });
+    return true;
+  }
+
+  // Main EVM payment processor
+  async processGGUSDPayment(purchaseData, chainId = 137) {
+    try {
+      console.log('Processing GGUSD payment:', { purchaseData, chainId });
+      
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please login first.');
+      }
+
+      const chainName = this.getChainName(chainId);
+      const starletAmount = purchaseData.quantity || purchaseData.amount;
+      const ggusdAmount = purchaseData.amount || starletAmount; // Adjust rate as needed
+
+      // 1. Verify wallet ownership first
+      const userAddress = this.currentUser.walletAddress || this.currentUser.userProfile?.evmAddr;
+      if (!userAddress) {
+        throw new Error(`No EVM wallet address found for ${chainName} payment`);
+      }
+
+      await this.signEvmVerificationMessage(userAddress, chainId);
+      console.log('Wallet verification successful');
+
+      // 2. Execute payment based on chain
+      const result = await this.purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount);
+      
+      if (result.success) {
+        console.log(`${chainName} GGUSD payment successful:`, result);
+        return {
+          success: true,
+          transactionHash: result.transactionHash,
+          amount: ggusdAmount,
+          currency: 'GGUSD',
+          chain: chainName,
+          starletAmount: starletAmount,
+          timestamp: new Date().toISOString(),
+          purchaseData: purchaseData,
+          network: chainName
+        };
+      } else {
+        throw new Error(result.error || `${chainName} payment failed`);
+      }
+    } catch (error) {
+      console.error(`${this.getChainName(chainId)} GGUSD payment failed:`, error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // ========== END EVM CHAIN METHODS ==========
 
   // Helper function
   numberToBytes(num) {

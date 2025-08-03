@@ -19,6 +19,14 @@ const BottomNavigation = ({ activeTab, setActiveTab }) => {
         <div className="nav-icon">💳</div>
         <span className="nav-label">Payment</span>
       </button>
+      
+      <button 
+        className={`nav-item ${activeTab === 'starlet-store' ? 'active' : ''}`}
+        onClick={() => setActiveTab('starlet-store')}
+      >
+        <div className="nav-icon">🌟</div>
+        <span className="nav-label">Starlet Store</span>
+      </button>
     </nav>
   );
 };

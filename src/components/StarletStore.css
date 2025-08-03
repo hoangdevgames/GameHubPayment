@@ -1,0 +1,241 @@
+/* StarletStore.css - Based on FSL Authorization Integration Guide styles */
+
+.starlet-store {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+.chain-button {
+  margin: 10px;
+  padding: 15px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.chain-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.chain-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.polygon {
+  background-color: #8247e5;
+  color: white;
+}
+
+.polygon:hover:not(:disabled) {
+  background-color: #7138d4;
+}
+
+.bsc {
+  background-color: #f3ba2f;
+  color: black;
+}
+
+.bsc:hover:not(:disabled) {
+  background-color: #e5a71e;
+}
+
+.ethereum {
+  background-color: #627eea;
+  color: white;
+}
+
+.ethereum:hover:not(:disabled) {
+  background-color: #4f6bd8;
+}
+
+.solana {
+  background-color: #00d4aa;
+  color: black;
+}
+
+.solana:hover:not(:disabled) {
+  background-color: #00c199;
+}
+
+.login-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 20px 30px;
+  font-size: 18px;
+}
+
+.login-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.logout-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.logout-btn:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.status {
+  margin: 20px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.loading {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.login-section {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.purchase-section {
+  padding: 20px;
+}
+
+.user-info {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.user-info p {
+  margin: 5px 0;
+}
+
+.user-info strong {
+  color: #495057;
+}
+
+.input-section {
+  margin: 20px 0;
+}
+
+.input-section label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #495057;
+}
+
+.input-section input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.input-section input:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.input-section input:disabled {
+  background-color: #e9ecef;
+  opacity: 1;
+}
+
+.payment-methods {
+  margin: 20px 0;
+}
+
+.payment-methods h3 {
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.payment-methods .chain-button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .starlet-store {
+    padding: 10px;
+  }
+  
+  .chain-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  .login-btn {
+    padding: 15px 25px;
+    font-size: 16px;
+  }
+  
+  .input-section input {
+    max-width: 100%;
+  }
+  
+  .payment-methods .chain-button {
+    max-width: 100%;
+  }
+}
+
+/* Loading animation */
+.loading {
+  position: relative;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #0c5460;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}

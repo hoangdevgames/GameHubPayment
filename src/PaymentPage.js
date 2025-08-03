@@ -43,6 +43,15 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
         case 'gmt':
           await handleGMTPayment();
           break;
+        case 'polygon':
+          await handlePolygonGGUSDPayment();
+          break;
+        case 'bsc':
+          await handleBSCGGUSDPayment();
+          break;
+        case 'ethereum':
+          await handleEthereumGGUSDPayment();
+          break;
         default:
           throw new Error('Unsupported payment method');
       }
@@ -77,6 +86,76 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     }
   };
 
+  // EVM Chain Payment Handlers - copy từ FSL Integration Guide
+  const handlePolygonGGUSDPayment = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Processing Polygon GGUSD payment for:', purchaseData);
+      
+      const result = await fslAuthService.processGGUSDPayment(purchaseData, 137); // Polygon chainId
+      
+      if (result.success) {
+        console.log('Polygon GGUSD payment successful:', result);
+        setLoading(false);
+        onSuccess && onSuccess(result);
+      } else {
+        throw new Error(result.error || 'Polygon payment failed');
+      }
+    } catch (error) {
+      console.error('Polygon GGUSD payment error:', error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
+  const handleBSCGGUSDPayment = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Processing BSC GGUSD payment for:', purchaseData);
+      
+      const result = await fslAuthService.processGGUSDPayment(purchaseData, 56); // BSC chainId
+      
+      if (result.success) {
+        console.log('BSC GGUSD payment successful:', result);
+        setLoading(false);
+        onSuccess && onSuccess(result);
+      } else {
+        throw new Error(result.error || 'BSC payment failed');
+      }
+    } catch (error) {
+      console.error('BSC GGUSD payment error:', error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
+  const handleEthereumGGUSDPayment = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Processing Ethereum GGUSD payment for:', purchaseData);
+      
+      const result = await fslAuthService.processGGUSDPayment(purchaseData, 1); // Ethereum chainId
+      
+      if (result.success) {
+        console.log('Ethereum GGUSD payment successful:', result);
+        setLoading(false);
+        onSuccess && onSuccess(result);
+      } else {
+        throw new Error(result.error || 'Ethereum payment failed');
+      }
+    } catch (error) {
+      console.error('Ethereum GGUSD payment error:', error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
   const handleBack = () => {
     // Redirect back to GamingHub
     if (purchaseData?.returnUrl) {
@@ -91,6 +170,9 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     if (currency === 'GMT') {
       return `${amount} GMT`;
     }
+    if (currency === 'GGUSD') {
+      return `${parseFloat(amount).toFixed(2)} GGUSD`;
+    }
     return `$${parseFloat(amount).toFixed(2)}`;
   };
 
@@ -104,6 +186,8 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
 
   // Get payment method details
   const getPaymentMethodDetails = (method) => {
+    const baseGGUSDAmount = purchaseData.amount || 1; // 1:1 ratio for GGUSD
+    
     switch (method) {
       case 'gmt':
         return {
@@ -112,6 +196,30 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           description: 'Pay with GMT tokens on Solana blockchain',
           icon: '⚡',
           balance: userBalance?.gmt ? `${userBalance.gmt.toFixed(2)} GMT` : null
+        };
+      case 'polygon':
+        return {
+          name: 'PAY WITH POLYGON-GGUSD',
+          amount: formatAmount(baseGGUSDAmount, 'GGUSD'),
+          description: 'Pay with GGUSD tokens on Polygon network',
+          icon: '🔷',
+          balance: userBalance?.ggusd_polygon ? `${userBalance.ggusd_polygon.toFixed(2)} GGUSD` : null
+        };
+      case 'bsc':
+        return {
+          name: 'PAY WITH BSC-GGUSD',
+          amount: formatAmount(baseGGUSDAmount, 'GGUSD'),
+          description: 'Pay with GGUSD tokens on BSC network',
+          icon: '🟡',
+          balance: userBalance?.ggusd_bsc ? `${userBalance.ggusd_bsc.toFixed(2)} GGUSD` : null
+        };
+      case 'ethereum':
+        return {
+          name: 'PAY WITH ETHEREUM-GGUSD',
+          amount: formatAmount(baseGGUSDAmount, 'GGUSD'),
+          description: 'Pay with GGUSD tokens on Ethereum network',
+          icon: '🟦',
+          balance: userBalance?.ggusd_ethereum ? `${userBalance.ggusd_ethereum.toFixed(2)} GGUSD` : null
         };
       default:
         return {
@@ -191,6 +299,66 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           </div>
           <div className="method-check">
             {paymentMethod === 'gmt' && <div className="checkmark">✓</div>}
+          </div>
+        </button>
+
+        {/* Polygon GGUSD Payment */}
+        <button 
+          className={`payment-method-button polygon-button ${paymentMethod === 'polygon' ? 'selected' : ''}`}
+          onClick={() => handlePaymentMethod('polygon')}
+          disabled={loading}
+        >
+          <div className="method-icon">🔷</div>
+          <div className="method-content">
+            <div className="method-name">PAY WITH POLYGON-GGUSD</div>
+            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-description">Pay with GGUSD tokens on Polygon network</div>
+            {userBalance?.ggusd_polygon && (
+              <div className="method-balance">Balance: {userBalance.ggusd_polygon.toFixed(2)} GGUSD</div>
+            )}
+          </div>
+          <div className="method-check">
+            {paymentMethod === 'polygon' && <div className="checkmark">✓</div>}
+          </div>
+        </button>
+
+        {/* BSC GGUSD Payment */}
+        <button 
+          className={`payment-method-button bsc-button ${paymentMethod === 'bsc' ? 'selected' : ''}`}
+          onClick={() => handlePaymentMethod('bsc')}
+          disabled={loading}
+        >
+          <div className="method-icon">🟡</div>
+          <div className="method-content">
+            <div className="method-name">PAY WITH BSC-GGUSD</div>
+            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-description">Pay with GGUSD tokens on BSC network</div>
+            {userBalance?.ggusd_bsc && (
+              <div className="method-balance">Balance: {userBalance.ggusd_bsc.toFixed(2)} GGUSD</div>
+            )}
+          </div>
+          <div className="method-check">
+            {paymentMethod === 'bsc' && <div className="checkmark">✓</div>}
+          </div>
+        </button>
+
+        {/* Ethereum GGUSD Payment */}
+        <button 
+          className={`payment-method-button ethereum-button ${paymentMethod === 'ethereum' ? 'selected' : ''}`}
+          onClick={() => handlePaymentMethod('ethereum')}
+          disabled={loading}
+        >
+          <div className="method-icon">🟦</div>
+          <div className="method-content">
+            <div className="method-name">PAY WITH ETHEREUM-GGUSD</div>
+            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-description">Pay with GGUSD tokens on Ethereum network</div>
+            {userBalance?.ggusd_ethereum && (
+              <div className="method-balance">Balance: {userBalance.ggusd_ethereum.toFixed(2)} GGUSD</div>
+            )}
+          </div>
+          <div className="method-check">
+            {paymentMethod === 'ethereum' && <div className="checkmark">✓</div>}
           </div>
         </button>
       </div>
