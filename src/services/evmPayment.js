@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
-import fSLAuthorization, { GGUSD_ABI, GGUSD_CONTRACTS, TREASURY_ADDRESSES, getChainName } from './fslConfig';
+import FSLAuthorization from 'fsl-authorization';
+import { initializeFSLAuthorization, GGUSD_ABI, GGUSD_CONTRACTS, TREASURY_ADDRESSES, getChainName } from './fslConfig';
 
 // 1. Message Signing for Verification (từ FSL Authorization Integration Guide)
 export async function signEvmVerificationMessage(userAddress, chainId = 137) {
@@ -7,6 +8,7 @@ export async function signEvmVerificationMessage(userAddress, chainId = 137) {
   const message = `Verify wallet ownership for Starlet purchase\nAddress: ${userAddress}\nTimestamp: ${timestamp}\nChain: ${chainId}`;
   
   try {
+    const fSLAuthorization = await initializeFSLAuthorization();
     const signature = await fSLAuthorization.callEvmSign({
       chainId: chainId,
       msg: message,
@@ -38,9 +40,10 @@ export async function purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmo
   }
   
   // Convert GGUSD amount to proper decimals
-  const amountInWei = ethers.utils.parseUnits(ggusdAmount.toString(), decimals);
+  const amountInWei = ethers.parseUnits(ggusdAmount.toString(), decimals);
   
   try {
+    const fSLAuthorization = await initializeFSLAuthorization();
     const txHash = await fSLAuthorization.callEvmContract({
       contractAddress: contractAddress,
       methodName: 'transfer',
@@ -77,7 +80,7 @@ export async function buyStarletsEthereum(starletAmount, ggusdAmount) {
 
 // 3. Alternative: Using Popup Window for Contract Calls (từ FSL Authorization Integration Guide)
 export async function purchaseWithPopup(chainId, contractAddress, treasuryAddress, ggusdAmount, appKey) {
-  const amountInWei = ethers.utils.parseUnits(ggusdAmount.toString(), 18);
+  const amountInWei = ethers.parseUnits(ggusdAmount.toString(), 18);
   
   const contractParams = {
     contractAddress: contractAddress,
@@ -146,6 +149,7 @@ export async function signPurchaseOrder(orderData, chainId) {
   };
 
   try {
+    const fSLAuthorization = await initializeFSLAuthorization();
     const signature = await fSLAuthorization.signTypedData({
       domain,
       types,
@@ -172,6 +176,7 @@ export async function signPurchaseOrder(orderData, chainId) {
 // 5. Transaction Signing (without execution) - từ FSL Authorization Integration Guide
 export async function signTransactionOnly(contractParams) {
   try {
+    const fSLAuthorization = await initializeFSLAuthorization();
     const signedTx = await fSLAuthorization.signTransaction({
       contractAddress: contractParams.contractAddress,
       methodName: contractParams.methodName,

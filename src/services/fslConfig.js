@@ -1,8 +1,9 @@
-import { FSLAuthorization } from 'fsl-authorization';
+import FSLAuthorization from 'fsl-authorization';
 import { ethers } from 'ethers';
 
 // Basic Configuration từ FSL Authorization Integration Guide
-const fSLAuthorization = FSLAuthorization.init({
+// Note: This returns a Promise, need to await in actual usage
+const initializeFSLAuthorization = () => FSLAuthorization.init({
   responseType: 'code', // 'code' | 'token'
   appKey: process.env.REACT_APP_FSL_APP_KEY || 'YOUR_APP_KEY', // Get this from FSL team
   redirectUri: window.location.origin + '/callback',
@@ -11,6 +12,9 @@ const fSLAuthorization = FSLAuthorization.init({
   usePopup: true,
   isApp: false, // Set to false for web applications
 });
+
+// Export the initializer function instead of direct instance
+export { initializeFSLAuthorization };
 
 // GGUSD Token Contract ABI (standard ERC-20 methods)
 export const GGUSD_ABI = [

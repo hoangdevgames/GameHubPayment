@@ -566,7 +566,7 @@ class FSLAuthService {
       const fslAuth = await this.init();
       
       // Convert GGUSD amount to proper decimals
-      const amountInWei = ethers.utils.parseUnits(ggusdAmount.toString(), decimals);
+      const amountInWei = ethers.parseUnits(ggusdAmount.toString(), decimals);
       
       const txHash = await fslAuth.callEvmContract({
         contractAddress: contractAddress,
@@ -617,7 +617,7 @@ class FSLAuthService {
   async purchaseWithPopup(chainId, ggusdAmount, appKey) {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];
     const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
-    const amountInWei = ethers.utils.parseUnits(ggusdAmount.toString(), 18);
+    const amountInWei = ethers.parseUnits(ggusdAmount.toString(), 18);
     
     const contractParams = {
       contractAddress: contractAddress,

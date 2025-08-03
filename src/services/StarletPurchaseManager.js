@@ -210,6 +210,29 @@ class StarletPurchaseManager {
     ];
   }
 
+  // Compatibility methods for StarletStore.js
+  getLoginStatus() {
+    return this.isLoggedIn;
+  }
+
+  getUserInfo() {
+    return this.userInfo;
+  }
+
+  getUserWallets() {
+    return this.userWallets;
+  }
+
+  logout() {
+    this.isLoggedIn = false;
+    this.userInfo = null;
+    this.userWallets = null;
+    // Also logout from FSL service
+    if (this.fslAuth && this.fslAuth.signOut) {
+      this.fslAuth.signOut();
+    }
+  }
+
   // Error handling - copy từ guide
   handlePurchaseError(error) {
     if (error.message.includes('User rejected')) {
@@ -239,6 +262,9 @@ class StarletPurchaseManager {
     }
   }
 }
+
+// Export cả class và default instance
+export { StarletPurchaseManager };
 
 // Tạo singleton instance
 const starletPurchaseManager = new StarletPurchaseManager();
