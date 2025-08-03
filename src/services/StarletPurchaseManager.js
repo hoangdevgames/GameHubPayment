@@ -125,10 +125,12 @@ class StarletPurchaseManager {
   }
 
   getChainId(chain) {
+    // Updated for TESTNET chain IDs
     const chainIds = {
-      'polygon': 137,
-      'bsc': 56,
-      'ethereum': 1,
+      'polygon': 80002,     // Polygon Amoy Testnet  
+      'bsc': 97,            // BSC Testnet
+      'ethereum': 11155111, // Ethereum Sepolia
+      'arbitrum': 421614,   // Arbitrum Sepolia (NEW)
     };
     return chainIds[chain];
   }
@@ -176,33 +178,40 @@ class StarletPurchaseManager {
     throw new Error('Transaction confirmation timeout');
   }
 
-  // Get supported chains
+  // Get supported chains - Updated for TESTNET
   getSupportedChains() {
     return [
       {
         id: 'polygon',
-        name: 'Polygon',
+        name: 'Polygon Amoy Testnet',
         currency: 'GGUSD',
         icon: '🔷',
-        chainId: 137
+        chainId: 80002
       },
       {
         id: 'bsc',
-        name: 'BSC',
+        name: 'BSC Testnet',
         currency: 'GGUSD',
         icon: '🟡',
-        chainId: 56
+        chainId: 97
       },
       {
         id: 'ethereum',
-        name: 'Ethereum',
+        name: 'Ethereum Sepolia',
         currency: 'GGUSD',
         icon: '🟦',
-        chainId: 1
+        chainId: 11155111
+      },
+      {
+        id: 'arbitrum',
+        name: 'Arbitrum Sepolia',
+        currency: 'GGUSD',
+        icon: '🔹',
+        chainId: 421614
       },
       {
         id: 'solana',
-        name: 'Solana',
+        name: 'Solana Devnet',
         currency: 'GMT',
         icon: '⚡',
         chainId: null

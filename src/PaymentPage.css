@@ -307,6 +307,12 @@
   box-shadow: 0 0 20px rgba(98, 126, 234, 0.3);
 }
 
+.arbitrum-button.selected {
+  background: rgba(41, 98, 255, 0.1);
+  border-color: #2962ff;
+  box-shadow: 0 0 20px rgba(41, 98, 255, 0.3);
+}
+
 /* Security Info */
 .security-info {
   display: flex;

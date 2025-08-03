@@ -1,5 +1,6 @@
 import FSLAuthorization from 'fsl-authorization';
 import { ethers } from 'ethers';
+import { TESTNET_CHAINS, TREASURY_ADDRESS } from '../utils/testnetHelper';
 
 // Basic Configuration từ FSL Authorization Integration Guide
 // Note: This returns a Promise, need to await in actual usage

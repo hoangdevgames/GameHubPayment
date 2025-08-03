@@ -9,6 +9,11 @@ import PaymentFailed from './PaymentFailed';
 import StarletStore from './components/StarletStore';
 import './App.css';
 
+// Import testing helpers for development (console utilities)
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/testingHelpers');
+}
+
 const AppContent = () => {
   const { shouldRedirectToPayment, clearRedirectFlag } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
