@@ -732,16 +732,39 @@ class FSLAuthService {
       const starletAmount = purchaseData.quantity || purchaseData.amount;
       const ggusdAmount = purchaseData.amount || starletAmount; // Adjust rate as needed
 
-      // 1. Verify wallet ownership first
-      const userAddress = this.currentUser.walletAddress || this.currentUser.userProfile?.evmAddr;
-      if (!userAddress) {
-        throw new Error(`No EVM wallet address found for ${chainName} payment`);
+      // 1. Get EVM wallet address from FSL Authorization
+      let userAddress;
+      try {
+        // First try to get from userProfile (if available from GamingHub)
+        userAddress = this.currentUser.walletAddress || this.currentUser.userProfile?.evmAddr;
+        
+        // If not available, get from FSL Authorization automatically
+        if (!userAddress) {
+          console.log(`Getting ${chainName} wallet address from FSL Authorization...`);
+          const chainMap = { 137: 'polygon', 56: 'bsc', 1: 'ethereum' };
+          const chainKey = chainMap[chainId] || 'ethereum';
+          userAddress = await this.getCurrentWalletAddress(chainKey);
+          console.log(`✅ Got ${chainName} wallet address from FSL:`, userAddress);
+        } else {
+          console.log(`✅ Using existing ${chainName} wallet address:`, userAddress);
+        }
+      } catch (error) {
+        console.error(`❌ Failed to get ${chainName} wallet address:`, error);
+        throw new Error(`Could not retrieve ${chainName} wallet address. Please ensure your wallet is connected to FSL ID.`);
       }
 
-      await this.signEvmVerificationMessage(userAddress, chainId);
-      console.log('Wallet verification successful');
+      // 2. Verify wallet ownership through FSL Authorization
+      try {
+        console.log(`Verifying ${chainName} wallet ownership...`);
+        await this.signEvmVerificationMessage(userAddress, chainId);
+        console.log('✅ Wallet verification successful');
+      } catch (error) {
+        console.error('❌ Wallet verification failed:', error);
+        throw new Error(`Wallet verification failed. Please ensure your ${chainName} wallet is connected to FSL ID.`);
+      }
 
-      // 2. Execute payment based on chain
+      // 3. Execute payment based on chain
+      console.log(`Executing ${chainName} GGUSD payment...`);
       const result = await this.purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount);
       
       if (result.success) {
@@ -755,7 +778,8 @@ class FSLAuthService {
           starletAmount: starletAmount,
           timestamp: new Date().toISOString(),
           purchaseData: purchaseData,
-          network: chainName
+          network: chainName,
+          walletAddress: userAddress // Include wallet address in response
         };
       } else {
         throw new Error(result.error || `${chainName} payment failed`);
@@ -764,7 +788,8 @@ class FSLAuthService {
       console.error(`${this.getChainName(chainId)} GGUSD payment failed:`, error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
+        chain: this.getChainName(chainId)
       };
     }
   }
