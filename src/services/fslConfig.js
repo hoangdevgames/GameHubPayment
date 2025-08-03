@@ -60,7 +60,7 @@ export const GGUSD_CONTRACTS = {
 export const TREASURY_ADDRESSES = {
   137: '0x...', // Your Polygon treasury wallet
   56: '0x...',  // Your BSC treasury wallet
-  1: '0x...',   // Your Ethereum treasury wallet
+  1: '0xd17A7196B9f55BD9cb6E3D412CF49a963EC94e9B',   // Your Ethereum mainnet treasury wallet
 };
 
 // Chain configuration

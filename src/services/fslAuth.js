@@ -769,7 +769,349 @@ class FSLAuthService {
     }
   }
 
-  // ========== END EVM CHAIN METHODS ==========
+  // ========== WALLET ADDRESS METHODS ==========
+
+  /**
+   * Lấy địa chỉ ví hiện tại từ FSL Authorization
+   * @param {string} chain - 'solana' hoặc 'ethereum' hoặc 'polygon' hoặc 'bsc'
+   * @returns {Promise<string>} Địa chỉ ví
+   */
+  async getCurrentWalletAddress(chain = 'solana') {
+    try {
+      const fslAuth = await this.init();
+      
+      if (!this.currentUser) {
+        throw new Error('User not initialized. Please login first.');
+      }
+
+      // 1. Thử lấy từ userProfile trước (từ GamingHub data)
+      if (this.currentUser.userProfile) {
+        if (chain === 'solana' && this.currentUser.userProfile.solAddr) {
+          console.log('Got Solana address from userProfile:', this.currentUser.userProfile.solAddr);
+          return this.currentUser.userProfile.solAddr;
+        }
+        if (chain !== 'solana' && this.currentUser.userProfile.evmAddr) {
+          console.log('Got EVM address from userProfile:', this.currentUser.userProfile.evmAddr);
+          return this.currentUser.userProfile.evmAddr;
+        }
+      }
+
+      // 2. Lấy từ FSL SDK bằng message signing
+      if (chain === 'solana') {
+        return await this.getSolanaWalletAddressFromFSL();
+      } else {
+        // EVM chains: ethereum, polygon, bsc
+        const chainId = this.getChainIdFromName(chain);
+        return await this.getEVMWalletAddressFromFSL(chainId);
+      }
+
+    } catch (error) {
+      console.error(`Error getting ${chain} wallet address:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy địa chỉ Solana ví từ FSL SDK
+   */
+  async getSolanaWalletAddressFromFSL() {
+    try {
+      const fslAuth = await this.init();
+      
+      // Method 1: Sign message để verify và lấy address
+      const message = `Get Solana wallet address - ${Date.now()}`;
+      
+      const result = await fslAuth.signSolMessage({
+        msg: message,
+        domain: 'https://gm3.joysteps.io',
+        uid: this.currentUser.id,
+      });
+
+      // Check if FSL SDK returns wallet address in result
+      if (result.address || result.walletAddress || result.solanaAddress) {
+        const address = result.address || result.walletAddress || result.solanaAddress;
+        console.log('Got Solana address from signSolMessage:', address);
+        return address;
+      }
+
+      // Method 2: Thử lấy từ FSL SDK storage
+      if (fslAuth.uid && fslAuth.sdkStorage) {
+        const userData = fslAuth.sdkStorage.getUserData(fslAuth.uid);
+        if (userData && userData.solanaAddress) {
+          console.log('Got Solana address from SDK storage:', userData.solanaAddress);
+          return userData.solanaAddress;
+        }
+      }
+
+      throw new Error('Could not retrieve Solana wallet address from FSL SDK');
+      
+    } catch (error) {
+      console.error('Error getting Solana wallet address from FSL:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy địa chỉ EVM ví từ FSL SDK
+   */
+  async getEVMWalletAddressFromFSL(chainId = 1) {
+    try {
+      const fslAuth = await this.init();
+      
+      // Method 1: Sign EVM message để verify và lấy address
+      const message = `Get EVM wallet address for chain ${chainId} - ${Date.now()}`;
+      
+      const signature = await fslAuth.callEvmSign({
+        chainId: chainId,
+        msg: message,
+        chain: this.getChainName(chainId),
+      });
+
+      // Recover address từ signature
+      const recoveredAddress = FSLAuthorization.evmVerifyMessage(message, signature);
+      
+      if (recoveredAddress) {
+        console.log(`Got EVM address from callEvmSign for chain ${chainId}:`, recoveredAddress);
+        return recoveredAddress;
+      }
+
+      throw new Error(`Could not retrieve EVM wallet address for chain ${chainId} from FSL SDK`);
+      
+    } catch (error) {
+      console.error(`Error getting EVM wallet address for chain ${chainId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Helper function to get chainId from chain name
+   */
+  getChainIdFromName(chainName) {
+    const chainIds = {
+      'ethereum': 1,
+      'polygon': 137,
+      'bsc': 56,
+    };
+    return chainIds[chainName.toLowerCase()] || 1;
+  }
+
+  /**
+   * Lấy GMT balance và địa chỉ ví cho Solana
+   */
+  async getSolanaGMTBalanceWithAddress() {
+    try {
+      // Lấy địa chỉ ví Solana hiện tại
+      const walletAddress = await this.getCurrentWalletAddress('solana');
+      console.log('Current Solana wallet address:', walletAddress);
+
+      // Sử dụng hàm balance GMT của bạn
+      const balance = await this.getSolanaGMTBalance(walletAddress);
+
+      return {
+        walletAddress: walletAddress,
+        balance: balance,
+        chain: 'solana',
+        currency: 'GMT'
+      };
+      
+    } catch (error) {
+      console.error('Error getting Solana GMT balance with address:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy GMT balance và địa chỉ ví cho Polygon
+   */
+  async getPolygonGMTBalanceWithAddress() {
+    try {
+      // Lấy địa chỉ ví Polygon hiện tại
+      const walletAddress = await this.getCurrentWalletAddress('polygon');
+      console.log('Current Polygon wallet address:', walletAddress);
+
+      // Sử dụng hàm balance GMT của bạn
+      const balance = await this.getPolygonGMTBalance(walletAddress);
+
+      return {
+        walletAddress: walletAddress,
+        balance: balance,
+        chain: 'polygon',
+        currency: 'GMT',
+        chainId: 137
+      };
+      
+    } catch (error) {
+      console.error('Error getting Polygon GMT balance with address:', error);
+      throw error;
+    }
+  }
+
+  // Copy 2 hàm GMT balance hiện tại của bạn vào đây
+  async getSolanaGMTBalance(walletAddress) {
+    console.log('Get Solana GMT balance for wallet:', walletAddress);
+
+    // Check if wallet address is valid
+    if (!walletAddress) {
+        console.log('No wallet address provided');
+        return 0;
+    }
+
+    // GMT token mint address on Solana
+    const GMT_MINT = new PublicKey('7i5KKsX2weiTkry7jA4ZwSuXGhs5eJBEjY8vVxR4pfRx');
+    
+    try {
+        // Initialize connection with commitment
+        const connection = new Connection('https://lb2.stepn.com/', 'confirmed');
+        const wallet = new PublicKey(walletAddress);
+
+        // Get token accounts by owner
+        const accounts = await connection.getParsedTokenAccountsByOwner(
+            wallet,
+            { mint: GMT_MINT }
+        );
+
+        console.log('GMT accounts Solana:', accounts);
+
+        if (accounts.value.length > 0) {
+            // Get the first account's balance
+            const balance = accounts.value[0].account.data.parsed.info.tokenAmount.uiAmount;
+            console.log('GMT balance Solana:', balance);
+            return balance;
+        }
+        return 0;
+    } catch (error) {
+        console.error('Error getting Solana GMT balance:', error);
+        return 0;
+    }
+  }
+
+  async getPolygonGMTBalance(walletAddress) {
+    console.log('Get Polygon GMT balance for wallet:', walletAddress);
+
+    if (!walletAddress) {
+        console.log('No wallet address provided');
+        return 0;
+    }
+
+    const GMT_CONTRACT = '0x714DB550b574b3E927af3D93E26127D15721D4C2';
+    
+    try {
+        // Import Web3 locally if needed
+        const Web3 = require('web3');
+        
+        // Simple ERC-20 ABI for balanceOf and decimals
+        const tokenABI = [
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"name": "", "type": "uint8"}],
+                "type": "function"
+            }
+        ];
+
+        const web3 = new Web3('https://lb5.stepn.com/');
+        const contract = new web3.eth.Contract(tokenABI, GMT_CONTRACT);
+
+        try {
+            // First get the token decimals
+            const decimals = await contract.methods.decimals().call();
+            console.log('GMT token decimals:', decimals);
+
+            const balance = await Promise.race([
+                contract.methods.balanceOf(walletAddress).call(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+            ]);
+
+            console.log('GMT balance Polygon (raw):', balance);
+            
+            if (balance !== undefined) {
+                // Convert BigInt values to strings before calculation
+                const balanceNum = Number(balance.toString());
+                const decimalsNum = Number(decimals.toString());
+                const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('GMT balance Polygon (formatted):', formattedBalance);
+                return formattedBalance;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error getting Polygon GMT balance:', error);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error initializing Web3:', error);
+        return 0;
+    }
+  }
+
+  /**
+   * Lấy tất cả wallet addresses và balances
+   */
+  async getAllWalletInfo() {
+    try {
+      console.log('Getting all wallet info for current user...');
+      
+      const walletInfo = {
+        user: this.currentUser?.name || 'Unknown',
+        userId: this.currentUser?.id || 'Unknown',
+        wallets: {},
+        balances: {},
+        timestamp: new Date().toISOString()
+      };
+
+      // Get Solana wallet and GMT balance
+      try {
+        const solanaInfo = await this.getSolanaGMTBalanceWithAddress();
+        walletInfo.wallets.solana = solanaInfo.walletAddress;
+        walletInfo.balances.solanaGMT = solanaInfo.balance;
+        console.log('✅ Solana wallet info retrieved');
+      } catch (error) {
+        console.warn('⚠️ Could not get Solana wallet info:', error.message);
+        walletInfo.wallets.solana = null;
+        walletInfo.balances.solanaGMT = 0;
+      }
+
+      // Get Polygon wallet and GMT balance
+      try {
+        const polygonInfo = await this.getPolygonGMTBalanceWithAddress();
+        walletInfo.wallets.polygon = polygonInfo.walletAddress;
+        walletInfo.balances.polygonGMT = polygonInfo.balance;
+        console.log('✅ Polygon wallet info retrieved');
+      } catch (error) {
+        console.warn('⚠️ Could not get Polygon wallet info:', error.message);
+        walletInfo.wallets.polygon = null;
+        walletInfo.balances.polygonGMT = 0;
+      }
+
+      // Get Ethereum wallet (optional)
+      try {
+        const ethereumAddress = await this.getCurrentWalletAddress('ethereum');
+        walletInfo.wallets.ethereum = ethereumAddress;
+        console.log('✅ Ethereum wallet address retrieved');
+      } catch (error) {
+        console.warn('⚠️ Could not get Ethereum wallet:', error.message);
+        walletInfo.wallets.ethereum = null;
+      }
+
+      console.log('🎯 Complete wallet info:', walletInfo);
+      return walletInfo;
+      
+    } catch (error) {
+      console.error('Error getting all wallet info:', error);
+      throw error;
+    }
+  }
+
+  // ========== END WALLET ADDRESS METHODS ==========
 
   // Helper function
   numberToBytes(num) {
