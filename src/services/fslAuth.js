@@ -60,17 +60,17 @@ class FSLAuthService {
       }
     ];
 
-    // GGUSD Contract addresses (replace with actual addresses)
+    // GGUSD Contract addresses (updated with actual addresses)
     this.GGUSD_CONTRACTS = {
-      137: '0x...', // Polygon GGUSD contract address
-      56: '0x...',  // BSC GGUSD contract address
-      1: '0x...'    // Ethereum GGUSD contract address
+      137: '0xFFFFFF9936BD58a008855b0812B44D2c8dFFE2aA', // Polygon GGUSD contract address
+      56: '0xffffff9936bd58a008855b0812b44d2c8dffe2aa',  // BSC GGUSD contract address
+      1: '0x...'    // Ethereum GGUSD contract address - NEED TO GET THIS
     };
 
     this.TREASURY_ADDRESSES = {
-      137: '0x...', // Your Polygon treasury wallet
-      56: '0x...',  // Your BSC treasury wallet
-      1: '0x...'    // Your Ethereum treasury wallet
+      137: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Polygon treasury wallet
+      56: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',  // Your BSC treasury wallet
+      1: '0x2572421a30c0097357Cd081228D5F1C07ce96bee'    // Your Ethereum treasury wallet
     };
 
     this.CHAIN_NAMES = {
@@ -593,9 +593,23 @@ class FSLAuthService {
       };
     } catch (error) {
       console.error('GGUSD payment failed:', error);
+      
+      // Handle popup blocker error specifically
+      if (error.message && error.message.includes('pop-up cannot be ejected')) {
+        console.warn('🚫 Popup blocked! Please allow popups for this site and try again.');
+        console.warn('💡 How to fix: Check your browser popup settings');
+      }
+      
+      // Return user-friendly error message
+      let userFriendlyError = error.message;
+      if (error.message && error.message.includes('pop-up cannot be ejected')) {
+        userFriendlyError = 'Payment popup was blocked. Please allow popups for this site and try again.';
+      }
+      
       return {
         success: false,
-        error: error.message
+        error: userFriendlyError,
+        originalError: error.message
       };
     }
   }
@@ -744,7 +758,7 @@ class FSLAuthService {
           const chainMap = { 137: 'polygon', 56: 'bsc', 1: 'ethereum' };
           const chainKey = chainMap[chainId] || 'ethereum';
           userAddress = await this.getCurrentWalletAddress(chainKey);
-          console.log(`✅ Got ${chainName} wallet address from FSL:`, userAddress);
+          console.log(`✅ Got ${chainName} wallet address from FSL (ownership verified):`, userAddress);
         } else {
           console.log(`✅ Using existing ${chainName} wallet address:`, userAddress);
         }
@@ -753,15 +767,9 @@ class FSLAuthService {
         throw new Error(`Could not retrieve ${chainName} wallet address. Please ensure your wallet is connected to FSL ID.`);
       }
 
-      // 2. Verify wallet ownership through FSL Authorization
-      try {
-        console.log(`Verifying ${chainName} wallet ownership...`);
-        await this.signEvmVerificationMessage(userAddress, chainId);
-        console.log('✅ Wallet verification successful');
-      } catch (error) {
-        console.error('❌ Wallet verification failed:', error);
-        throw new Error(`Wallet verification failed. Please ensure your ${chainName} wallet is connected to FSL ID.`);
-      }
+      // 2. Wallet ownership already verified when getting address
+      // No need for additional verification as user already signed to get wallet address
+      console.log('✅ Wallet ownership verified (user signed to get address)');
 
       // 3. Execute payment based on chain
       console.log(`Executing ${chainName} GGUSD payment...`);

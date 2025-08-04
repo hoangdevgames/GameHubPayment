@@ -50,17 +50,17 @@ export const GGUSD_ABI = [
   }
 ];
 
-// Contract addresses for different chains (replace with actual addresses)
+// Contract addresses for different chains (updated with actual addresses)
 export const GGUSD_CONTRACTS = {
-  137: '0x...', // Polygon GGUSD contract address
-  56: '0x...',  // BSC GGUSD contract address
-  1: '0x...',   // Ethereum GGUSD contract address
+  137: '0xFFFFFF9936BD58a008855b0812B44D2c8dFFE2aA', // Polygon GGUSD contract address
+  56: '0xffffff9936bd58a008855b0812b44d2c8dffe2aa',  // BSC GGUSD contract address
+  1: '0x...',   // Ethereum GGUSD contract address - NEED TO GET THIS
 };
 
 export const TREASURY_ADDRESSES = {
-  137: '0x...', // Your Polygon treasury wallet
-  56: '0x...',  // Your BSC treasury wallet
-  1: '0xd17A7196B9f55BD9cb6E3D412CF49a963EC94e9B',   // Your Ethereum mainnet treasury wallet
+  137: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Polygon treasury wallet
+  56: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',  // Your BSC treasury wallet
+  1: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',   // Your Ethereum treasury wallet
 };
 
 // Chain configuration
