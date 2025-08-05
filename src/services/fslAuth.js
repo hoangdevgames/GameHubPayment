@@ -81,6 +81,20 @@ class FSLAuthService {
       137: 'Polygon',
       56: 'BSC',
     };
+
+    // RPC URLs for each chain
+    this.RPC_URLS = {
+      80002: 'https://rpc-amoy.polygon.technology/', // Amoy testnet RPC
+      137: 'https://polygon-rpc.com/', // Polygon mainnet RPC
+      56: 'https://bsc-dataseed.binance.org/', // BSC mainnet RPC
+    };
+
+    // Chain mapping for FSL SDK
+    this.FSL_CHAIN_MAPPING = {
+      80002: 'polygon', // Amoy uses Polygon's gas token (MATIC/POL)
+      137: 'polygon',   // Polygon mainnet
+      56: 'bsc',        // BSC
+    };
   }
 
   async init() {
@@ -605,7 +619,7 @@ class FSLAuthService {
       const signature = await fslAuth.callEvmSign({
         chainId: chainId,
         msg: message,
-        chain: this.getChainName(chainId),
+        chain: this.FSL_CHAIN_MAPPING[chainId], // ✅ Use proper FSL chain mapping
       });
       
       // Verify the signature
@@ -645,6 +659,9 @@ class FSLAuthService {
       console.log('  Amount (GGUSD):', ggusdAmount);
       console.log('  Amount (Wei):', amountInWeiString);
       console.log('  Chain ID:', chainId);
+      console.log('  Chain Name:', this.getChainName(chainId));
+      console.log('  FSL Chain:', this.FSL_CHAIN_MAPPING[chainId]);
+      console.log('  RPC URL:', this.RPC_URLS[chainId]);
       
       const txHash = await fslAuth.callEvmContract({
         contractAddress: contractAddress,
@@ -653,6 +670,8 @@ class FSLAuthService {
         abi: this.GGUSD_ABI,
         gasLimit: '150000',
         chainId: chainId,
+        chain: this.FSL_CHAIN_MAPPING[chainId], // ✅ Specify chain for proper gas token
+        rpc: this.RPC_URLS[chainId], // ✅ Specify RPC URL for the network
       });
       
       console.log('Payment transaction successful:', txHash);
@@ -732,6 +751,8 @@ class FSLAuthService {
       abi: this.GGUSD_ABI,
       gasLimit: '150000',
       chainId: chainId,
+      chain: this.FSL_CHAIN_MAPPING[chainId], // ✅ Specify chain for proper gas token
+      rpc: this.RPC_URLS[chainId], // ✅ Specify RPC URL for the network
     };
     
     const url = `https://id.fsl.com/authorization/sign?arguments=${JSON.stringify({
@@ -836,7 +857,7 @@ class FSLAuthService {
 
       const chainName = this.getChainName(chainId);
       const starletAmount = purchaseData.quantity || purchaseData.amount;
-      const ggusdAmount = purchaseData.amount || starletAmount; // Adjust rate as needed
+      const ggusdAmount = purchaseData.ggusdAmount || purchaseData.stars || starletAmount; // Use GGUSD amount from purchase data
 
       // 1. Get EVM wallet address from FSL Authorization
       let userAddress;
@@ -1000,7 +1021,7 @@ class FSLAuthService {
       const signature = await fslAuth.callEvmSign({
         chainId: chainId,
         msg: message,
-        chain: this.getChainName(chainId),
+        chain: this.FSL_CHAIN_MAPPING[chainId], // ✅ Use proper FSL chain mapping
       });
 
       // Recover address từ signature
