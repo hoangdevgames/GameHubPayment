@@ -1,75 +1,425 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import './MainContent.css';
+import starlet from './images/starlet.png';
+import avatar from './images/avatar.png';
+import background from './images/background_2.png';
+import ticketIcon from './images/ticket.svg';
+import arrow_2 from './images/arrow_2.svg';
 
 const MainContent = ({ activeTab }) => {
   const { user } = useAuth();
+  const [tickets, setTickets] = useState(0);
+  const [starlets, setStarlets] = useState(0);
+  const [marketTab, setMarketTab] = useState('telegram'); // 'starlet' or 'telegram'
+  const [buyOptions, setBuyOptions] = useState([]);
+  const [isFreeItemClaimed, setIsFreeItemClaimed] = useState(false);
+  const [nextClaimTime, setNextClaimTime] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Category expansion states
+  const [standardPackExpanded, setStandardPackExpanded] = useState(true);
+  const [exclusiveOfferExpanded, setExclusiveOfferExpanded] = useState(true);
+  const [monthlyOfferExpanded, setMonthlyOfferExpanded] = useState(true);
+  const [weeklyOfferExpanded, setWeeklyOfferExpanded] = useState(true);
+
+  // Mock data for demonstration
+  useEffect(() => {
+    // Simulate user data
+    setTickets(150);
+    setStarlets(2500);
+    
+    // Mock buy options with proper categorization
+    setBuyOptions([
+      {
+        id: 2001,
+        state: 0,
+        type: 20,
+        stars: 250,
+        starlet: 1950,
+        ticket: 0,
+        canBuy: true
+      },
+      {
+        id: 4,
+        state: 0,
+        type: 0,
+        stars: 100,
+        starlet: 500,
+        ticket: 0,
+        canBuy: true
+      },
+      {
+        id: 5,
+        state: 0,
+        type: 10,
+        stars: 150,
+        starlet: 750,
+        ticket: 5,
+        canBuy: true
+      },
+      {
+        id: 6,
+        state: 0,
+        type: 30,
+        stars: 500,
+        starlet: 2500,
+        ticket: 15,
+        canBuy: true
+      }
+    ]);
+  }, []);
+
+  // Add body class to prevent iOS overscrolling
+  useEffect(() => {
+    // Add class when component mounts
+    document.body.classList.add('mk-market-open');
+    
+    // Remove class when component unmounts
+    return () => {
+      document.body.classList.remove('mk-market-open');
+    };
+  }, []);
+
+  const handleStarletPurchase = async (amount, stars, price, optionId = null) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('Purchase clicked:', { amount, stars, price, optionId });
+      
+      if (optionId === 'free') {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        setIsFreeItemClaimed(true);
+        // Update user stats
+        setTickets(prev => prev + 1);
+        setStarlets(prev => prev + 50);
+      } else {
+        // Handle paid purchase
+        console.log('Processing paid purchase:', { amount, stars, price, optionId });
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (err) {
+      setError('Purchase failed. Please try again.');
+      console.error('Purchase error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConnectFSLID = () => {
+    console.log('Connect FSL ID clicked');
+    // Handle FSL ID connection
+  };
+
+  const handleProfileClick = () => {
+    console.log('Profile clicked');
+    // Handle profile click - could open profile view
+  };
+
+  const handleStatsClick = (type) => {
+    console.log(`${type} stats clicked`);
+    // Handle stats click - could show detailed stats
+  };
+
+  // Helper function to get category title and color based on type
+  const getCategoryInfo = (type) => {
+    switch (type) {
+      case 0:
+        return { title: 'STANDARD PACK', color: '#00FF00', bgColor: 'rgba(0, 255, 0, 0.1)' };
+      case 10:
+        return { title: 'LIMITED WEEKLY OFFER', color: '#FF69B4', bgColor: 'rgba(255, 105, 180, 0.1)' };
+      case 20:
+        return { title: 'LIMITED MONTHLY OFFER', color: '#9370DB', bgColor: 'rgba(147, 112, 219, 0.1)' };
+      case 30:
+        return { title: 'EXCLUSIVE ONE-TIME OFFER', color: '#FFA500', bgColor: 'rgba(255, 165, 0, 0.1)' };
+      default:
+        return { title: 'STANDARD PACK', color: '#00FF00', bgColor: 'rgba(0, 255, 0, 0.1)' };
+    }
+  };
+
+  // Helper function to get expansion state based on type
+  const getExpansionState = (type) => {
+    switch (type) {
+      case 0:
+        return standardPackExpanded;
+      case 10:
+        return weeklyOfferExpanded;
+      case 20:
+        return monthlyOfferExpanded;
+      case 30:
+        return exclusiveOfferExpanded;
+      default:
+        return standardPackExpanded;
+    }
+  };
+
+  // Helper function to set expansion state based on type
+  const setExpansionState = (type, value) => {
+    switch (type) {
+      case 0:
+        setStandardPackExpanded(value);
+        break;
+      case 10:
+        setWeeklyOfferExpanded(value);
+        break;
+      case 20:
+        setMonthlyOfferExpanded(value);
+        break;
+      case 30:
+        setExclusiveOfferExpanded(value);
+        break;
+      default:
+        setStandardPackExpanded(value);
+    }
+  };
+
+  // Group buy options by type
+  const groupedOptions = buyOptions.reduce((acc, option) => {
+    if (!acc[option.type]) {
+      acc[option.type] = [];
+    }
+    acc[option.type].push(option);
+    return acc;
+  }, {});
+
+  // Ensure all category types exist
+  [0, 10, 20, 30].forEach(type => {
+    if (!groupedOptions[type]) {
+      groupedOptions[type] = [];
+    }
+  });
+
+  // Sort categories by type order: 0 (Standard), 30 (Exclusive), 20 (Monthly), 10 (Weekly)
+  const categoryOrder = [0, 30, 20, 10];
 
   const renderHomeContent = () => (
-    <div className="home-content">
-      <div className="welcome-section">
-        <h1 className="welcome-title">Welcome to GameHub Payment</h1>
-        <p className="welcome-subtitle">
-          Secure payment processing for FSL Game Hub!
-        </p>
+    <>
+      <div className="background-container">
+        <img src={background} alt="background" />
       </div>
-
-      <div className="features-grid">
-        <div className="feature-card">
-          <div className="feature-icon">⚡</div>
-          <h3 className="feature-title">Fast Processing</h3>
-          <p className="feature-description">
-            Lightning-fast payment processing with blockchain technology!
-          </p>
+      
+      {/* Market Top Bar - Copy from Market.js */}
+      <div className="mk-market-top-bar">
+        <div className="mk-user-greeting">
+          <button className="mk-profile-pic-main" onClick={handleProfileClick}>
+            <img src={avatar} alt="Profile" />
+          </button>
+          <div className="mk-greeting-text" onClick={handleProfileClick}>
+            GM {user?.name || user?.telegramUsername || 'User'}!
+          </div>
         </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">🔒</div>
-          <h3 className="feature-title">Secure</h3>
-          <p className="feature-description">
-            Bank-level security with encrypted transactions!
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">💎</div>
-          <h3 className="feature-title">Multiple Methods</h3>
-          <p className="feature-description">
-            Support for Solana-GMT and traditional payment methods
-          </p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">🎮</div>
-          <h3 className="feature-title">Gaming Focused</h3>
-          <p className="feature-description">
-            Designed specifically for gaming transactions
-          </p>
+        <div className="mk-currency-info">
+          <button className="mk-currency-item" onClick={() => handleStatsClick('tickets')}>
+            <img src={ticketIcon} alt="Tickets" />
+            <span className="mk-currency-value">{tickets}</span>
+          </button>
+          <button className="mk-currency-item" onClick={() => handleStatsClick('starlets')}>
+            <img src={starlet} alt="Starlets" />
+            <span className="mk-currency-value">{starlets}</span>
+          </button>
         </div>
       </div>
 
-      {user && (
-        <div className="user-info-section">
-          <h2 className="section-title">Your Account</h2>
-          <div className="user-card">
-            <div className="user-avatar">
-              <div className="avatar-placeholder">👤</div>
+      <div className="mk-market-container">
+        <div className="mk-market-content">
+          <div className="mk-market-title">MARKET</div>
+
+          {!user?.fslId && (
+            <div className="mk-fsl-connect-section" onClick={handleConnectFSLID}>
+              <div className="mk-fsl-connect-content">
+                <div className="mk-lock-icon">🔒</div>
+                <div className="mk-fsl-text">
+                  <div className="mk-connect-title">CONNECT YOUR FSL ID</div>
+                  <div className="mk-connect-subtitle">STEPN OG SNEAKER HOLDERS CAN CLAIM 10 FREE STARLETS DAILY!</div>
+                </div>
+              </div>
             </div>
-            <div className="user-details">
-              <div className="user-name">
-                {user.name || user.telegramUsername || 'User'}
+          )}
+          
+          <div className="mk-market-inner-content">
+            <div className="mk-market-tab-container">
+              <div className="mk-tabs">
+                <button
+                  className={`mk-tab ${marketTab === 'telegram' ? 'active' : ''}`}
+                  onClick={() => setMarketTab('telegram')}
+                >
+                  <div>TELEGRAM</div>
+                  <div>PACKAGES</div>
+                </button>
+                <button
+                  className={`mk-tab ${marketTab === 'starlet' ? 'active' : ''}`}
+                  onClick={() => setMarketTab('starlet')}
+                >
+                  <div>STARLET</div>
+                  <div>PACKAGES</div>
+                </button>
               </div>
-              <div className="user-platform">
-                {user.platform === 'telegram' ? '📱 Telegram' : '📱 LINE'}
+              
+              <div className="mk-scrollable-market-content">
+                {/* Show content based on active tab */}
+                {marketTab === 'telegram' && (
+                  <>
+                    {error && (
+                      <div className="error-message" style={{ 
+                        color: '#ff6b6b', 
+                        textAlign: 'center', 
+                        padding: '10px', 
+                        marginBottom: '10px',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 107, 107, 0.3)'
+                      }}>
+                        {error}
+                      </div>
+                    )}
+                    
+                    {/* Render each category in order */}
+                    {categoryOrder.map((type) => {
+                      const categoryInfo = getCategoryInfo(type);
+                      const isExpanded = getExpansionState(type);
+                      const options = groupedOptions[type] || [];
+                      
+                      // Skip empty sections except Standard Pack (type 0) which should always show for free item
+                      if (options.length === 0 && type !== 0) {
+                        return null;
+                      }
+                      
+                      return (
+                        <div key={type} className="mk-market-section">
+                          <div 
+                            className="mk-section-header"
+                            onClick={() => setExpansionState(type, !isExpanded)}
+                          >
+                            {/* Corner borders */}
+                            <div className="mk-corner mk-top-left"></div>
+                            <div className="mk-corner mk-top-right"></div>
+                            
+                            <div 
+                              className="mk-section-title-container"
+                              style={{ backgroundColor: categoryInfo.color }}
+                            >
+                              <span className="mk-section-title">
+                                {categoryInfo.title}
+                              </span>
+                              <img src={arrow_2} className={`mk-section-arrow ${isExpanded ? 'expanded' : ''}`} alt="arrow" />
+                            </div>
+                          </div>
+                          <div className={`mk-section-content ${isExpanded ? 'expanded' : ''}`}>
+                            {/* Corner borders for content */}
+                            <div className="mk-corner mk-bottom-left"></div>
+                            <div className="mk-corner mk-bottom-right"></div>
+                            
+                            <div className="mk-starlet-grid">
+                              {/* Show free item only in Standard Pack (type 0) */}
+                              {type === 0 && (
+                                <button 
+                                  className={`mk-market-ticket-button ${isFreeItemClaimed ? 'sold-out' : ''}`} 
+                                  onClick={() => !isFreeItemClaimed && handleStarletPurchase(50, 0, 'FREE', 'free')}
+                                  disabled={isFreeItemClaimed || isLoading}
+                                >
+                                  <div className="mk-market-ticket-button-image-container">
+                                    <div className="mk-market-ticket-content">
+                                      <div className="mk-market-ticket-icon">
+                                        <img src={starlet} alt="Starlet" style={{ opacity: isFreeItemClaimed ? 0.5 : 1 }} />
+                                      </div>
+                                      <div className="mk-market-ticket-info">
+                                        <div className="mk-market-ticket-text">
+                                          <div className="mk-market-ticket-amount" style={{ opacity: isFreeItemClaimed ? 0.5 : 1 }}>50</div>
+                                          <div className="mk-market-ticket-label" style={{ opacity: isFreeItemClaimed ? 0.5 : 1 }}>STARLETS</div>
+                                        </div>
+                                        <div className="mk-market-ticket-bonus">
+                                          <span>X1</span>&nbsp;<span>TICKETS</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="mk-market-ticket-price">
+                                      {isLoading ? 'LOADING...' : (isFreeItemClaimed ? 'SOLD OUT' : 'FREE')}
+                                    </div>
+                                  </div>
+                                </button>
+                              )}
+                              
+                              {/* Show regular options */}
+                              {options.map((option) => {
+                                // Check if option is available (state 0 = available, 1 = unavailable)
+                                const isAvailable = option.state === 0 && option.canBuy;
+                                
+                                // Calculate bonus for special offers
+                                let bonusText = null;
+                                if (type === 30) { // Exclusive One-Time Offer
+                                  if (option.stars === 0) bonusText = "BONUS: 50";
+                                  else if (option.stars === 5) bonusText = "BONUS: 325";
+                                  else if (option.stars === 10) bonusText = "BONUS: 325";
+                                } else if (type === 10) { // Limited Weekly Offer
+                                  if (option.stars === 0) bonusText = "BONUS: 25";
+                                  else if (option.stars === 5) {
+                                    if (option.starlet === 100) bonusText = "BONUS: 195";
+                                    else bonusText = "BONUS: 675";
+                                  }
+                                } else if (type === 20) { // Limited Monthly Offer
+                                  if (option.stars === 0) bonusText = "50% VALUE";
+                                  else if (option.stars === 5) bonusText = "100% VALUE";
+                                }
+                                
+                                return (
+                                  <button 
+                                    key={option.id}
+                                    className={`mk-market-ticket-button ${!isAvailable ? 'sold-out' : ''}`}
+                                    onClick={() => isAvailable && handleStarletPurchase(option.starlet, option.stars, null, option.id)}
+                                    disabled={!isAvailable || isLoading}
+                                  >
+                                    <div className="mk-market-ticket-button-image-container">
+                                      <div className="mk-market-ticket-content">
+                                        <div className="mk-market-ticket-icon">
+                                          <img src={starlet} alt="Starlet" style={{ opacity: isAvailable ? 1 : 0.5 }} />
+                                        </div>
+                                        <div className="mk-market-ticket-info">
+                                          {bonusText && (
+                                            <div className="mk-market-ticket-bonus-text" style={{ opacity: isAvailable ? 1 : 0.5 }}>{bonusText}</div>
+                                          )}
+                                          <div className="mk-market-ticket-text">
+                                            <div className="mk-market-ticket-amount" style={{ opacity: isAvailable ? 1 : 0.5 }}>{option.starlet}</div>
+                                            <div className="mk-market-ticket-label" style={{ opacity: isAvailable ? 1 : 0.5 }}>STARLETS</div>
+                                          </div>
+                                          <div className="mk-market-ticket-bonus" style={{ opacity: isAvailable ? 1 : 0.5 }}>
+                                            <span>X{option.ticket}</span>&nbsp;<span>TICKETS</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="mk-market-ticket-price" style={{ opacity: isAvailable ? 1 : 0.5 }}>
+                                        {isLoading ? 'LOADING...' : (!isAvailable ? 'SOLD OUT' : `${option.stars} TELEGRAM STARS`)}
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+                
+                {marketTab === 'starlet' && (
+                  <div className="mk-starlet-packages-placeholder">
+                    <div className="mk-placeholder-content">
+                      <div className="mk-placeholder-text">STARLET PACKAGES</div>
+                      <div className="mk-placeholder-subtext">Coming Soon</div>
+                    </div>
+                  </div>
+                )}
               </div>
-              {user.fslId && (
-                <div className="user-fslid">FSL ID: {user.fslId}</div>
-              )}
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 
   const renderPaymentContent = () => (
