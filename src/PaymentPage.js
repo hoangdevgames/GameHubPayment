@@ -52,6 +52,9 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
         case 'ethereum':
           await handleEthereumGGUSDPayment();
           break;
+        case 'amoy':
+          await handleAmoyGGUSDPayment();
+          break;
         default:
           throw new Error('Unsupported payment method');
       }
@@ -156,6 +159,29 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     }
   };
 
+  const handleAmoyGGUSDPayment = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Processing Amoy GGUSD payment for:', purchaseData);
+      
+      const result = await fslAuthService.processGGUSDPayment(purchaseData, 80002); // Amoy chainId
+      
+      if (result.success) {
+        console.log('Amoy GGUSD payment successful:', result);
+        setLoading(false);
+        onSuccess && onSuccess(result);
+      } else {
+        throw new Error(result.error || 'Amoy payment failed');
+      }
+    } catch (error) {
+      console.error('Amoy GGUSD payment error:', error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
   const handleBack = () => {
     // Redirect back to GamingHub
     if (purchaseData?.returnUrl) {
@@ -220,6 +246,14 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           description: 'Pay with GGUSD tokens on Ethereum network',
           icon: '🟦',
           balance: userBalance?.ggusd_ethereum ? `${userBalance.ggusd_ethereum.toFixed(2)} GGUSD` : null
+        };
+      case 'amoy':
+        return {
+          name: 'PAY WITH AMOY-GGUSD',
+          amount: formatAmount(baseGGUSDAmount, 'GGUSD'),
+          description: 'Pay with GGUSD tokens on Amoy testnet',
+          icon: '🟢',
+          balance: userBalance?.ggusd_amoy ? `${userBalance.ggusd_amoy.toFixed(2)} GGUSD` : null
         };
       default:
         return {
@@ -359,6 +393,26 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           </div>
           <div className="method-check">
             {paymentMethod === 'ethereum' && <div className="checkmark">✓</div>}
+          </div>
+        </button>
+
+        {/* Amoy GGUSD Payment */}
+        <button 
+          className={`payment-method-button amoy-button ${paymentMethod === 'amoy' ? 'selected' : ''}`}
+          onClick={() => handlePaymentMethod('amoy')}
+          disabled={loading}
+        >
+          <div className="method-icon">🟢</div>
+          <div className="method-content">
+            <div className="method-name">PAY WITH AMOY-GGUSD</div>
+            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-description">Pay with GGUSD tokens on Amoy testnet</div>
+            {userBalance?.ggusd_amoy && (
+              <div className="method-balance">Balance: {userBalance.ggusd_amoy.toFixed(2)} GGUSD</div>
+            )}
+          </div>
+          <div className="method-check">
+            {paymentMethod === 'amoy' && <div className="checkmark">✓</div>}
           </div>
         </button>
       </div>

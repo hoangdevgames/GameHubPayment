@@ -64,19 +64,22 @@ class FSLAuthService {
     this.GGUSD_CONTRACTS = {
       137: '0xFFFFFF9936BD58a008855b0812B44D2c8dFFE2aA', // Polygon GGUSD contract address
       56: '0xffffff9936bd58a008855b0812b44d2c8dffe2aa',  // BSC GGUSD contract address
-      1: '0x...'    // Ethereum GGUSD contract address - NEED TO GET THIS
+      1: '0x...',    // Ethereum GGUSD contract address - NEED TO GET THIS
+      80002: '0xfF39ac1e2aD4CbA1b86D77d972424fB8515242bd'
     };
 
     this.TREASURY_ADDRESSES = {
       137: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Polygon treasury wallet
       56: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',  // Your BSC treasury wallet
-      1: '0x2572421a30c0097357Cd081228D5F1C07ce96bee'    // Your Ethereum treasury wallet
+      1: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',    // Your Ethereum treasury wallet
+      80002: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',
     };
 
     this.CHAIN_NAMES = {
+      80002: 'Amoy',
       137: 'Polygon',
       56: 'BSC',
-      1: 'Ethereum'
+      1: 'Ethereum',
     };
   }
 
@@ -627,6 +630,10 @@ class FSLAuthService {
     return await this.purchaseStarletsWithGGUSD(1, starletAmount, ggusdAmount);
   }
 
+  async buyStarletsAmoy(starletAmount, ggusdAmount) {
+    return await this.purchaseStarletsWithGGUSD(80002, starletAmount, ggusdAmount);
+  }
+
   // Alternative: Using Popup Window for Contract Calls - copy từ guide
   async purchaseWithPopup(chainId, ggusdAmount, appKey) {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];
@@ -924,6 +931,7 @@ class FSLAuthService {
       'ethereum': 1,
       'polygon': 137,
       'bsc': 56,
+      'amoy': 80002,
     };
     return chainIds[chainName.toLowerCase()] || 1;
   }
@@ -975,6 +983,32 @@ class FSLAuthService {
       
     } catch (error) {
       console.error('Error getting Polygon GMT balance with address:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy GMT balance và địa chỉ ví cho Amoy
+   */
+  async getAmoyGMTBalanceWithAddress() {
+    try {
+      // Lấy địa chỉ ví Amoy hiện tại
+      const walletAddress = await this.getCurrentWalletAddress('amoy');
+      console.log('Current Amoy wallet address:', walletAddress);
+
+      // Sử dụng hàm balance GMT của bạn
+      const balance = await this.getAmoyGMTBalance(walletAddress);
+
+      return {
+        walletAddress: walletAddress,
+        balance: balance,
+        chain: 'amoy',
+        currency: 'GMT',
+        chainId: 80002
+      };
+      
+    } catch (error) {
+      console.error('Error getting Amoy GMT balance with address:', error);
       throw error;
     }
   }
@@ -1086,6 +1120,76 @@ class FSLAuthService {
     }
   }
 
+  async getAmoyGMTBalance(walletAddress) {
+    console.log('Get Amoy GMT balance for wallet:', walletAddress);
+
+    if (!walletAddress) {
+        console.log('No wallet address provided');
+        return 0;
+    }
+
+    // Amoy testnet GMT contract address (you may need to update this)
+    const GMT_CONTRACT = '0x714DB550b574b3E927af3D93E26127D15721D4C2';
+    
+    try {
+        // Import Web3 locally if needed
+        const Web3 = require('web3');
+        
+        // Simple ERC-20 ABI for balanceOf and decimals
+        const tokenABI = [
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"name": "", "type": "uint8"}],
+                "type": "function"
+            }
+        ];
+
+        // Amoy testnet RPC URL
+        const web3 = new Web3('https://rpc-amoy.polygon.technology/');
+        const contract = new web3.eth.Contract(tokenABI, GMT_CONTRACT);
+
+        try {
+            // First get the token decimals
+            const decimals = await contract.methods.decimals().call();
+            console.log('GMT token decimals (Amoy):', decimals);
+
+            const balance = await Promise.race([
+                contract.methods.balanceOf(walletAddress).call(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+            ]);
+
+            console.log('GMT balance Amoy (raw):', balance);
+            
+            if (balance !== undefined) {
+                // Convert BigInt values to strings before calculation
+                const balanceNum = Number(balance.toString());
+                const decimalsNum = Number(decimals.toString());
+                const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('GMT balance Amoy (formatted):', formattedBalance);
+                return formattedBalance;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error getting Amoy GMT balance:', error);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error initializing Web3 for Amoy:', error);
+        return 0;
+    }
+  }
+
   /**
    * Lấy tất cả wallet addresses và balances
    */
@@ -1123,6 +1227,18 @@ class FSLAuthService {
         console.warn('⚠️ Could not get Polygon wallet info:', error.message);
         walletInfo.wallets.polygon = null;
         walletInfo.balances.polygonGMT = 0;
+      }
+
+      // Get Amoy wallet and GMT balance
+      try {
+        const amoyInfo = await this.getAmoyGMTBalanceWithAddress();
+        walletInfo.wallets.amoy = amoyInfo.walletAddress;
+        walletInfo.balances.amoyGMT = amoyInfo.balance;
+        console.log('✅ Amoy wallet info retrieved');
+      } catch (error) {
+        console.warn('⚠️ Could not get Amoy wallet info:', error.message);
+        walletInfo.wallets.amoy = null;
+        walletInfo.balances.amoyGMT = 0;
       }
 
       // Get Ethereum wallet (optional)
