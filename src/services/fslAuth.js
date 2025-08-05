@@ -9,6 +9,9 @@ import { Connection, PublicKey } from '@solana/web3.js';
 // Thêm import ethers cho EVM chains
 import { ethers } from 'ethers';
 
+// Thêm import Web3 cho EVM balance queries
+import Web3 from 'web3';
+
 /**
  * FSL Authentication Service with Multi-Chain Payment Support
  * 
@@ -64,22 +67,19 @@ class FSLAuthService {
     this.GGUSD_CONTRACTS = {
       137: '0xFFFFFF9936BD58a008855b0812B44D2c8dFFE2aA', // Polygon GGUSD contract address
       56: '0xffffff9936bd58a008855b0812b44d2c8dffe2aa',  // BSC GGUSD contract address
-      1: '0x...',    // Ethereum GGUSD contract address - NEED TO GET THIS
-      80002: '0xfF39ac1e2aD4CbA1b86D77d972424fB8515242bd'
+      80002: '0xfF39ac1e2aD4CbA1b86D77d972424fB8515242bd' // Amoy GGUSD contract address
     };
 
     this.TREASURY_ADDRESSES = {
       137: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Polygon treasury wallet
       56: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',  // Your BSC treasury wallet
-      1: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',    // Your Ethereum treasury wallet
-      80002: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',
+      80002: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Amoy treasury wallet
     };
 
     this.CHAIN_NAMES = {
       80002: 'Amoy',
       137: 'Polygon',
       56: 'BSC',
-      1: 'Ethereum',
     };
   }
 
@@ -91,7 +91,7 @@ class FSLAuthService {
         responseType: 'code',
         appKey: 'MiniGame',
         redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
-        scope: 'basic,wallet',
+        scope: 'basic,wallet,stepn',
         state: 'gamehub_payment',
         usePopup: true,
         isApp: false,
@@ -192,17 +192,84 @@ class FSLAuthService {
   // Get balance using FSL SDK
   async getBalance() {
     try {
+      console.log('🔄 Starting getBalance()...');
       await this.init();
       
-      // Trong thực tế, bạn sẽ gọi API để lấy balance thực
-      // Ở đây tôi giả lập balance data với số lượng đủ để test
-      return {
-        gmt: 1000 + Math.random() * 500, // Đảm bảo ít nhất 1000 GMT
-        sol: 5 + Math.random() * 5,      // Đảm bảo ít nhất 5 SOL
+      // Lấy balance thực tế từ tất cả chains
+      console.log('📊 Getting wallet info...');
+      const walletInfo = await this.getAllWalletInfo();
+      console.log('✅ Wallet info received:', walletInfo);
+      
+      // Lấy GGUSD balances
+      console.log('💰 Getting GGUSD balances...');
+      
+      let ggusd_polygon = 0;
+      let ggusd_bsc = 0;
+      let ggusd_amoy = 0;
+      
+      if (walletInfo.wallets.polygon) {
+        console.log('🔷 Getting Polygon GGUSD balance for:', walletInfo.wallets.polygon);
+        try {
+          ggusd_polygon = await this.getPolygonGGUSDBalance(walletInfo.wallets.polygon);
+          console.log('✅ Polygon GGUSD balance:', ggusd_polygon);
+        } catch (error) {
+          console.error('❌ Polygon GGUSD balance error:', error);
+        }
+      }
+      
+      if (walletInfo.wallets.bsc) {
+        console.log('🟡 Getting BSC GGUSD balance for:', walletInfo.wallets.bsc);
+        try {
+          ggusd_bsc = await this.getBSCGGUSDBalance(walletInfo.wallets.bsc);
+          console.log('✅ BSC GGUSD balance:', ggusd_bsc);
+        } catch (error) {
+          console.error('❌ BSC GGUSD balance error:', error);
+        }
+      }
+      
+      if (walletInfo.wallets.amoy) {
+        console.log('🟢 Getting Amoy GGUSD balance for:', walletInfo.wallets.amoy);
+        try {
+          ggusd_amoy = await this.getAmoyGGUSDBalance(walletInfo.wallets.amoy);
+          console.log('✅ Amoy GGUSD balance:', ggusd_amoy);
+        } catch (error) {
+          console.error('❌ Amoy GGUSD balance error:', error);
+        }
+      }
+      
+      const result = {
+        // GMT balances
+        gmt: walletInfo.balances.solanaGMT || 0,
+        
+        // GGUSD balances
+        ggusd_polygon: ggusd_polygon,
+        ggusd_bsc: ggusd_bsc,
+        ggusd_amoy: ggusd_amoy,
+        
+        // Wallet addresses
+        walletAddresses: {
+          solana: walletInfo.wallets.solana,
+          polygon: walletInfo.wallets.polygon,
+          bsc: walletInfo.wallets.bsc,
+          amoy: walletInfo.wallets.amoy,
+        }
       };
+      
+      console.log('🎯 Final balance result:', result);
+      return result;
+      
     } catch (error) {
-      console.error('Get balance error:', error);
-      throw error;
+      console.error('❌ Get balance error:', error);
+      console.log('🔄 Falling back to mock data...');
+      // Fallback to mock data if real balance fails
+      const mockResult = {
+        gmt: 1000 + Math.random() * 500,
+        ggusd_polygon: 100 + Math.random() * 50,
+        ggusd_bsc: 100 + Math.random() * 50,
+        ggusd_amoy: 100 + Math.random() * 50,
+      };
+      console.log('🎭 Mock data result:', mockResult);
+      return mockResult;
     }
   }
 
@@ -568,13 +635,21 @@ class FSLAuthService {
     try {
       const fslAuth = await this.init();
       
-      // Convert GGUSD amount to proper decimals
+      // Convert GGUSD amount to proper decimals and convert to string to avoid BigInt serialization issues
       const amountInWei = ethers.parseUnits(ggusdAmount.toString(), decimals);
+      const amountInWeiString = amountInWei.toString(); // Convert BigInt to string
+      
+      console.log('🔗 GGUSD Payment Details:');
+      console.log('  Contract Address:', contractAddress);
+      console.log('  Treasury Address:', treasuryAddress);
+      console.log('  Amount (GGUSD):', ggusdAmount);
+      console.log('  Amount (Wei):', amountInWeiString);
+      console.log('  Chain ID:', chainId);
       
       const txHash = await fslAuth.callEvmContract({
         contractAddress: contractAddress,
         methodName: 'transfer',
-        params: [treasuryAddress, amountInWei],
+        params: [treasuryAddress, amountInWeiString], // Use string instead of BigInt
         abi: this.GGUSD_ABI,
         gasLimit: '150000',
         chainId: chainId,
@@ -597,6 +672,13 @@ class FSLAuthService {
     } catch (error) {
       console.error('GGUSD payment failed:', error);
       
+      // Handle BigInt serialization errors specifically
+      if (error.message && error.message.includes('BigInt')) {
+        console.error('❌ BigInt serialization error detected!');
+        console.error('This usually happens when BigInt values are passed to JSON.stringify()');
+        console.error('Error details:', error);
+      }
+      
       // Handle popup blocker error specifically
       if (error.message && error.message.includes('pop-up cannot be ejected')) {
         console.warn('🚫 Popup blocked! Please allow popups for this site and try again.');
@@ -607,6 +689,8 @@ class FSLAuthService {
       let userFriendlyError = error.message;
       if (error.message && error.message.includes('pop-up cannot be ejected')) {
         userFriendlyError = 'Payment popup was blocked. Please allow popups for this site and try again.';
+      } else if (error.message && error.message.includes('BigInt')) {
+        userFriendlyError = 'Payment processing error. Please try again or contact support.';
       }
       
       return {
@@ -639,11 +723,12 @@ class FSLAuthService {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];
     const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
     const amountInWei = ethers.parseUnits(ggusdAmount.toString(), 18);
+    const amountInWeiString = amountInWei.toString(); // Convert BigInt to string
     
     const contractParams = {
       contractAddress: contractAddress,
       methodName: 'transfer',
-      params: [treasuryAddress, amountInWei],
+      params: [treasuryAddress, amountInWeiString], // Use string instead of BigInt
       abi: this.GGUSD_ABI,
       gasLimit: '150000',
       chainId: chainId,
@@ -780,6 +865,12 @@ class FSLAuthService {
 
       // 3. Execute payment based on chain
       console.log(`Executing ${chainName} GGUSD payment...`);
+      console.log('🔗 Payment parameters:');
+      console.log('  Chain ID:', chainId);
+      console.log('  Starlet Amount:', starletAmount);
+      console.log('  GGUSD Amount:', ggusdAmount);
+      console.log('  User Address:', userAddress);
+      
       const result = await this.purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount);
       
       if (result.success) {
@@ -818,23 +909,28 @@ class FSLAuthService {
    */
   async getCurrentWalletAddress(chain = 'solana') {
     try {
+      console.log(`🔍 Getting ${chain} wallet address...`);
       const fslAuth = await this.init();
       
       if (!this.currentUser) {
         throw new Error('User not initialized. Please login first.');
       }
 
+      console.log('👤 Current user profile:', this.currentUser.userProfile);
+
       // 1. Thử lấy từ userProfile trước (từ GamingHub data)
       if (this.currentUser.userProfile) {
         if (chain === 'solana' && this.currentUser.userProfile.solAddr) {
-          console.log('Got Solana address from userProfile:', this.currentUser.userProfile.solAddr);
+          console.log('✅ Got Solana address from userProfile:', this.currentUser.userProfile.solAddr);
           return this.currentUser.userProfile.solAddr;
         }
         if (chain !== 'solana' && this.currentUser.userProfile.evmAddr) {
-          console.log('Got EVM address from userProfile:', this.currentUser.userProfile.evmAddr);
+          console.log('✅ Got EVM address from userProfile:', this.currentUser.userProfile.evmAddr);
           return this.currentUser.userProfile.evmAddr;
         }
       }
+      
+      console.log('⚠️ No wallet address found in userProfile, trying FSL SDK...');
 
       // 2. Lấy từ FSL SDK bằng message signing
       if (chain === 'solana') {
@@ -928,12 +1024,11 @@ class FSLAuthService {
    */
   getChainIdFromName(chainName) {
     const chainIds = {
-      'ethereum': 1,
       'polygon': 137,
       'bsc': 56,
       'amoy': 80002,
     };
-    return chainIds[chainName.toLowerCase()] || 1;
+    return chainIds[chainName.toLowerCase()] || 137; // Default to Polygon
   }
 
   /**
@@ -1063,9 +1158,6 @@ class FSLAuthService {
     const GMT_CONTRACT = '0x714DB550b574b3E927af3D93E26127D15721D4C2';
     
     try {
-        // Import Web3 locally if needed
-        const Web3 = require('web3');
-        
         // Simple ERC-20 ABI for balanceOf and decimals
         const tokenABI = [
             {
@@ -1128,14 +1220,11 @@ class FSLAuthService {
         return 0;
     }
 
-    // Amoy testnet GMT contract address (you may need to update this)
     const GMT_CONTRACT = '0x714DB550b574b3E927af3D93E26127D15721D4C2';
     
     try {
-        // Import Web3 locally if needed
-        const Web3 = require('web3');
+        const web3 = new Web3('https://lb5.stepn.com/');
         
-        // Simple ERC-20 ABI for balanceOf and decimals
         const tokenABI = [
             {
                 "constant": true,
@@ -1152,9 +1241,7 @@ class FSLAuthService {
                 "type": "function"
             }
         ];
-
-        // Amoy testnet RPC URL
-        const web3 = new Web3('https://rpc-amoy.polygon.technology/');
+        
         const contract = new web3.eth.Contract(tokenABI, GMT_CONTRACT);
 
         try {
@@ -1190,12 +1277,219 @@ class FSLAuthService {
     }
   }
 
+  // ========== GGUSD BALANCE METHODS ==========
+
+  /**
+   * Lấy GGUSD balance cho Amoy testnet
+   */
+  async getAmoyGGUSDBalance(walletAddress) {
+    console.log('Get Amoy GGUSD balance for wallet:', walletAddress);
+
+    if (!walletAddress) {
+        console.log('No wallet address provided');
+        return 0;
+    }
+
+    const GGUSD_CONTRACT = '0xfF39ac1e2aD4CbA1b86D77d972424fB8515242bd';
+    
+    try {
+        const web3 = new Web3('https://rpc-amoy.polygon.technology/');
+        
+        const tokenABI = [
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"name": "", "type": "uint8"}],
+                "type": "function"
+            }
+        ];
+        
+        const contract = new web3.eth.Contract(tokenABI, GGUSD_CONTRACT);
+
+        try {
+            // First get the token decimals
+            const decimals = await contract.methods.decimals().call();
+            console.log('GGUSD token decimals (Amoy):', decimals);
+
+            const balance = await Promise.race([
+                contract.methods.balanceOf(walletAddress).call(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+            ]);
+
+            console.log('GGUSD balance Amoy (raw):', balance);
+            
+            if (balance !== undefined) {
+                // Convert BigInt values to strings before calculation
+                const balanceNum = Number(balance.toString());
+                const decimalsNum = Number(decimals.toString());
+                const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('GGUSD balance Amoy (formatted):', formattedBalance);
+                return formattedBalance;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error getting Amoy GGUSD balance:', error);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error initializing Web3 for Amoy GGUSD:', error);
+        return 0;
+    }
+  }
+
+  /**
+   * Lấy GGUSD balance cho Polygon
+   */
+  async getPolygonGGUSDBalance(walletAddress) {
+    console.log('Get Polygon GGUSD balance for wallet:', walletAddress);
+
+    if (!walletAddress) {
+        console.log('No wallet address provided');
+        return 0;
+    }
+
+    const GGUSD_CONTRACT = '0xFFFFFF9936BD58a008855b0812B44D2c8dFFE2aA';
+    
+    try {
+        const web3 = new Web3('https://lb5.stepn.com/');
+        
+        const tokenABI = [
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"name": "", "type": "uint8"}],
+                "type": "function"
+            }
+        ];
+        
+        const contract = new web3.eth.Contract(tokenABI, GGUSD_CONTRACT);
+
+        try {
+            // First get the token decimals
+            const decimals = await contract.methods.decimals().call();
+            console.log('GGUSD token decimals (Polygon):', decimals);
+
+            const balance = await Promise.race([
+                contract.methods.balanceOf(walletAddress).call(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+            ]);
+
+            console.log('GGUSD balance Polygon (raw):', balance);
+            
+            if (balance !== undefined) {
+                // Convert BigInt values to strings before calculation
+                const balanceNum = Number(balance.toString());
+                const decimalsNum = Number(decimals.toString());
+                const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('GGUSD balance Polygon (formatted):', formattedBalance);
+                return formattedBalance;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error getting Polygon GGUSD balance:', error);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error initializing Web3 for Polygon GGUSD:', error);
+        return 0;
+    }
+  }
+
+  /**
+   * Lấy GGUSD balance cho BSC
+   */
+  async getBSCGGUSDBalance(walletAddress) {
+    console.log('Get BSC GGUSD balance for wallet:', walletAddress);
+
+    if (!walletAddress) {
+        console.log('No wallet address provided');
+        return 0;
+    }
+
+    const GGUSD_CONTRACT = '0xffffff9936bd58a008855b0812b44d2c8dffe2aa';
+    
+    try {
+        const web3 = new Web3('https://bsc-dataseed.binance.org');
+        
+        const tokenABI = [
+            {
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"name": "", "type": "uint8"}],
+                "type": "function"
+            }
+        ];
+        
+        const contract = new web3.eth.Contract(tokenABI, GGUSD_CONTRACT);
+
+        try {
+            // First get the token decimals
+            const decimals = await contract.methods.decimals().call();
+            console.log('GGUSD token decimals (BSC):', decimals);
+
+            const balance = await Promise.race([
+                contract.methods.balanceOf(walletAddress).call(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+            ]);
+
+            console.log('GGUSD balance BSC (raw):', balance);
+            
+            if (balance !== undefined) {
+                // Convert BigInt values to strings before calculation
+                const balanceNum = Number(balance.toString());
+                const decimalsNum = Number(decimals.toString());
+                const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('GGUSD balance BSC (formatted):', formattedBalance);
+                return formattedBalance;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error getting BSC GGUSD balance:', error);
+            return 0;
+        }
+    } catch (error) {
+        console.error('Error initializing Web3 for BSC GGUSD:', error);
+        return 0;
+    }
+  }
+
   /**
    * Lấy tất cả wallet addresses và balances
    */
   async getAllWalletInfo() {
     try {
-      console.log('Getting all wallet info for current user...');
+      console.log('🔍 Getting all wallet info for current user...');
+      console.log('👤 Current user:', this.currentUser);
       
       const walletInfo = {
         user: this.currentUser?.name || 'Unknown',
@@ -1207,48 +1501,56 @@ class FSLAuthService {
 
       // Get Solana wallet and GMT balance
       try {
+        console.log('⚡ Getting Solana wallet and GMT balance...');
         const solanaInfo = await this.getSolanaGMTBalanceWithAddress();
         walletInfo.wallets.solana = solanaInfo.walletAddress;
         walletInfo.balances.solanaGMT = solanaInfo.balance;
-        console.log('✅ Solana wallet info retrieved');
+        console.log('✅ Solana wallet info retrieved:', solanaInfo);
       } catch (error) {
         console.warn('⚠️ Could not get Solana wallet info:', error.message);
+        console.error('❌ Solana error details:', error);
         walletInfo.wallets.solana = null;
         walletInfo.balances.solanaGMT = 0;
       }
 
       // Get Polygon wallet and GMT balance
       try {
+        console.log('🔷 Getting Polygon wallet and GMT balance...');
         const polygonInfo = await this.getPolygonGMTBalanceWithAddress();
         walletInfo.wallets.polygon = polygonInfo.walletAddress;
         walletInfo.balances.polygonGMT = polygonInfo.balance;
-        console.log('✅ Polygon wallet info retrieved');
+        console.log('✅ Polygon wallet info retrieved:', polygonInfo);
       } catch (error) {
         console.warn('⚠️ Could not get Polygon wallet info:', error.message);
+        console.error('❌ Polygon error details:', error);
         walletInfo.wallets.polygon = null;
         walletInfo.balances.polygonGMT = 0;
       }
 
       // Get Amoy wallet and GMT balance
       try {
+        console.log('🟢 Getting Amoy wallet and GMT balance...');
         const amoyInfo = await this.getAmoyGMTBalanceWithAddress();
         walletInfo.wallets.amoy = amoyInfo.walletAddress;
         walletInfo.balances.amoyGMT = amoyInfo.balance;
-        console.log('✅ Amoy wallet info retrieved');
+        console.log('✅ Amoy wallet info retrieved:', amoyInfo);
       } catch (error) {
         console.warn('⚠️ Could not get Amoy wallet info:', error.message);
+        console.error('❌ Amoy error details:', error);
         walletInfo.wallets.amoy = null;
         walletInfo.balances.amoyGMT = 0;
       }
 
-      // Get Ethereum wallet (optional)
+      // Get BSC wallet (optional)
       try {
-        const ethereumAddress = await this.getCurrentWalletAddress('ethereum');
-        walletInfo.wallets.ethereum = ethereumAddress;
-        console.log('✅ Ethereum wallet address retrieved');
+        console.log('🟡 Getting BSC wallet address...');
+        const bscAddress = await this.getCurrentWalletAddress('bsc');
+        walletInfo.wallets.bsc = bscAddress;
+        console.log('✅ BSC wallet address retrieved:', bscAddress);
       } catch (error) {
-        console.warn('⚠️ Could not get Ethereum wallet:', error.message);
-        walletInfo.wallets.ethereum = null;
+        console.warn('⚠️ Could not get BSC wallet:', error.message);
+        console.error('❌ BSC error details:', error);
+        walletInfo.wallets.bsc = null;
       }
 
       console.log('🎯 Complete wallet info:', walletInfo);

@@ -49,9 +49,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
         case 'bsc':
           await handleBSCGGUSDPayment();
           break;
-        case 'ethereum':
-          await handleEthereumGGUSDPayment();
-          break;
+
         case 'amoy':
           await handleAmoyGGUSDPayment();
           break;
@@ -136,28 +134,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     }
   };
 
-  const handleEthereumGGUSDPayment = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Processing Ethereum GGUSD payment for:', purchaseData);
-      
-      const result = await fslAuthService.processGGUSDPayment(purchaseData, 1); // Ethereum chainId
-      
-      if (result.success) {
-        console.log('Ethereum GGUSD payment successful:', result);
-        setLoading(false);
-        onSuccess && onSuccess(result);
-      } else {
-        throw new Error(result.error || 'Ethereum payment failed');
-      }
-    } catch (error) {
-      console.error('Ethereum GGUSD payment error:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
+
 
   const handleAmoyGGUSDPayment = async () => {
     setLoading(true);
@@ -239,14 +216,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           icon: '🟡',
           balance: userBalance?.ggusd_bsc ? `${userBalance.ggusd_bsc.toFixed(2)} GGUSD` : null
         };
-      case 'ethereum':
-        return {
-          name: 'PAY WITH ETHEREUM-GGUSD',
-          amount: formatAmount(baseGGUSDAmount, 'GGUSD'),
-          description: 'Pay with GGUSD tokens on Ethereum network',
-          icon: '🟦',
-          balance: userBalance?.ggusd_ethereum ? `${userBalance.ggusd_ethereum.toFixed(2)} GGUSD` : null
-        };
+
       case 'amoy':
         return {
           name: 'PAY WITH AMOY-GGUSD',
@@ -376,25 +346,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           </div>
         </button>
 
-        {/* Ethereum GGUSD Payment */}
-        <button 
-          className={`payment-method-button ethereum-button ${paymentMethod === 'ethereum' ? 'selected' : ''}`}
-          onClick={() => handlePaymentMethod('ethereum')}
-          disabled={loading}
-        >
-          <div className="method-icon">🟦</div>
-          <div className="method-content">
-            <div className="method-name">PAY WITH ETHEREUM-GGUSD</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
-            <div className="method-description">Pay with GGUSD tokens on Ethereum network</div>
-            {userBalance?.ggusd_ethereum && (
-              <div className="method-balance">Balance: {userBalance.ggusd_ethereum.toFixed(2)} GGUSD</div>
-            )}
-          </div>
-          <div className="method-check">
-            {paymentMethod === 'ethereum' && <div className="checkmark">✓</div>}
-          </div>
-        </button>
+
 
         {/* Amoy GGUSD Payment */}
         <button 

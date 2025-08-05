@@ -44,6 +44,11 @@ export const AuthProvider = ({ children }) => {
         
         console.log('Received data from GamingHub:', { userData, purchaseInfo });
         
+        // Debug: Log wallet addresses received
+        console.log('🔗 Received wallet addresses from GamingHub:');
+        console.log('  EVM Address:', userData.userProfile?.evmAddr);
+        console.log('  Solana Address:', userData.userProfile?.solAddr);
+        
         // Auto-login with received data and redirect to payment
         autoLoginWithGamingHubData(userData, purchaseInfo);
         
