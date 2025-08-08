@@ -670,7 +670,7 @@ body.mk-market-open {
 
 .mk-scrollable-market-content {
   flex: 1;
-  padding: 16px;
+  padding: 80px;
   overflow-y: auto;
   min-height: 0;
   display: flex;

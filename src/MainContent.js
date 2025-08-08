@@ -245,7 +245,7 @@ const MainContent = ({ activeTab }) => {
           
           <div className="mk-market-inner-content">
             <div className="mk-market-tab-container">
-              <div className="mk-tabs">
+              {/* <div className="mk-tabs">
                 <button
                   className={`mk-tab ${marketTab === 'telegram' ? 'active' : ''}`}
                   onClick={() => setMarketTab('telegram')}
@@ -260,7 +260,7 @@ const MainContent = ({ activeTab }) => {
                   <div>STARLET</div>
                   <div>PACKAGES</div>
                 </button>
-              </div>
+              </div> */}
               
               <div className="mk-scrollable-market-content">
                 {/* Show content based on active tab */}
