@@ -3,7 +3,7 @@ body.mk-market-open {
   overscroll-behavior-y: none;
   overflow: hidden;
   /* Remove position: fixed and height: 100% to fix iPhone LINE mini app white space issue */
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .mk-market-container {
@@ -11,9 +11,11 @@ body.mk-market-open {
   flex-direction: column;
   padding: 0;
   color: white;
-  height: 100%;
+  /* Fill available space without forcing page overflow */
+  flex: 1;
+  height: auto;
+  min-height: 0;
   background-color: transparent;
-  width: min(500px, 100%);
   margin: 0 auto;
   position: relative;
   overflow-y: auto;
@@ -90,7 +92,6 @@ body.mk-market-open {
 }
 
 .mk-market-title {
-  text-align: center;
   font-size: clamp(65px, 15vw, 90px);
   font-weight: 700;
   font-family: "PP Neue Machina";
@@ -103,7 +104,6 @@ body.mk-market-open {
   box-sizing: border-box;
   line-height: 1;
   display: flex;
-  justify-content: center;
   height: 90px;
 }
 
@@ -265,7 +265,6 @@ body.mk-market-open {
   width: 100%; /* Extend to full width */
   box-sizing: border-box;
   /* Scale up to 1.2x without changing position */
-  transform: scaleX(1.075);
   transform-origin: center;
 }
 
@@ -376,7 +375,7 @@ body.mk-market-open {
 
 .mk-starlet-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   width: 100%;
   max-width: 100%;
@@ -476,7 +475,6 @@ body.mk-market-open {
   background: rgba(0, 0, 0, 0.5);
   gap: 8px;
   border-bottom: 1px solid #0000FF;
-  height: 55px;
   backdrop-filter: blur(5px);
 }
 
@@ -637,7 +635,7 @@ body.mk-market-open {
   padding-bottom: 91px;
   -webkit-overflow-scrolling: touch;
   position: relative;
-  height: 100vh;
+  height: auto;
   margin-top: 0;
   overscroll-behavior: none;
   width: 100%;
@@ -803,11 +801,12 @@ body.mk-market-open {
 .main-content {
   flex: 1;
   padding: 0;
-  max-width: 1200px;
   margin: 0 auto;
-  width: 100%;
+  width: 80%;
   position: relative;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* allow children to define scroll area */
   overflow: hidden;
 }
 
@@ -1004,4 +1003,12 @@ body.mk-market-open {
     height: 35px;
     font-size: 16px;
   }
-} 
+}
+
+.mk-market-title-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}

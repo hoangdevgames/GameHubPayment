@@ -80,9 +80,9 @@ const AppContent = () => {
         <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       )}
       {renderActiveView()}
-      {!showPaymentView && !showSuccessView && !showFailedView && (
+      {/* {!showPaymentView && !showSuccessView && !showFailedView && (
         <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      )}
+      )} */}
     </div>
   );
 };

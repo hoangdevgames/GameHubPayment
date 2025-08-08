@@ -227,6 +227,7 @@ const MainContent = ({ activeTab }) => {
 
       <div className="mk-market-container">
         <div className="mk-market-content">
+          <div className="mk-market-title-container">
           <div className="mk-market-title">MARKET</div>
 
           {!user?.fslId && (
@@ -240,6 +241,7 @@ const MainContent = ({ activeTab }) => {
               </div>
             </div>
           )}
+          </div>
           
           <div className="mk-market-inner-content">
             <div className="mk-market-tab-container">

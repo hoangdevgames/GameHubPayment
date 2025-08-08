@@ -857,7 +857,23 @@ class FSLAuthService {
 
       const chainName = this.getChainName(chainId);
       const starletAmount = purchaseData.quantity || purchaseData.amount;
-      const ggusdAmount = purchaseData.ggusdAmount || purchaseData.stars || starletAmount; // Use GGUSD amount from purchase data
+      
+      // Calculate GGUSD amount properly
+      let ggusdAmount;
+      if (purchaseData.ggusdAmount) {
+        ggusdAmount = purchaseData.ggusdAmount; // Use provided GGUSD amount
+      } else if (purchaseData.stars) {
+        const starsToGGUSDRate = 1; // 1 Star = 1 GGUSD
+        ggusdAmount = purchaseData.stars * starsToGGUSDRate; // Calculate from Stars
+      } else {
+        ggusdAmount = starletAmount; // Fallback to starlet amount (should not happen)
+      }
+      
+      console.log('💰 GGUSD Amount Calculation:');
+      console.log('  Purchase Data:', purchaseData);
+      console.log('  Starlet Amount:', starletAmount);
+      console.log('  Stars Required:', purchaseData.stars);
+      console.log('  GGUSD Amount:', ggusdAmount);
 
       // 1. Get EVM wallet address from FSL Authorization
       let userAddress;
@@ -884,13 +900,49 @@ class FSLAuthService {
       // No need for additional verification as user already signed to get wallet address
       console.log('✅ Wallet ownership verified (user signed to get address)');
 
-      // 3. Execute payment based on chain
+      // 3. Check GGUSD balance before payment
+      console.log(`Checking ${chainName} GGUSD balance...`);
+      let ggusdBalance = 0;
+      try {
+        if (chainId === 80002) {
+          ggusdBalance = await this.getAmoyGGUSDBalance(userAddress);
+        } else if (chainId === 137) {
+          ggusdBalance = await this.getPolygonGGUSDBalance(userAddress);
+        } else if (chainId === 56) {
+          ggusdBalance = await this.getBSCGGUSDBalance(userAddress);
+        }
+        console.log(`✅ ${chainName} GGUSD Balance:`, ggusdBalance);
+      } catch (error) {
+        console.warn(`⚠️ Could not check ${chainName} GGUSD balance:`, error);
+      }
+
+      // Check if user has enough GGUSD
+      if (ggusdBalance < ggusdAmount) {
+        const errorMsg = `Insufficient GGUSD balance. You have ${ggusdBalance} GGUSD but need ${ggusdAmount} GGUSD for this purchase.`;
+        console.error('❌', errorMsg);
+        
+        // In development mode, allow proceeding with insufficient balance for testing
+        if (this.isDevelopment) {
+          console.warn('⚠️ Development mode: Proceeding with insufficient balance for testing');
+        } else {
+          return {
+            success: false,
+            error: errorMsg,
+            balance: ggusdBalance,
+            required: ggusdAmount,
+            chain: chainName
+          };
+        }
+      }
+
+      // 4. Execute payment based on chain
       console.log(`Executing ${chainName} GGUSD payment...`);
       console.log('🔗 Payment parameters:');
       console.log('  Chain ID:', chainId);
       console.log('  Starlet Amount:', starletAmount);
       console.log('  GGUSD Amount:', ggusdAmount);
       console.log('  User Address:', userAddress);
+      console.log('  GGUSD Balance:', ggusdBalance);
       
       const result = await this.purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount);
       

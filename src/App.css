@@ -20,6 +20,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden; /* Ngăn body scroll và ẩn thanh cuộn ngoài */
 }
 
 /* Header Styles */
@@ -74,9 +75,8 @@ body {
 .main-content {
   flex: 1;
   padding: 1rem;
-  max-width: 1200px;
   margin: 0 auto;
-  width: 100%;
+  width: 80%;
 }
 
 /* Cards */
