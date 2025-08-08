@@ -373,25 +373,177 @@ body.mk-market-open {
   padding: 16px 16px; /* Adjust padding to match container */
 }
 
+/* Improved responsive grid system */
 .mk-starlet-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
+  
+  /* Default for large screens - 6 columns for 16:9 aspect ratio */
+  grid-template-columns: repeat(6, 1fr);
 }
 
-/* Responsive grid adjustments */
-@media screen and (max-width: 400px) {
+/* Responsive breakpoints for different screen sizes */
+/* Large desktop screens (1920px and above) */
+@media screen and (min-width: 1920px) {
   .mk-starlet-grid {
-    grid-template-columns: repeat(2, 1fr); /* Keep 2 columns even on small screens */
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 20px 20px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 80px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 32px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 16px;
+  }
+}
+
+/* Medium desktop screens (1440px - 1919px) */
+@media screen and (min-width: 1440px) and (max-width: 1919px) {
+  .mk-starlet-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 18px 18px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 75px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 30px;
+  }
+}
+
+/* Small desktop screens (1024px - 1439px) */
+@media screen and (min-width: 1024px) and (max-width: 1439px) {
+  .mk-starlet-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 16px 16px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 70px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 28px;
+  }
+}
+
+/* Tablet screens (768px - 1023px) */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .mk-starlet-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 14px 14px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 65px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 26px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 13px;
+  }
+}
+
+/* Large mobile screens (480px - 767px) */
+@media screen and (min-width: 480px) and (max-width: 767px) {
+  .mk-starlet-grid {
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
   
   .mk-section-content.expanded {
-    padding: 12px 12px; /* Reduce padding on small screens */
+    padding: 12px 12px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 60px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 24px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 12px;
+  }
+}
+
+/* Small mobile screens (390px - 479px) */
+@media screen and (min-width: 390px) and (max-width: 479px) {
+  .mk-starlet-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 10px 10px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 55px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 22px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 11px;
+  }
+}
+
+/* Extra small mobile screens (below 390px) */
+@media screen and (max-width: 389px) {
+  .mk-starlet-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 8px 8px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 50px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 20px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 10px;
   }
 }
 
@@ -466,6 +618,8 @@ body.mk-market-open {
   border: 1px solid #0000FF;
   display: flex;
   flex-direction: column;
+  /* Ensure consistent height across different screen sizes */
+  min-height: 70px;
 }
 
 .mk-market-ticket-content {
@@ -476,6 +630,7 @@ body.mk-market-open {
   gap: 8px;
   border-bottom: 1px solid #0000FF;
   backdrop-filter: blur(5px);
+  flex: 1;
 }
 
 .mk-market-ticket-icon {
@@ -609,6 +764,7 @@ body.mk-market-open {
   overscroll-behavior: inherit;
 }
 
+/* Updated mobile responsive styles */
 @media screen and (max-width: 500px) {
   .mk-market-container {
     width: 100%;
@@ -624,6 +780,11 @@ body.mk-market-open {
   
   .mk-market-top-bar {
     width: 100%;
+  }
+  
+  .mk-market-title {
+    font-size: 28px;
+    margin-top: 80px;
   }
 } 
 
