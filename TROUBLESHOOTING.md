@@ -44,7 +44,7 @@ const result = await fslAuth.callSolInstructions({
   rpc: 'https://api.mainnet-beta.solana.com',
   unitLimit: 200000,
   unitPrice: 5000,
-  domain: 'https://gm3.joysteps.io',
+  domain: 'https://9ijsflpfgm3.joysteps.io',
   uid: this.currentUser.id,
   onlySign: false // Execute transaction
 });
@@ -96,7 +96,7 @@ const fslAuth = await FSLAuthorization.init({
   state: 'gamehub_payment',
   usePopup: true,
   isApp: false,
-  domain: 'https://gm3.joysteps.io',
+  domain: 'https://9ijsflpfgm3.joysteps.io',
 });
 ```
 
@@ -122,7 +122,7 @@ console.log('User FSL ID:', shared.userProfile?.fslId);
 **Solution**: Verify FSL SDK configuration and domain settings
 ```javascript
 // Check domain matches
-domain: 'https://gm3.joysteps.io'
+domain: 'https://9ijsflpfgm3.joysteps.io'
 ```
 
 #### Issue 3: Transaction fails with insufficient balance

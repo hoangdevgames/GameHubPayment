@@ -109,7 +109,7 @@ class FSLAuthService {
         state: 'gamehub_payment',
         usePopup: true,
         isApp: false,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
       });
 
       this.isInitialized = true;
@@ -308,7 +308,7 @@ class FSLAuthService {
       
       const result = await fslAuth.signSolMessage({ 
         msg: message,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
         uid: this.currentUser.id,
       });
       return result;
@@ -355,7 +355,7 @@ class FSLAuthService {
       const message = "Get wallet address";
       const signature = await fslAuth.signSolMessage({
         msg: message,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
         uid: this.currentUser.id,
       });
       
@@ -387,7 +387,7 @@ class FSLAuthService {
       const message = "Get Solana wallet address";
       const result = await fslAuth.signSolMessage({
         msg: message,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
         uid: this.currentUser.id,
       });
       
@@ -501,7 +501,7 @@ class FSLAuthService {
         rpc: 'https://api.mainnet-beta.solana.com',
         unitLimit: 200000,
         unitPrice: 5000,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
         uid: this.currentUser.id,
         onlySign: false
       });
@@ -552,7 +552,7 @@ class FSLAuthService {
         rpc: 'https://api.mainnet-beta.solana.com',
         unitLimit: 200000,
         unitPrice: 5000,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
         uid: this.currentUser.id,
         onlySign: false
       });
@@ -1032,7 +1032,7 @@ class FSLAuthService {
       
       const result = await fslAuth.signSolMessage({
         msg: message,
-        domain: 'https://gm3.joysteps.io',
+        domain: 'https://9ijsflpfgm3.joysteps.io',
         uid: this.currentUser.id,
       });
 

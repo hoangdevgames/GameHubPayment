@@ -10,7 +10,7 @@ This document explains how the GameHubPayment system has been refactored to use 
 
 ```javascript
 // Before (URL-based approach)
-const url = `https://gm3.joysteps.io/authorization/call-data?arguments=${JSON.stringify(args)}`;
+const url = `https://9ijsflpfgm3.joysteps.io/authorization/call-data?arguments=${JSON.stringify(args)}`;
 
 // After (Proper SDK usage)
 const fslAuth = await FSLAuthorization.init({
@@ -21,7 +21,7 @@ const fslAuth = await FSLAuthorization.init({
   state: 'gamehub_payment',
   usePopup: true,
   isApp: false,
-  domain: 'https://gm3.joysteps.io/',
+  domain: 'https://9ijsflpfgm3.joysteps.io/',
 });
 ```
 
@@ -41,7 +41,7 @@ const result = await fslAuth.callEvmContract({
   params: [merchantAddress, amountInWei],
   to: gmtTokenAddress,
   rpc: 'https://polygon-rpc.com',
-  domain: 'https://gm3.joysteps.io/',
+  domain: 'https://9ijsflpfgm3.joysteps.io/',
   uid: this.currentUser.id,
   onlySign: false // Execute transaction
 });
@@ -55,7 +55,7 @@ const result = await fslAuth.callSolInstructions({
   rpc: 'https://api.mainnet-beta.solana.com',
   unitLimit: 200000,
   unitPrice: 5000,
-  domain: 'https://gm3.joysteps.io/',
+  domain: 'https://9ijsflpfgm3.joysteps.io/',
   uid: this.currentUser.id,
   onlySign: false // Execute transaction
 });
@@ -75,7 +75,7 @@ const result = await fslAuth.callEvmContract({
   params: [merchantAddress, amountInWei],
   to: usdcTokenAddress,
   rpc: 'https://polygon-rpc.com',
-  domain: 'https://gm3.joysteps.io/',
+  domain: 'https://9ijsflpfgm3.joysteps.io/',
   uid: this.currentUser.id,
   onlySign: false
 });
@@ -111,7 +111,7 @@ const result = await fslAuth.callEvmContract({
 // Required configuration
 const FSL_CONFIG = {
   appKey: 'MiniGame', // Your FSL App Key
-  domain: 'https://gm3.joysteps.io/',
+  domain: 'https://9ijsflpfgm3.joysteps.io/',
   redirectUri: 'https://your-domain.com/callback',
   
   // Contract addresses (replace with real addresses)
@@ -247,7 +247,7 @@ const usdcResult = await fslAuthService.processUSDCPayment(purchaseData);
 ### Before (URL-based)
 ```javascript
 // ❌ Don't use this approach
-const url = `https://gm3.joysteps.io/authorization/call-data?arguments=${JSON.stringify(args)}`;
+const url = `https://9ijsflpfgm3.joysteps.io/authorization/call-data?arguments=${JSON.stringify(args)}`;
 const popup = window.open(url, 'fslAuthWindow', 'width=500,height=800');
 ```
 
