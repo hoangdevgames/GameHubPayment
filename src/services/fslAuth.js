@@ -878,18 +878,30 @@ class FSLAuthService {
       // 1. Get EVM wallet address from FSL Authorization
       let userAddress;
       try {
-        // First try to get from userProfile (if available from GamingHub)
-        userAddress = this.currentUser.walletAddress || this.currentUser.userProfile?.evmAddr;
-        
-        // If not available, get from FSL Authorization automatically
-        if (!userAddress) {
-          console.log(`Getting ${chainName} wallet address from FSL Authorization...`);
-          const chainMap = { 137: 'polygon', 56: 'bsc', 1: 'ethereum' };
-          const chainKey = chainMap[chainId] || 'ethereum';
-          userAddress = await this.getCurrentWalletAddress(chainKey);
-          console.log(`✅ Got ${chainName} wallet address from FSL (ownership verified):`, userAddress);
+        // For Amoy testnet, prioritize EVM address
+        if (chainId === 80002) {
+          userAddress = this.currentUser.userProfile?.evmAddr;
+          if (!userAddress) {
+            console.log(`Getting Amoy EVM wallet address from FSL Authorization...`);
+            userAddress = await this.getCurrentWalletAddress('amoy');
+            console.log(`✅ Got Amoy EVM wallet address from FSL (ownership verified):`, userAddress);
+          } else {
+            console.log(`✅ Using existing Amoy EVM wallet address:`, userAddress);
+          }
         } else {
-          console.log(`✅ Using existing ${chainName} wallet address:`, userAddress);
+          // For other chains, use existing logic
+          userAddress = this.currentUser.walletAddress || this.currentUser.userProfile?.evmAddr;
+          
+          // If not available, get from FSL Authorization automatically
+          if (!userAddress) {
+            console.log(`Getting ${chainName} wallet address from FSL Authorization...`);
+            const chainMap = { 137: 'polygon', 56: 'bsc', 1: 'ethereum' };
+            const chainKey = chainMap[chainId] || 'ethereum';
+            userAddress = await this.getCurrentWalletAddress(chainKey);
+            console.log(`✅ Got ${chainName} wallet address from FSL (ownership verified):`, userAddress);
+          } else {
+            console.log(`✅ Using existing ${chainName} wallet address:`, userAddress);
+          }
         }
       } catch (error) {
         console.error(`❌ Failed to get ${chainName} wallet address:`, error);
