@@ -71,9 +71,9 @@ class FSLAuthService {
     };
 
     this.TREASURY_ADDRESSES = {
-      137: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Polygon treasury wallet
-      56: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',  // Your BSC treasury wallet
-      80002: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Amoy treasury wallet
+      137: '0xAF81dC03d1449B44B36D3144099C3F66888B8906', // Polygon treasury wallet
+      56: '0xAF81dC03d1449B44B36D3144099C3F66888B8906',  // BSC treasury wallet
+      80002: '0xAF81dC03d1449B44B36D3144099C3F66888B8906', // Amoy treasury wallet
     };
 
     this.CHAIN_NAMES = {
