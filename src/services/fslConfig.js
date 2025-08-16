@@ -59,10 +59,10 @@ export const GGUSD_CONTRACTS = {
 };
 
 export const TREASURY_ADDRESSES = {
-  137: '0x2572421a30c0097357Cd081228D5F1C07ce96bee', // Your Polygon treasury wallet
-  56: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',  // Your BSC treasury wallet
-  1: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',   // Your Ethereum treasury wallet
-  80002: '0x2572421a30c0097357Cd081228D5F1C07ce96bee',
+  137: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb', // Your Polygon treasury wallet
+  56: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb',  // Your BSC treasury wallet
+  1: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb',   // Your Ethereum treasury wallet
+  80002: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb',
 };
 
 // Chain configuration

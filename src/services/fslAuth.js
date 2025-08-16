@@ -71,9 +71,9 @@ class FSLAuthService {
     };
 
     this.TREASURY_ADDRESSES = {
-      137: '0xAF81dC03d1449B44B36D3144099C3F66888B8906', // Polygon treasury wallet
-      56: '0xAF81dC03d1449B44B36D3144099C3F66888B8906',  // BSC treasury wallet
-      80002: '0xAF81dC03d1449B44B36D3144099C3F66888B8906', // Amoy treasury wallet
+      137: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb', // Polygon treasury wallet
+      56: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb',  // BSC treasury wallet
+      80002: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb', // Amoy treasury wallet
     };
 
     this.CHAIN_NAMES = {
@@ -676,7 +676,7 @@ class FSLAuthService {
         methodName: 'transfer',
         params: [treasuryAddress, amountInWeiString], // Use string instead of BigInt
         abi: this.GGUSD_ABI,
-        // gasLimit: '150000', // ← Remove hardcoded gas limit
+        gasLimit: '150000', // ← Remove hardcoded gas limit
         chainId: chainId,
         chain: this.FSL_CHAIN_MAPPING[chainId], // ✅ Specify chain for proper gas token
         rpc: this.RPC_URLS[chainId], // ✅ Specify RPC URL for the network
