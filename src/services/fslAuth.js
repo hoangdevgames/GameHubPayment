@@ -638,7 +638,7 @@ class FSLAuthService {
   }
 
   // ERC-20 GGUSD Token Transfer - copy từ guide với modifications
-  async purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount, decimals = 18) {
+  async purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount) {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];
     const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
     
@@ -649,9 +649,17 @@ class FSLAuthService {
     try {
       const fslAuth = await this.init();
       
-      // Convert GGUSD amount to proper decimals and convert to string to avoid BigInt serialization issues
+      // ✅ Lấy decimals từ contract thay vì hardcode
+      const web3 = new Web3(this.RPC_URLS[chainId]);
+      const contract = new web3.eth.Contract(this.GGUSD_ABI, contractAddress);
+      const contractDecimals = await contract.methods.decimals().call();
+      const decimals = Number(contractDecimals.toString());
+      
+      console.log(`🔍 Contract decimals for chain ${chainId}:`, decimals);
+      
+      // Convert GGUSD amount to proper decimals
       const amountInWei = ethers.parseUnits(ggusdAmount.toString(), decimals);
-      const amountInWeiString = amountInWei.toString(); // Convert BigInt to string
+      const amountInWeiString = amountInWei.toString();
       
       console.log('🔗 GGUSD Payment Details:');
       console.log('  Contract Address:', contractAddress);
@@ -668,7 +676,7 @@ class FSLAuthService {
         methodName: 'transfer',
         params: [treasuryAddress, amountInWeiString], // Use string instead of BigInt
         abi: this.GGUSD_ABI,
-        gasLimit: '150000',
+        // gasLimit: '150000', // ← Remove hardcoded gas limit
         chainId: chainId,
         chain: this.FSL_CHAIN_MAPPING[chainId], // ✅ Specify chain for proper gas token
         rpc: this.RPC_URLS[chainId], // ✅ Specify RPC URL for the network
@@ -1403,6 +1411,8 @@ class FSLAuthService {
             // First get the token decimals
             const decimals = await contract.methods.decimals().call();
             console.log('GGUSD token decimals (Amoy):', decimals);
+            console.log('🔍 Decimals type:', typeof decimals);
+            console.log('🔍 Decimals value:', decimals.toString());
 
             const balance = await Promise.race([
                 contract.methods.balanceOf(walletAddress).call(),
@@ -1412,12 +1422,21 @@ class FSLAuthService {
             ]);
 
             console.log('GGUSD balance Amoy (raw):', balance);
+            console.log('🔍 Balance type:', typeof balance);
+            console.log('🔍 Balance value:', balance.toString());
             
             if (balance !== undefined) {
                 // Convert BigInt values to strings before calculation
                 const balanceNum = Number(balance.toString());
                 const decimalsNum = Number(decimals.toString());
+                
+                console.log('🔍 Balance calculation details:');
+                console.log('  Raw balance:', balanceNum);
+                console.log('  Decimals:', decimalsNum);
+                console.log('  Division: 10^' + decimalsNum + ' =', Math.pow(10, decimalsNum));
+                
                 const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('  Result:', balanceNum + ' / ' + Math.pow(10, decimalsNum) + ' =', formattedBalance);
                 console.log('GGUSD balance Amoy (formatted):', formattedBalance);
                 return formattedBalance;
             }
@@ -1471,6 +1490,8 @@ class FSLAuthService {
             // First get the token decimals
             const decimals = await contract.methods.decimals().call();
             console.log('GGUSD token decimals (Polygon):', decimals);
+            console.log('🔍 Decimals type:', typeof decimals);
+            console.log('🔍 Decimals value:', decimals.toString());
 
             const balance = await Promise.race([
                 contract.methods.balanceOf(walletAddress).call(),
@@ -1480,12 +1501,21 @@ class FSLAuthService {
             ]);
 
             console.log('GGUSD balance Polygon (raw):', balance);
+            console.log('🔍 Balance type:', typeof balance);
+            console.log('🔍 Balance value:', balance.toString());
             
             if (balance !== undefined) {
                 // Convert BigInt values to strings before calculation
                 const balanceNum = Number(balance.toString());
                 const decimalsNum = Number(decimals.toString());
+                
+                console.log('🔍 Balance calculation details:');
+                console.log('  Raw balance:', balanceNum);
+                console.log('  Decimals:', decimalsNum);
+                console.log('  Division: 10^' + decimalsNum + ' =', Math.pow(10, decimalsNum));
+                
                 const formattedBalance = balanceNum / Math.pow(10, decimalsNum);
+                console.log('  Result:', balanceNum + ' / ' + Math.pow(10, decimalsNum) + ' =', formattedBalance);
                 console.log('GGUSD balance Polygon (formatted):', formattedBalance);
                 return formattedBalance;
             }
