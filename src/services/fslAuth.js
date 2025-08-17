@@ -745,6 +745,104 @@ class FSLAuthService {
     return await this.purchaseStarletsWithGGUSD(80002, starletAmount, ggusdAmount);
   }
 
+  // Custom Data Transaction Method for Amoy
+  async callEvmContractByCallDataWithCustomData(purchaseData, chainId, customData) {
+    try {
+      console.log('🔗 Processing custom data transaction on Amoy...');
+      console.log('📊 Purchase Data:', purchaseData);
+      console.log('🔗 Chain ID:', chainId);
+      console.log('📝 Custom Data:', customData);
+      
+      const fslAuth = await this.init();
+      
+      // Lấy contract và treasury addresses
+      const contractAddress = this.GGUSD_CONTRACTS[chainId];
+      const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
+      
+      if (!contractAddress || !treasuryAddress) {
+        throw new Error(`Unsupported chain ID: ${chainId}`);
+      }
+      
+      // Tính toán GGUSD amount
+      const ggusdAmount = purchaseData.amount || 1;
+      
+      // Lấy decimals từ contract
+      const web3 = new Web3(this.RPC_URLS[chainId]);
+      const contract = new web3.eth.Contract(this.GGUSD_ABI, contractAddress);
+      const contractDecimals = await contract.methods.decimals().call();
+      const decimals = Number(contractDecimals.toString());
+      
+      // Convert GGUSD amount to proper decimals
+      const amountInWei = ethers.parseUnits(ggusdAmount.toString(), decimals);
+      const amountInWeiString = amountInWei.toString();
+      
+      console.log('💰 Transaction Details:');
+      console.log('  Contract Address:', contractAddress);
+      console.log('  Treasury Address:', treasuryAddress);
+      console.log('  Amount (GGUSD):', ggusdAmount);
+      console.log('  Amount (Wei):', amountInWeiString);
+      console.log('  Custom Data Length:', customData.length);
+      
+      // Tạo callData với custom data
+      const transferFunctionSelector = '0xa9059cbb'; // transfer(address,uint256)
+      const encodedParams = ethers.AbiCoder.defaultAbiCoder().encode(
+        ['address', 'uint256'],
+        [treasuryAddress, amountInWeiString]
+      );
+      
+      // Kết hợp function selector, params và custom data
+      const callData = transferFunctionSelector + encodedParams.slice(2) + customData.slice(2);
+      
+      console.log('🔗 Final CallData:', callData);
+      
+      // Gọi FSL SDK với callData
+      const result = await fslAuth.callEvmContractByCallData({
+        contractAddress: contractAddress,
+        callData: callData,
+        chainId: chainId,
+        gasLimit: '200000', // Tăng gas limit cho custom data
+        chain: this.FSL_CHAIN_MAPPING[chainId],
+        rpc: this.RPC_URLS[chainId],
+      });
+      
+      console.log('✅ Custom data transaction successful:', result);
+      
+      // Verify transaction và mint Starlets
+      await this.verifyAndMintStarlets(purchaseData.quantity || 1, result.transactionHash, chainId);
+      
+      return {
+        success: true,
+        transactionHash: result.transactionHash || result.hash || 'mock_tx_hash',
+        amount: ggusdAmount,
+        currency: 'GGUSD',
+        chain: this.getChainName(chainId),
+        starletAmount: purchaseData.quantity || 1,
+        timestamp: new Date().toISOString(),
+        customData: customData,
+        network: 'Amoy Testnet'
+      };
+      
+    } catch (error) {
+      console.error('❌ Custom data transaction failed:', error);
+      
+      // Handle specific errors
+      if (error.message && error.message.includes('pop-up cannot be ejected')) {
+        console.warn('🚫 Popup blocked! Please allow popups for this site.');
+        return {
+          success: false,
+          error: 'Payment popup was blocked. Please allow popups for this site and try again.',
+          originalError: error.message
+        };
+      }
+      
+      return {
+        success: false,
+        error: error.message,
+        chain: this.getChainName(chainId)
+      };
+    }
+  }
+
   // Alternative: Using Popup Window for Contract Calls - copy từ guide
   async purchaseWithPopup(chainId, ggusdAmount, appKey) {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];

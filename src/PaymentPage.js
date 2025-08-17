@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import fslAuthService from './services/fslAuth';
+import { ethers } from 'ethers';
 import './PaymentPage.css';
 
 const PaymentPage = ({ onSuccess, onFailed }) => {
@@ -141,19 +142,46 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     setError(null);
     
     try {
-      console.log('Processing Amoy GGUSD payment for:', purchaseData);
+      console.log('Processing Amoy GGUSD payment with custom data for:', purchaseData);
       
-      const result = await fslAuthService.processGGUSDPayment(purchaseData, 80002); // Amoy chainId
+      // Tạo custom data cho transaction
+      const customData = {
+        purchaseId: Date.now(),
+        productName: purchaseData.productName || 'Starlets',
+        quantity: purchaseData.quantity || 1,
+        amount: purchaseData.amount || 1,
+        timestamp: new Date().toISOString(),
+        userInfo: {
+          fslId: user?.id || 'unknown',
+          telegramUsername: user?.telegramUsername || 'unknown'
+        }
+      };
+      
+      // Encode custom data thành bytes
+      const customDataBytes = ethers.toUtf8Bytes(JSON.stringify(customData));
+      
+      // Tạo callData với custom data
+      const encodedCustomData = ethers.AbiCoder.defaultAbiCoder().encode(
+        ['string', 'uint256', 'bytes'],
+        ['Custom Purchase Data', customData.purchaseId, customDataBytes]
+      );
+      
+      // Gọi FSL SDK với custom data
+      const result = await fslAuthService.callEvmContractByCallDataWithCustomData(
+        purchaseData, 
+        80002, // Amoy chainId
+        encodedCustomData
+      );
       
       if (result.success) {
-        console.log('Amoy GGUSD payment successful:', result);
+        console.log('Amoy GGUSD payment with custom data successful:', result);
         setLoading(false);
         onSuccess && onSuccess(result);
       } else {
         throw new Error(result.error || 'Amoy payment failed');
       }
     } catch (error) {
-      console.error('Amoy GGUSD payment error:', error);
+      console.error('Amoy GGUSD payment with custom data error:', error);
       setError(error.message);
       setLoading(false);
     }
