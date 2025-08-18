@@ -76,7 +76,7 @@ html::-webkit-scrollbar-track {
 .mk-market-top-bar {
   position: fixed;
   top: 18px;
-  width: 500px;
+  width: 90%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -118,7 +118,7 @@ html::-webkit-scrollbar-track {
 .mk-greeting-text {
   color: #FFF;
   font-family: "PP Neue Machina";
-  font-size: 12px;
+  font-size: 28px;
   font-style: italic;
   font-weight: 800;
   line-height: normal;
@@ -183,7 +183,7 @@ html::-webkit-scrollbar-track {
 .mk-currency-value {
   color: #FFF;
   font-family: "PP Neue Machina";
-  font-size: 12px;
+  font-size: 28px;
   font-style: italic;
   font-weight: 800;
   line-height: normal;
@@ -520,6 +520,7 @@ html::-webkit-scrollbar-track {
   .mk-market-title-container {
     flex-direction: column !important;
     gap: 8px;
+    margin-top: 65px;
   }
   
   .mk-market-title  {

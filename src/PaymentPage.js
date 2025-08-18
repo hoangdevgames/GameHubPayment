@@ -280,10 +280,10 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
         <button className="back-button" onClick={handleBack}>
           <img src="/images/back.svg" alt="Back" />
         </button>
-        <div className="header-content">
+        {/* <div className="header-content">
           <h1>PAYMENT</h1>
           <p>Complete your purchase</p>
-        </div>
+        </div> */}
       </div>
 
       {/* Payment Details */}

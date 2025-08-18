@@ -298,16 +298,6 @@ const MainContent = ({ activeTab }) => {
             GM {user?.name || user?.telegramUsername || 'User'}!
           </div>
         </div>
-        <div className="mk-currency-info">
-          <button className="mk-currency-item" onClick={() => handleStatsClick('tickets')}>
-            <img src={ticketIcon} alt="Tickets" />
-            <span className="mk-currency-value">{tickets}</span>
-          </button>
-          <button className="mk-currency-item" onClick={() => handleStatsClick('starlets')}>
-            <img src={starlet} alt="Starlets" />
-            <span className="mk-currency-value">{starlets}</span>
-          </button>
-        </div>
       </div>
 
       <div className="mk-market-container">
