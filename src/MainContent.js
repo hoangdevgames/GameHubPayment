@@ -33,40 +33,125 @@ const MainContent = ({ activeTab }) => {
     // Mock buy options with proper categorization
     setBuyOptions([
       {
-        id: 2001,
-        state: 0,
-        type: 20,
-        stars: 250,
-        starlet: 1950,
-        ticket: 0,
-        canBuy: true
+        "id": 2001,
+        "state": 0,
+        "type": 20,
+        "stars": 250,
+        "starlet": 1950,
+        "ticket": 0,
+        "bonus": 750,
+        "bonusPercentage": 50,
+        "canBuy": true
       },
       {
-        id: 4,
-        state: 0,
-        type: 0,
-        stars: 100,
-        starlet: 500,
-        ticket: 0,
-        canBuy: true
+        "id": 2002,
+        "state": 0,
+        "type": 20,
+        "stars": 500,
+        "starlet": 5400,
+        "ticket": 0,
+        "bonus": 2700,
+        "bonusPercentage": 100,
+        "canBuy": true
       },
       {
-        id: 5,
-        state: 0,
-        type: 10,
-        stars: 150,
-        starlet: 750,
-        ticket: 5,
-        canBuy: true
+        "id": 4,
+        "state": 0,
+        "type": 0,
+        "stars": 100,
+        "starlet": 500,
+        "ticket": 1,
+        "bonus": 0,
+        "bonusPercentage": 0,
+        "canBuy": true
       },
       {
-        id: 6,
-        state: 0,
-        type: 30,
-        stars: 500,
-        starlet: 2500,
-        ticket: 15,
-        canBuy: true
+        "id": 5,
+        "state": 0,
+        "type": 0,
+        "stars": 250,
+        "starlet": 1300,
+        "ticket": 5,
+        "bonus": 0,
+        "bonusPercentage": 0,
+        "canBuy": true
+      },
+      {
+        "id": 6,
+        "state": 0,
+        "type": 0,
+        "stars": 500,
+        "starlet": 2700,
+        "ticket": 10,
+        "bonus": 0,
+        "bonusPercentage": 0,
+        "canBuy": true
+      },
+      {
+        "id": 1001,
+        "state": 0,
+        "type": 10,
+        "stars": 100,
+        "starlet": 525,
+        "ticket": 0,
+        "bonus": 25,
+        "bonusPercentage": 5,
+        "canBuy": true
+      },
+      {
+        "id": 1002,
+        "state": 0,
+        "type": 10,
+        "stars": 250,
+        "starlet": 1495,
+        "ticket": 0,
+        "bonus": 195,
+        "bonusPercentage": 15,
+        "canBuy": true
+      },
+      {
+        "id": 1003,
+        "state": 0,
+        "type": 10,
+        "stars": 500,
+        "starlet": 3375,
+        "ticket": 0,
+        "bonus": 675,
+        "bonusPercentage": 25,
+        "canBuy": true
+      },
+      {
+        "id": 3001,
+        "state": 0,
+        "type": 30,
+        "stars": 100,
+        "starlet": 550,
+        "ticket": 0,
+        "bonus": 50,
+        "bonusPercentage": 10,
+        "canBuy": true
+      },
+      {
+        "id": 3002,
+        "state": 0,
+        "type": 30,
+        "stars": 250,
+        "starlet": 1625,
+        "ticket": 0,
+        "bonus": 325,
+        "bonusPercentage": 25,
+        "canBuy": true
+      },
+      {
+        "id": 3003,
+        "state": 0,
+        "type": 30,
+        "stars": 500,
+        "starlet": 4050,
+        "ticket": 0,
+        "bonus": 1350,
+        "bonusPercentage": 50,
+        "canBuy": true
       }
     ]);
   }, []);
@@ -351,21 +436,14 @@ const MainContent = ({ activeTab }) => {
                                 // Check if option is available (state 0 = available, 1 = unavailable)
                                 const isAvailable = option.state === 0 && option.canBuy;
                                 
-                                // Calculate bonus for special offers
+                                // Calculate bonus for special offers using new API data
                                 let bonusText = null;
-                                if (type === 30) { // Exclusive One-Time Offer
-                                  if (option.stars === 0) bonusText = "BONUS: 50";
-                                  else if (option.stars === 5) bonusText = "BONUS: 325";
-                                  else if (option.stars === 10) bonusText = "BONUS: 325";
-                                } else if (type === 10) { // Limited Weekly Offer
-                                  if (option.stars === 0) bonusText = "BONUS: 25";
-                                  else if (option.stars === 5) {
-                                    if (option.starlet === 100) bonusText = "BONUS: 195";
-                                    else bonusText = "BONUS: 675";
+                                if (option.bonus > 0) {
+                                  if (option.bonusPercentage > 0) {
+                                    bonusText = `BONUS: +${option.bonusPercentage}%`;
+                                  } else {
+                                    bonusText = `BONUS: +${option.bonus}`;
                                   }
-                                } else if (type === 20) { // Limited Monthly Offer
-                                  if (option.stars === 0) bonusText = "50% VALUE";
-                                  else if (option.stars === 5) bonusText = "100% VALUE";
                                 }
                                 
                                 return (
@@ -382,7 +460,12 @@ const MainContent = ({ activeTab }) => {
                                         </div>
                                         <div className="mk-market-ticket-info">
                                           {bonusText && (
-                                            <div className="mk-market-ticket-bonus-text" style={{ opacity: isAvailable ? 1 : 0.5 }}>{bonusText}</div>
+                                            <div className="mk-market-ticket-bonus-text" style={{ opacity: isAvailable ? 1 : 0.5 }}>
+                                              {bonusText}
+                                              {option.bonus > 0 && option.bonusPercentage === 0 && (
+                                                <span className="bonus-details"> (+{option.bonus} Starlets)</span>
+                                              )}
+                                            </div>
                                           )}
                                           <div className="mk-market-ticket-text">
                                             <div className="mk-market-ticket-amount" style={{ opacity: isAvailable ? 1 : 0.5 }}>{option.starlet}</div>
