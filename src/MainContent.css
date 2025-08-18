@@ -488,6 +488,11 @@ html::-webkit-scrollbar-track {
 
 /* Tablet screens (768px - 1023px) */
 @media screen and (min-width: 768px) and (max-width: 1279px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 12px;
+  }
+  
   .mk-starlet-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
@@ -510,8 +515,31 @@ html::-webkit-scrollbar-track {
   }
 }
 
+/* Mobile and small tablet screens (below 768px) */
+@media screen and (max-width: 767px) {
+  .mk-market-title-container {
+    flex-direction: column !important;
+    gap: 8px;
+  }
+  
+  .mk-market-title  {
+    margin: 10px !important;
+    font-size: 72px !important;
+    justify-content: center !important;
+  }
+
+  .mk-fsl-connect-section {
+    margin: 24px !important;
+  }
+}
+
 /* Large mobile screens (480px - 767px) */
 @media screen and (min-width: 480px) and (max-width: 767px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 10px;
+  }
+  
   .mk-starlet-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
@@ -532,10 +560,71 @@ html::-webkit-scrollbar-track {
   .mk-market-ticket-label {
     font-size: 12px;
   }
+  
+  /* Additional mobile optimizations */
+  .mk-market-top-bar {
+    width: calc(100% - 32px);
+    left: 16px;
+    transform: none;
+    padding: 0px 20px;
+    margin-top: 30px;
+  }
+  
+  .mk-market-title {
+    font-size: 32px;
+    margin-top: 80px;
+    padding: 0 20px;
+    height: 80px;
+  }
+  
+  .mk-market-title span {
+    line-height: 80px;
+    height: 80px;
+  }
+  
+  .mk-fsl-connect-section {
+    margin: 16px 20px 0px;
+    padding: 12px;
+  }
+  
+  .mk-section-header {
+    padding: 10px 16px;
+  }
+  
+  .mk-section-title {
+    font-size: 15px;
+  }
+  
+  .mk-market-ticket-content {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 26px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 13px;
+    min-width: 70px;
+  }
+  
+  .mk-scrollable-market-content {
+    padding: 25px;
+  }
+  
+  .mk-market-inner-content {
+    padding: 0px 12px;
+  }
 }
 
 /* Small mobile screens (390px - 479px) */
 @media screen and (min-width: 390px) and (max-width: 479px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 8px;
+  }
+  
   .mk-starlet-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
@@ -556,10 +645,71 @@ html::-webkit-scrollbar-track {
   .mk-market-ticket-label {
     font-size: 11px;
   }
+  
+  /* Additional mobile optimizations */
+  .mk-market-top-bar {
+    width: calc(100% - 24px);
+    left: 12px;
+    transform: none;
+    padding: 0px 18px;
+    margin-top: 25px;
+  }
+  
+  .mk-market-title {
+    font-size: 26px;
+    margin-top: 70px;
+    padding: 0 18px;
+    height: 70px;
+  }
+  
+  .mk-market-title span {
+    line-height: 70px;
+    height: 70px;
+  }
+  
+  .mk-fsl-connect-section {
+    margin: 14px 18px 0px;
+    padding: 11px;
+  }
+  
+  .mk-section-header {
+    padding: 9px 14px;
+  }
+  
+  .mk-section-title {
+    font-size: 14px;
+  }
+  
+  .mk-market-ticket-content {
+    padding: 7px;
+    gap: 7px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 24px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 12px;
+    min-width: 65px;
+  }
+  
+  .mk-scrollable-market-content {
+    padding: 18px;
+  }
+  
+  .mk-market-inner-content {
+    padding: 0px 9px;
+  }
 }
 
 /* Extra small mobile screens (below 390px) */
 @media screen and (max-width: 389px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 6px;
+  }
+  
   .mk-starlet-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 6px;
@@ -816,6 +966,11 @@ html::-webkit-scrollbar-track {
 
 /* Updated mobile responsive styles */
 @media screen and (max-width: 500px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 8px;
+  }
+  
   .mk-market-container {
     width: 100%;
     overscroll-behavior-y: none;
@@ -1237,6 +1392,11 @@ html::-webkit-scrollbar-track {
 
 /* Responsive Design */
 @media screen and (max-width: 500px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 8px;
+  }
+  
   .stats-header {
     width: 100%;
     margin: 0 16px;
@@ -1269,4 +1429,414 @@ html::-webkit-scrollbar-track {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+}
+
+/* Mobile-first responsive design for 390px width */
+@media screen and (max-width: 390px) {
+  /* Top bar adjustments */
+  .mk-market-top-bar {
+    width: calc(100% - 20px);
+    left: 10px;
+    transform: none;
+    padding: 0px 16px;
+    margin-top: 20px;
+  }
+  
+  /* Market title adjustments */
+  .mk-market-title {
+    font-size: 24px;
+    margin-top: 60px;
+    padding: 0 16px;
+    height: 60px;
+  }
+  
+  .mk-market-title span {
+    line-height: 60px;
+    height: 60px;
+  }
+  
+  /* FSL connect section */
+  .mk-fsl-connect-section {
+    margin: 12px 16px 0px;
+    padding: 10px;
+  }
+  
+  .mk-fsl-connect-content {
+    gap: 10px;
+  }
+  
+  .mk-lock-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  
+  .mk-connect-title {
+    font-size: 14px;
+  }
+  
+  .mk-connect-subtitle {
+    font-size: 11px;
+  }
+  
+  /* Section headers */
+  .mk-section-header {
+    padding: 8px 12px;
+  }
+  
+  .mk-section-title-container {
+    padding: 3px 12px;
+  }
+  
+  .mk-section-title {
+    font-size: 13px;
+  }
+  
+  .mk-section-arrow {
+    width: 14px;
+    height: 14px;
+  }
+  
+  /* Section content */
+  .mk-section-content.expanded {
+    padding: 12px 12px;
+  }
+  
+  /* Starlet grid for mobile */
+  .mk-starlet-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  /* Starlet items */
+  .mk-starlet-item {
+    padding: 12px;
+  }
+  
+  .mk-starlet-amount {
+    font-size: 20px;
+  }
+  
+  .mk-starlet-label {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  
+  .mk-price-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+  
+  /* Market ticket buttons */
+  .mk-market-ticket-button-image-container {
+    min-height: 50px;
+  }
+  
+  .mk-market-ticket-content {
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .mk-market-ticket-icon {
+    width: 30%;
+  }
+  
+  .mk-market-ticket-text {
+    width: 70%;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 18px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 10px;
+    min-width: 60px;
+    margin-top: -1px;
+  }
+  
+  .mk-market-ticket-bonus {
+    font-size: 8px;
+    padding: 0.5px 3px;
+    min-width: 60px;
+    margin-top: 1px;
+  }
+  
+  .mk-market-ticket-price {
+    height: 16px;
+    font-size: 10px;
+  }
+  
+  /* Market content padding */
+  .mk-scrollable-market-content {
+    padding: 15px;
+  }
+  
+  .mk-market-inner-content {
+    padding: 0px 8px;
+    padding-top: 10px;
+  }
+  
+  /* Tabs */
+  .mk-tabs {
+    gap: 12px;
+  }
+  
+  .mk-tab {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  
+  /* Stats header compatibility */
+  .stats-header {
+    width: calc(100% - 20px);
+    left: 10px;
+    transform: none;
+    padding: 0px 16px;
+    margin-top: 20px;
+    height: 50px;
+  }
+  
+  .profile-pic-main img {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .stat-item-main-text {
+    font-size: 10px;
+  }
+  
+  .stat-item-main img {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* Payment content */
+  .payment-content {
+    padding: 0 16px;
+    gap: 20px;
+  }
+  
+  .payment-info {
+    padding: 20px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .payment-description {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .step {
+    gap: 12px;
+  }
+  
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .step-content h3 {
+    font-size: 14px;
+  }
+  
+  .step-content p {
+    font-size: 12px;
+  }
+  
+  /* Main content width adjustment */
+  .main-content {
+    width: 100% !important;
+    padding: 0 8px;
+  }
+}
+
+/* Additional mobile optimizations for very small screens */
+@media screen and (max-width: 360px) {
+  .mk-market-top-bar {
+    width: calc(100% - 16px);
+    left: 8px;
+    padding: 0px 12px;
+  }
+  
+  .mk-market-title {
+    font-size: 22px;
+    padding: 0 12px;
+  }
+  
+  .mk-fsl-connect-section {
+    margin: 10px 12px 0px;
+    padding: 8px;
+  }
+  
+  .mk-section-header {
+    padding: 6px 10px;
+  }
+  
+  .mk-section-title-container {
+    padding: 2px 10px;
+  }
+  
+  .mk-section-title {
+    font-size: 12px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 10px 10px;
+  }
+  
+  .mk-starlet-grid {
+    gap: 6px;
+  }
+  
+  .mk-starlet-item {
+    padding: 10px;
+  }
+  
+  .mk-starlet-amount {
+    font-size: 18px;
+  }
+  
+  .mk-starlet-label {
+    font-size: 10px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 45px;
+  }
+  
+  .mk-market-ticket-content {
+    padding: 5px;
+    gap: 5px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 16px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 9px;
+    min-width: 55px;
+  }
+  
+  .mk-market-ticket-bonus {
+    font-size: 7px;
+    padding: 0.5px 2px;
+    min-width: 55px;
+  }
+  
+  .mk-scrollable-market-content {
+    padding: 12px;
+  }
+  
+  .mk-market-inner-content {
+    padding: 0px 6px;
+  }
+  
+  .stats-header {
+    width: calc(100% - 16px);
+    left: 8px;
+    padding: 0px 12px;
+  }
+  
+  .payment-content {
+    padding: 0 12px;
+  }
+  
+  .payment-info {
+    padding: 16px;
+  }
+  
+  .main-content {
+    width: 100% !important;
+    padding: 0 6px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media screen and (max-width: 390px) and (orientation: landscape) {
+  .mk-market-top-bar {
+    margin-top: 10px;
+  }
+  
+  .mk-market-title {
+    margin-top: 40px;
+  }
+  
+  .mk-scrollable-market-content {
+    padding: 20px;
+  }
+  
+  .mk-market-inner-content {
+    padding-top: 8px;
+  }
+}
+
+/* High DPI mobile screens */
+@media screen and (max-width: 390px) and (-webkit-min-device-pixel-ratio: 2) {
+  .mk-market-ticket-button-image-container {
+    border-width: 0.5px;
+  }
+  
+  .mk-section-header {
+    border-width: 0.5px;
+  }
+  
+  .mk-starlet-item {
+    border-width: 0.5px;
+  }
+}
+
+/* Touch-friendly mobile adjustments */
+@media screen and (max-width: 390px) and (pointer: coarse) {
+  .mk-market-ticket-button {
+    min-height: 44px; /* Minimum touch target size */
+  }
+  
+  .mk-tab {
+    min-height: 44px;
+    padding: 8px 0;
+  }
+  
+  .mk-section-header {
+    min-height: 44px;
+  }
+  
+  .mk-starlet-item {
+    min-height: 44px;
+  }
+}
+
+/* Medium-small mobile screens (below 600px) */
+@media screen and (max-width: 600px) {
+  .main-content {
+    width: 100% !important;
+    padding: 0 8px;
+  }
+  
+  .mk-starlet-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .mk-section-content.expanded {
+    padding: 10px 10px;
+  }
+  
+  .mk-market-ticket-button-image-container {
+    min-height: 55px;
+  }
+  
+  .mk-market-ticket-amount {
+    font-size: 22px;
+  }
+  
+  .mk-market-ticket-label {
+    font-size: 11px;
+  }
 }
