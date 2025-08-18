@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/GameHubPayment/static/css/main.8139661a.css",
-    "main.js": "/GameHubPayment/static/js/main.26078497.js",
+    "main.css": "/GameHubPayment/static/css/main.b6f8cf1a.css",
+    "main.js": "/GameHubPayment/static/js/main.ad2812ac.js",
     "static/js/453.ec6a1386.chunk.js": "/GameHubPayment/static/js/453.ec6a1386.chunk.js",
     "static/media/PPNeueMachina-InktrapBoldItalic.ttf": "/GameHubPayment/static/media/PPNeueMachina-InktrapBoldItalic.428743c4048618a2d77e.ttf",
     "static/media/PPNeueMachina-InktrapRegularItalic.ttf": "/GameHubPayment/static/media/PPNeueMachina-InktrapRegularItalic.d8206042331fe141994d.ttf",
@@ -40,16 +40,17 @@
     "static/media/PPNeueMachina-PlainUltralight.ttf": "/GameHubPayment/static/media/PPNeueMachina-PlainUltralight.63f986759c4f621c4899.ttf",
     "static/media/PPNeueMachina-PlainThin.ttf": "/GameHubPayment/static/media/PPNeueMachina-PlainThin.d6746b933117ca4f8d13.ttf",
     "static/media/Sora-VariableFont_wght.ttf": "/GameHubPayment/static/media/Sora-VariableFont_wght.e56298aec2e944c699d8.ttf",
+    "static/media/FSLID_Login_Logo.png": "/GameHubPayment/static/media/FSLID_Login_Logo.07ed1adca04347f27a3e.png",
     "static/media/background_2.png": "/GameHubPayment/static/media/background_2.918666a42017fdd3946e.png",
     "static/media/ticket.svg": "/GameHubPayment/static/media/ticket.c8a052d29411b7224614107b13b307b4.svg",
     "index.html": "/GameHubPayment/index.html",
     "static/media/arrow_2.svg": "/GameHubPayment/static/media/arrow_2.1c00cee1b2df4c5d746a4c5ea2ae314b.svg",
-    "main.8139661a.css.map": "/GameHubPayment/static/css/main.8139661a.css.map",
-    "main.26078497.js.map": "/GameHubPayment/static/js/main.26078497.js.map",
+    "main.b6f8cf1a.css.map": "/GameHubPayment/static/css/main.b6f8cf1a.css.map",
+    "main.ad2812ac.js.map": "/GameHubPayment/static/js/main.ad2812ac.js.map",
     "453.ec6a1386.chunk.js.map": "/GameHubPayment/static/js/453.ec6a1386.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.8139661a.css",
-    "static/js/main.26078497.js"
+    "static/css/main.b6f8cf1a.css",
+    "static/js/main.ad2812ac.js"
   ]
 }
