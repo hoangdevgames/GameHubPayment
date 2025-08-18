@@ -6,6 +6,7 @@ import avatar from './images/avatar.png';
 import background from './images/background_2.png';
 import ticketIcon from './images/ticket.svg';
 import arrow_2 from './images/arrow_2.svg';
+import fslLogo from './images/FSLID_Login_Logo.png';
 
 const MainContent = ({ activeTab }) => {
   const { user } = useAuth();
@@ -308,7 +309,7 @@ const MainContent = ({ activeTab }) => {
           {!user?.fslId && (
             <div className="mk-fsl-connect-section" onClick={handleConnectFSLID}>
               <div className="mk-fsl-connect-content">
-                <div className="mk-lock-icon">🔒</div>
+                <div className="mk-lock-icon"><img src={fslLogo} alt="FSL Logo" /></div>
                 <div className="mk-fsl-text">
                   <div className="mk-connect-title">CONNECT YOUR FSL ID</div>
                   <div className="mk-connect-subtitle">STEPN OG SNEAKER HOLDERS CAN CLAIM 10 FREE STARLETS DAILY!</div>
@@ -443,20 +444,20 @@ const MainContent = ({ activeTab }) => {
                                     onClick={() => isAvailable && handleStarletPurchase(option.starlet, option.stars, null, option.id)}
                                     disabled={!isAvailable || isLoading}
                                   >
+                                    {/* Bonus box in top-left corner */}
+                                    {option.bonus > 0 && type !== 0 && (
+                                      <div className="mk-market-ticket-bonus-corner" style={{ opacity: isAvailable ? 1 : 0.5 }}>
+                                        <div className="mk-market-ticket-bonus-corner-text">
+                                          {type === 20 ? `${option.bonusPercentage}% VALUE` : `BONUS: ${option.bonus}`}
+                                        </div>
+                                      </div>
+                                    )}
                                     <div className="mk-market-ticket-button-image-container">
                                       <div className="mk-market-ticket-content">
                                         <div className="mk-market-ticket-icon">
                                           <img src={starlet} alt="Starlet" style={{ opacity: isAvailable ? 1 : 0.5 }} />
                                         </div>
                                         <div className="mk-market-ticket-info">
-                                          {bonusText && (
-                                            <div className="mk-market-ticket-bonus-text" style={{ opacity: isAvailable ? 1 : 0.5 }}>
-                                              {bonusText}
-                                              {option.bonus > 0 && option.bonusPercentage === 0 && (
-                                                <span className="bonus-details"> (+{option.bonus} Starlets)</span>
-                                              )}
-                                            </div>
-                                          )}
                                           <div className="mk-market-ticket-text">
                                             <div className="mk-market-ticket-amount" style={{ opacity: isAvailable ? 1 : 0.5 }}>{option.starlet}</div>
                                             <div className="mk-market-ticket-label" style={{ opacity: isAvailable ? 1 : 0.5 }}>STARLETS</div>
