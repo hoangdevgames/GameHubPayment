@@ -16,8 +16,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [purchaseData, setPurchaseData] = useState(null);
-  const [shouldRedirectToPayment, setShouldRedirectToPayment] = useState(false);
+  const [apiToken, setApiToken] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
   // Check if user is already authenticated on app load
   useEffect(() => {
@@ -34,23 +34,26 @@ export const AuthProvider = ({ children }) => {
   const checkIncomingData = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const userDataParam = urlParams.get('userData');
-    const purchaseDataParam = urlParams.get('purchaseData');
     const source = urlParams.get('source');
+    const token = urlParams.get('token');
     
-    if (source === 'gaminghub' && userDataParam && purchaseDataParam) {
+    if (source === 'gaminghub' && userDataParam && token) {
       try {
         const userData = JSON.parse(atob(userDataParam));
-        const purchaseInfo = JSON.parse(atob(purchaseDataParam));
         
-        console.log('Received data from GamingHub:', { userData, purchaseInfo });
+        console.log('Received data from GamingHub:', { userData, token });
         
         // Debug: Log wallet addresses received
         console.log('🔗 Received wallet addresses from GamingHub:');
         console.log('  EVM Address:', userData.userProfile?.evmAddr);
         console.log('  Solana Address:', userData.userProfile?.solAddr);
+        console.log('  API Token:', token);
         
-        // Auto-login with received data and redirect to payment
-        autoLoginWithGamingHubData(userData, purchaseInfo);
+        // Store the API token
+        setApiToken(token);
+        
+        // Auto-login with received data
+        autoLoginWithGamingHubData(userData, token);
         
         // KHÔNG clear URL parameters để giữ data khi reload
         // window.history.replaceState({}, document.title, url.pathname + url.search);
@@ -62,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const autoLoginWithGamingHubData = async (userData, purchaseInfo) => {
+  const autoLoginWithGamingHubData = async (userData, token) => {
     setLoading(true);
     try {
       // Set user data vào FSL Auth Service trước
@@ -85,15 +88,11 @@ export const AuthProvider = ({ children }) => {
         };
         
         setUser(user);
-        setPurchaseData(purchaseInfo);
         
         // Load user data
         await loadUserData();
         
         console.log('Auto-login successful with GamingHub data');
-        
-        // Set flag to redirect to payment page
-        setShouldRedirectToPayment(true);
       } else {
         console.error('FSL ID verification failed:', verificationResult.error);
         // Don't throw error, just log it and continue with mock data
@@ -112,12 +111,8 @@ export const AuthProvider = ({ children }) => {
         };
         
         setUser(user);
-        setPurchaseData(purchaseInfo);
         
         console.log('Auto-login completed with mock verification (demo mode)');
-        
-        // Set flag to redirect to payment page
-        setShouldRedirectToPayment(true);
       }
     } catch (error) {
       console.error('Auto-login failed:', error);
@@ -162,8 +157,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setBalance(null);
     setTransactions([]);
-    setPurchaseData(null);
-    setShouldRedirectToPayment(false);
+    setSelectedPackage(null);
   };
 
   const signMessage = async (message) => {
@@ -192,8 +186,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const clearRedirectFlag = () => {
-    setShouldRedirectToPayment(false);
+  const selectPackage = (packageData) => {
+    setSelectedPackage(packageData);
+  };
+
+  const clearSelectedPackage = () => {
+    setSelectedPackage(null);
   };
 
   const value = {
@@ -201,14 +199,15 @@ export const AuthProvider = ({ children }) => {
     loading,
     balance,
     transactions,
-    purchaseData,
-    shouldRedirectToPayment,
+    apiToken,
+    selectedPackage,
     signIn,
     signOut,
     signMessage,
     callContract,
     refreshUserData,
-    clearRedirectFlag,
+    selectPackage,
+    clearSelectedPackage,
     isAuthenticated: !!user
   };
 

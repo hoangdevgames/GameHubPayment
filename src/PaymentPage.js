@@ -4,20 +4,20 @@ import fslAuthService from './services/fslAuth';
 import { ethers } from 'ethers';
 import './PaymentPage.css';
 
-const PaymentPage = ({ onSuccess, onFailed }) => {
-  const { user, purchaseData } = useAuth();
+const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
+  const { user, selectedPackage } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('gmt');
   const [error, setError] = useState(null);
   const [userBalance, setUserBalance] = useState(null);
 
-  // Redirect back to GamingHub if no purchase data
+  // Redirect back if no package selected
   useEffect(() => {
-    if (!purchaseData) {
-      // Nếu không có purchase data, quay về home
-      onFailed && onFailed();
+    if (!selectedPackage) {
+      // If no package selected, go back to MainContent
+      onBack && onBack();
     }
-  }, [purchaseData, onFailed]);
+  }, [selectedPackage, onBack]);
 
   // Load user balance on component mount
   useEffect(() => {
@@ -69,10 +69,10 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     setError(null);
     
     try {
-      console.log('Processing GMT payment for:', purchaseData);
+      console.log('Processing GMT payment for:', selectedPackage);
       
       // Sử dụng FSL SDK để xử lý GMT payment trên Solana
-      const result = await fslAuthService.processGMTPayment(purchaseData);
+      const result = await fslAuthService.processGMTPayment(selectedPackage);
       
       if (result.success) {
         console.log('GMT payment successful:', result);
@@ -94,9 +94,9 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     setError(null);
     
     try {
-      console.log('Processing Polygon GGUSD payment for:', purchaseData);
+      console.log('Processing Polygon GGUSD payment for:', selectedPackage);
       
-      const result = await fslAuthService.processGGUSDPayment(purchaseData, 137); // Polygon chainId
+      const result = await fslAuthService.processGGUSDPayment(selectedPackage, 137); // Polygon chainId
       
       if (result.success) {
         console.log('Polygon GGUSD payment successful:', result);
@@ -117,9 +117,9 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     setError(null);
     
     try {
-      console.log('Processing BSC GGUSD payment for:', purchaseData);
+      console.log('Processing BSC GGUSD payment for:', selectedPackage);
       
-      const result = await fslAuthService.processGGUSDPayment(purchaseData, 56); // BSC chainId
+      const result = await fslAuthService.processGGUSDPayment(selectedPackage, 56); // BSC chainId
       
       if (result.success) {
         console.log('BSC GGUSD payment successful:', result);
@@ -142,14 +142,14 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     setError(null);
     
     try {
-      console.log('Processing Amoy GGUSD payment with custom data for:', purchaseData);
+      console.log('Processing Amoy GGUSD payment with custom data for:', selectedPackage);
       
       // Tạo custom data cho transaction
       const customData = {
         purchaseId: Date.now(),
-        productName: purchaseData.productName || 'Starlets',
-        quantity: purchaseData.quantity || 1,
-        amount: purchaseData.amount || 1,
+        productName: selectedPackage.name || 'Starlets',
+        quantity: selectedPackage.starlets || 1,
+        amount: selectedPackage.amount || 1,
         timestamp: new Date().toISOString(),
         userInfo: {
           fslId: user?.id || 'unknown',
@@ -168,7 +168,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
       
       // Gọi FSL SDK với custom data
       const result = await fslAuthService.callEvmContractByCallDataWithCustomData(
-        purchaseData, 
+        selectedPackage, 
         80002, // Amoy chainId
         encodedCustomData
       );
@@ -188,12 +188,8 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
   };
 
   const handleBack = () => {
-    // Redirect back to GamingHub
-    if (purchaseData?.returnUrl) {
-      window.location.href = purchaseData.returnUrl;
-    } else {
-      onFailed && onFailed();
-    }
+    // Go back to MainContent
+    onBack && onBack();
   };
 
   // Format amount for display
@@ -217,13 +213,13 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
 
   // Get payment method details
   const getPaymentMethodDetails = (method) => {
-    const baseGGUSDAmount = purchaseData.amount || 1; // 1:1 ratio for GGUSD
+    const baseGGUSDAmount = selectedPackage?.price || 1; // Use price from selected package
     
     switch (method) {
       case 'gmt':
         return {
           name: 'PAY WITH SOLANA-GMT',
-          amount: formatAmount(purchaseData.amount * 0.1, 'GMT'),
+          amount: formatAmount((selectedPackage?.price || 1) * 0.1, 'GMT'),
           description: 'Pay with GMT tokens on Solana blockchain',
           icon: '⚡',
           balance: userBalance?.gmt ? `${userBalance.gmt.toFixed(2)} GMT` : null
@@ -256,7 +252,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
       default:
         return {
           name: 'PAYMENT METHOD',
-          amount: formatAmount(purchaseData.amount),
+          amount: formatAmount(selectedPackage?.price || 1),
           description: 'Select a payment method',
           icon: '💰',
           balance: null
@@ -264,7 +260,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
     }
   };
 
-  if (!purchaseData) {
+  if (!selectedPackage) {
     return (
       <div className="payment-loading">
         <div className="loading-spinner"></div>
@@ -300,12 +296,12 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
 
         <div className="purchase-summary">
           <div className="purchase-item">
-            <div className="item-name">{purchaseData.productName || 'Starlets'}</div>
-            <div className="item-quantity">x{purchaseData.quantity || 1}</div>
+            <div className="item-name">{selectedPackage.name || 'Starlets'}</div>
+            <div className="item-quantity">{selectedPackage.starlets} Starlets + {selectedPackage.tickets} Tickets</div>
           </div>
           <div className="purchase-total">
             <div className="total-label">TOTAL</div>
-            <div className="total-amount">{formatAmount(purchaseData.amount)}</div>
+            <div className="total-amount">{formatAmount(selectedPackage.price, 'GGUSD')}</div>
           </div>
         </div>
       </div>
@@ -323,7 +319,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           <div className="method-icon">⚡</div>
           <div className="method-content">
             <div className="method-name">PAY WITH SOLANA-GMT</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount * 0.1, 'GMT')}</div>
+            <div className="method-amount">{formatAmount((selectedPackage?.price || 1) * 0.1, 'GMT')}</div>
             <div className="method-description">Pay with GMT tokens on Solana blockchain</div>
             {userBalance?.gmt && (
               <div className="method-balance">Balance: {userBalance.gmt.toFixed(2)} GMT</div>
@@ -343,7 +339,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           <div className="method-icon">🔷</div>
           <div className="method-content">
             <div className="method-name">PAY WITH POLYGON-GGUSD</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-amount">{formatAmount(selectedPackage?.price || 1, 'GGUSD')}</div>
             <div className="method-description">Pay with GGUSD tokens on Polygon network</div>
             {userBalance?.ggusd_polygon && (
               <div className="method-balance">Balance: {userBalance.ggusd_polygon.toFixed(2)} GGUSD</div>
@@ -363,7 +359,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           <div className="method-icon">🟡</div>
           <div className="method-content">
             <div className="method-name">PAY WITH BSC-GGUSD</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-amount">{formatAmount(selectedPackage?.price || 1, 'GGUSD')}</div>
             <div className="method-description">Pay with GGUSD tokens on BSC network</div>
             {userBalance?.ggusd_bsc && (
               <div className="method-balance">Balance: {userBalance.ggusd_bsc.toFixed(2)} GGUSD</div>
@@ -385,7 +381,7 @@ const PaymentPage = ({ onSuccess, onFailed }) => {
           <div className="method-icon">🟢</div>
           <div className="method-content">
             <div className="method-name">PAY WITH AMOY-GGUSD</div>
-            <div className="method-amount">{formatAmount(purchaseData.amount, 'GGUSD')}</div>
+            <div className="method-amount">{formatAmount(selectedPackage?.price || 1, 'GGUSD')}</div>
             <div className="method-description">Pay with GGUSD tokens on Amoy testnet</div>
             {userBalance?.ggusd_amoy && (
               <div className="method-balance">Balance: {userBalance.ggusd_amoy.toFixed(2)} GGUSD</div>

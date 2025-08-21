@@ -70,11 +70,15 @@ class FSLAuthService {
       80002: '0xfF39ac1e2aD4CbA1b86D77d972424fB8515242bd' // Amoy GGUSD contract address
     };
 
+    // Default treasury addresses - will be updated from API
     this.TREASURY_ADDRESSES = {
       137: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb', // Polygon treasury wallet
       56: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb',  // BSC treasury wallet
       80002: '0x1a7dabEfb9D1fD8BF3197d61C0D6aa8ef3948fEb', // Amoy treasury wallet
     };
+    
+    // Dynamic treasury address from API (lineReceiveAddress)
+    this.dynamicTreasuryAddress = null;
 
     this.CHAIN_NAMES = {
       80002: 'Amoy',
@@ -136,6 +140,28 @@ class FSLAuthService {
       walletAddress: userData.userProfile?.solAddr // ✅ Thêm wallet address
     };
     console.log('User set from GamingHub:', this.currentUser);
+  }
+
+  // Update treasury address from API (lineReceiveAddress)
+  updateTreasuryAddress(lineReceiveAddress) {
+    console.log('Updating treasury address from API:', lineReceiveAddress);
+    this.dynamicTreasuryAddress = lineReceiveAddress;
+    
+    // Update all chain treasury addresses with the new address
+    if (lineReceiveAddress) {
+      Object.keys(this.TREASURY_ADDRESSES).forEach(chainId => {
+        this.TREASURY_ADDRESSES[chainId] = lineReceiveAddress;
+      });
+      console.log('Updated treasury addresses:', this.TREASURY_ADDRESSES);
+    }
+  }
+
+  // Get treasury address for a specific chain (uses dynamic address if available)
+  getTreasuryAddress(chainId) {
+    if (this.dynamicTreasuryAddress) {
+      return this.dynamicTreasuryAddress;
+    }
+    return this.TREASURY_ADDRESSES[chainId];
   }
 
   // Verify FSL ID (đã có từ GamingHub)
@@ -640,7 +666,7 @@ class FSLAuthService {
   // ERC-20 GGUSD Token Transfer - copy từ guide với modifications
   async purchaseStarletsWithGGUSD(chainId, starletAmount, ggusdAmount) {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];
-    const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
+    const treasuryAddress = this.getTreasuryAddress(chainId);
     
     if (!contractAddress || !treasuryAddress) {
       throw new Error(`Unsupported chain ID: ${chainId}`);
@@ -757,7 +783,7 @@ class FSLAuthService {
       
       // Lấy contract và treasury addresses
       const contractAddress = this.GGUSD_CONTRACTS[chainId];
-      const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
+      const treasuryAddress = this.getTreasuryAddress(chainId);
       
       if (!contractAddress || !treasuryAddress) {
         throw new Error(`Unsupported chain ID: ${chainId}`);
@@ -846,7 +872,7 @@ class FSLAuthService {
   // Alternative: Using Popup Window for Contract Calls - copy từ guide
   async purchaseWithPopup(chainId, ggusdAmount, appKey) {
     const contractAddress = this.GGUSD_CONTRACTS[chainId];
-    const treasuryAddress = this.TREASURY_ADDRESSES[chainId];
+    const treasuryAddress = this.getTreasuryAddress(chainId);
     const amountInWei = ethers.parseUnits(ggusdAmount.toString(), 18);
     const amountInWeiString = amountInWei.toString(); // Convert BigInt to string
     

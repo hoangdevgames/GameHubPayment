@@ -1,6 +1,14 @@
 import FSLAuthorization from 'fsl-authorization';
 import { ethers } from 'ethers';
 
+// API Configuration
+export const API_CONFIG = {
+  server_url: 'https://gm14.joysteps.io',
+  endpoints: {
+    chainProducts: '/api/app/chainProducts'
+  }
+};
+
 // Basic Configuration từ FSL Authorization Integration Guide
 // Note: This returns a Promise, need to await in actual usage
 const initializeFSLAuthorization = () => FSLAuthorization.init({
@@ -93,7 +101,7 @@ export const CHAIN_CONFIG = {
   }
 };
 
-export default fSLAuthorization;
+export default initializeFSLAuthorization;
 
 // Helper functions
 export function getChainName(chainId) {

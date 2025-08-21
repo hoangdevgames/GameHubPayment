@@ -10,21 +10,20 @@ import StarletStore from './components/StarletStore';
 import './App.css';
 
 const AppContent = () => {
-  const { shouldRedirectToPayment, clearRedirectFlag } = useAuth();
+  const { selectedPackage, clearSelectedPackage } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [showPaymentView, setShowPaymentView] = useState(false);
   const [showSuccessView, setShowSuccessView] = useState(false);
   const [showFailedView, setShowFailedView] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
 
-  // Auto-show payment view when coming from GamingHub
+  // Show payment view when package is selected from MainContent
   useEffect(() => {
-    if (shouldRedirectToPayment) {
-      clearRedirectFlag();
+    if (selectedPackage) {
       setShowPaymentView(true);
       setActiveTab('payment');
     }
-  }, [shouldRedirectToPayment, clearRedirectFlag]);
+  }, [selectedPackage]);
 
   const renderActiveView = () => {
     if (showPaymentView) {
@@ -33,8 +32,16 @@ const AppContent = () => {
           setTransactionData(data);
           setShowSuccessView(true);
           setShowPaymentView(false);
+          clearSelectedPackage();
         }} 
-        onFailed={() => setShowFailedView(true)} 
+        onFailed={() => {
+          setShowFailedView(true);
+          clearSelectedPackage();
+        }} 
+        onBack={() => {
+          setShowPaymentView(false);
+          clearSelectedPackage();
+        }}
       />;
     }
     
@@ -64,8 +71,16 @@ const AppContent = () => {
             setTransactionData(data);
             setShowSuccessView(true);
             setShowPaymentView(false);
+            clearSelectedPackage();
           }} 
-          onFailed={() => setShowFailedView(true)} 
+          onFailed={() => {
+            setShowFailedView(true);
+            clearSelectedPackage();
+          }}
+          onBack={() => {
+            setActiveTab('home');
+            clearSelectedPackage();
+          }}
         />;
       case 'starlet-store':
         return <StarletStore />;

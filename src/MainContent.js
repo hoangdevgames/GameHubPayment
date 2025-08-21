@@ -7,13 +7,18 @@ import background from './images/background_2.png';
 import ticketIcon from './images/ticket.svg';
 import arrow_2 from './images/arrow_2.svg';
 import fslLogo from './images/FSLID_Login_Logo.png';
+import { API_CONFIG } from './services/fslConfig';
+import fslAuthService from './services/fslAuth';
 
 const MainContent = ({ activeTab }) => {
-  const { user } = useAuth();
+  const { user, apiToken, selectPackage } = useAuth();
   const [tickets, setTickets] = useState(0);
   const [starlets, setStarlets] = useState(0);
   const [marketTab, setMarketTab] = useState('telegram'); // 'starlet' or 'telegram'
   const [buyOptions, setBuyOptions] = useState([]);
+  const [chainProducts, setChainProducts] = useState([]);
+  const [telegramReceiveAddress, setTelegramReceiveAddress] = useState('');
+  const [lineReceiveAddress, setLineReceiveAddress] = useState('');
   const [isFreeItemClaimed, setIsFreeItemClaimed] = useState(false);
   const [nextClaimTime, setNextClaimTime] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,137 +30,78 @@ const MainContent = ({ activeTab }) => {
   const [monthlyOfferExpanded, setMonthlyOfferExpanded] = useState(true);
   const [weeklyOfferExpanded, setWeeklyOfferExpanded] = useState(true);
 
-  // Mock data for demonstration
+  // Fetch chain products from API
   useEffect(() => {
-    // Simulate user data
+    const fetchChainProducts = async () => {
+      if (!apiToken) {
+        console.log('No API token available, skipping chain products fetch');
+        return;
+      }
+      
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await fetch(`${API_CONFIG.server_url}${API_CONFIG.endpoints.chainProducts}?token=${apiToken}`);
+        const data = await response.json();
+        
+        console.log('Chain Products Response:', data);
+        
+        if (data.code === 0 && data.data) {
+          const { chainProducts, telegramReceiveAddress, lineReceiveAddress } = data.data;
+          
+          console.log('Chain Products Data:', {
+            products: chainProducts,
+            telegramReceiveAddress,
+            lineReceiveAddress
+          });
+          
+          setChainProducts(chainProducts || []);
+          setTelegramReceiveAddress(telegramReceiveAddress || '');
+          setLineReceiveAddress(lineReceiveAddress || '');
+          
+          // Update FSL Auth Service with the lineReceiveAddress (treasury address)
+          if (lineReceiveAddress) {
+            fslAuthService.updateTreasuryAddress(lineReceiveAddress);
+          }
+          
+          // Convert chain products to buy options format for compatibility
+          const convertedOptions = (chainProducts || []).map(product => ({
+            id: product.id,
+            state: product.state,
+            type: 0, // All chain products are standard pack for now
+            stars: product.price, // price maps to stars
+            starlet: product.starlets,
+            ticket: product.ticket,
+            bonus: 0,
+            bonusPercentage: 0,
+            canBuy: product.state === 0
+          }));
+          
+          setBuyOptions(convertedOptions);
+          
+        } else if (data.code === 102002 || data.code === 102001) {
+          console.log('Token expired or invalid');
+          setError('Session expired. Please return to the main app and try again.');
+        } else {
+          console.error('API returned error:', data);
+          setError('Failed to load products. Please try again.');
+        }
+      } catch (error) {
+        console.error('Failed to fetch chain products:', error);
+        setError('Network error. Please check your connection and try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Simulate user data (keep this for now)
     setTickets(150);
     setStarlets(2500);
     
-    // Mock buy options with proper categorization
-    setBuyOptions([
-      {
-        "id": 2001,
-        "state": 0,
-        "type": 20,
-        "stars": 250,
-        "starlet": 1950,
-        "ticket": 0,
-        "bonus": 750,
-        "bonusPercentage": 50,
-        "canBuy": true
-      },
-      {
-        "id": 2002,
-        "state": 0,
-        "type": 20,
-        "stars": 500,
-        "starlet": 5400,
-        "ticket": 0,
-        "bonus": 2700,
-        "bonusPercentage": 100,
-        "canBuy": true
-      },
-      {
-        "id": 4,
-        "state": 0,
-        "type": 0,
-        "stars": 100,
-        "starlet": 500,
-        "ticket": 1,
-        "bonus": 0,
-        "bonusPercentage": 0,
-        "canBuy": true
-      },
-      {
-        "id": 5,
-        "state": 0,
-        "type": 0,
-        "stars": 250,
-        "starlet": 1300,
-        "ticket": 5,
-        "bonus": 0,
-        "bonusPercentage": 0,
-        "canBuy": true
-      },
-      {
-        "id": 6,
-        "state": 0,
-        "type": 0,
-        "stars": 500,
-        "starlet": 2700,
-        "ticket": 10,
-        "bonus": 0,
-        "bonusPercentage": 0,
-        "canBuy": true
-      },
-      {
-        "id": 1001,
-        "state": 0,
-        "type": 10,
-        "stars": 100,
-        "starlet": 525,
-        "ticket": 0,
-        "bonus": 25,
-        "bonusPercentage": 5,
-        "canBuy": true
-      },
-      {
-        "id": 1002,
-        "state": 0,
-        "type": 10,
-        "stars": 250,
-        "starlet": 1495,
-        "ticket": 0,
-        "bonus": 195,
-        "bonusPercentage": 15,
-        "canBuy": true
-      },
-      {
-        "id": 1003,
-        "state": 0,
-        "type": 10,
-        "stars": 500,
-        "starlet": 3375,
-        "ticket": 0,
-        "bonus": 675,
-        "bonusPercentage": 25,
-        "canBuy": true
-      },
-      {
-        "id": 3001,
-        "state": 0,
-        "type": 30,
-        "stars": 100,
-        "starlet": 550,
-        "ticket": 0,
-        "bonus": 50,
-        "bonusPercentage": 10,
-        "canBuy": true
-      },
-      {
-        "id": 3002,
-        "state": 0,
-        "type": 30,
-        "stars": 250,
-        "starlet": 1625,
-        "ticket": 0,
-        "bonus": 325,
-        "bonusPercentage": 25,
-        "canBuy": true
-      },
-      {
-        "id": 3003,
-        "state": 0,
-        "type": 30,
-        "stars": 500,
-        "starlet": 4050,
-        "ticket": 0,
-        "bonus": 1350,
-        "bonusPercentage": 50,
-        "canBuy": true
-      }
-    ]);
-  }, []);
+    // Fetch real data
+    fetchChainProducts();
+  }, [apiToken]);
 
   // Add body class to prevent iOS overscrolling
   useEffect(() => {
@@ -176,18 +122,43 @@ const MainContent = ({ activeTab }) => {
       console.log('Purchase clicked:', { amount, stars, price, optionId });
       
       if (optionId === 'free') {
-        // Simulate API call delay
+        // Handle free item claim
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         setIsFreeItemClaimed(true);
         // Update user stats
         setTickets(prev => prev + 1);
         setStarlets(prev => prev + 50);
+        
+        // Show success message
+        alert('Free item claimed successfully!');
       } else {
-        // Handle paid purchase
-        console.log('Processing paid purchase:', { amount, stars, price, optionId });
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Find the selected product from chainProducts
+        const selectedProduct = chainProducts.find(product => product.id === optionId);
+        
+        if (selectedProduct) {
+          // Create package data for payment
+          const packageData = {
+            id: selectedProduct.id,
+            name: `${selectedProduct.starlets} Starlets Package`,
+            starlets: selectedProduct.starlets,
+            tickets: selectedProduct.ticket,
+            price: selectedProduct.price,
+            currency: 'GGUSD',
+            productType: 'starlets',
+            // Add additional data for payment processing
+            amount: selectedProduct.starlets, // For compatibility
+            stars: selectedProduct.price,    // For compatibility
+            optionId: selectedProduct.id
+          };
+          
+          console.log('Selecting package for payment:', packageData);
+          
+          // Select package and trigger redirect to PaymentPage
+          selectPackage(packageData);
+        } else {
+          throw new Error('Selected product not found');
+        }
       }
     } catch (err) {
       setError('Purchase failed. Please try again.');
