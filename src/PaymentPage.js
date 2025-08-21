@@ -7,7 +7,7 @@ import './PaymentPage.css';
 const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
   const { user, selectedPackage } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('gmt');
+  const [paymentMethod, setPaymentMethod] = useState('amoy');
   const [error, setError] = useState(null);
   const [userBalance, setUserBalance] = useState(null);
 
@@ -41,16 +41,15 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
     
     try {
       switch (method) {
-        case 'gmt':
-          await handleGMTPayment();
-          break;
-        case 'polygon':
-          await handlePolygonGGUSDPayment();
-          break;
-        case 'bsc':
-          await handleBSCGGUSDPayment();
-          break;
-
+        // case 'gmt':
+        //   await handleGMTPayment();
+        //   break;
+        // case 'polygon':
+        //   await handlePolygonGGUSDPayment();
+        //   break;
+        // case 'bsc':
+        //   await handleBSCGGUSDPayment();
+        //   break;
         case 'amoy':
           await handleAmoyGGUSDPayment();
           break;
@@ -64,6 +63,8 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
     }
   };
 
+  // TEMPORARILY DISABLED PAYMENT METHODS
+  /*
   const handleGMTPayment = async () => {
     setLoading(true);
     setError(null);
@@ -134,6 +135,7 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
       setLoading(false);
     }
   };
+  */
 
 
 
@@ -310,8 +312,8 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
       <div className="payment-methods">
         <div className="payment-method-title">SELECT PAYMENT METHOD</div>
         
-        {/* GMT Payment */}
-        <button 
+        {/* GMT Payment - TEMPORARILY HIDDEN */}
+        {/* <button 
           className={`payment-method-button gmt-button ${paymentMethod === 'gmt' ? 'selected' : ''}`}
           onClick={() => handlePaymentMethod('gmt')}
           disabled={loading}
@@ -328,10 +330,10 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
           <div className="method-check">
             {paymentMethod === 'gmt' && <div className="checkmark">✓</div>}
           </div>
-        </button>
+        </button> */}
 
-        {/* Polygon GGUSD Payment */}
-        <button 
+        {/* Polygon GGUSD Payment - TEMPORARILY HIDDEN */}
+        {/* <button 
           className={`payment-method-button polygon-button ${paymentMethod === 'polygon' ? 'selected' : ''}`}
           onClick={() => handlePaymentMethod('polygon')}
           disabled={loading}
@@ -348,10 +350,10 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
           <div className="method-check">
             {paymentMethod === 'polygon' && <div className="checkmark">✓</div>}
           </div>
-        </button>
+        </button> */}
 
-        {/* BSC GGUSD Payment */}
-        <button 
+        {/* BSC GGUSD Payment - TEMPORARILY HIDDEN */}
+        {/* <button 
           className={`payment-method-button bsc-button ${paymentMethod === 'bsc' ? 'selected' : ''}`}
           onClick={() => handlePaymentMethod('bsc')}
           disabled={loading}
@@ -368,11 +370,9 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
           <div className="method-check">
             {paymentMethod === 'bsc' && <div className="checkmark">✓</div>}
           </div>
-        </button>
+        </button> */}
 
-
-
-        {/* Amoy GGUSD Payment */}
+        {/* Amoy GGUSD Payment - ONLY ACTIVE METHOD */}
         <button 
           className={`payment-method-button amoy-button ${paymentMethod === 'amoy' ? 'selected' : ''}`}
           onClick={() => handlePaymentMethod('amoy')}

@@ -789,8 +789,8 @@ class FSLAuthService {
         throw new Error(`Unsupported chain ID: ${chainId}`);
       }
       
-      // Tính toán GGUSD amount
-      const ggusdAmount = purchaseData.amount || 1;
+      // Tính toán GGUSD amount - use price field which contains the GGUSD amount to pay
+      const ggusdAmount = purchaseData.price || purchaseData.ggusdAmount || 1;
       
       // Lấy decimals từ contract
       const web3 = new Web3(this.RPC_URLS[chainId]);
@@ -994,6 +994,8 @@ class FSLAuthService {
       let ggusdAmount;
       if (purchaseData.ggusdAmount) {
         ggusdAmount = purchaseData.ggusdAmount; // Use provided GGUSD amount
+      } else if (purchaseData.price) {
+        ggusdAmount = purchaseData.price; // Use price field (GGUSD amount to pay)
       } else if (purchaseData.stars) {
         const starsToGGUSDRate = 1; // 1 Star = 1 GGUSD
         ggusdAmount = purchaseData.stars * starsToGGUSDRate; // Calculate from Stars

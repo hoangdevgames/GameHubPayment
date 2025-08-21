@@ -70,7 +70,7 @@ const MainContent = ({ activeTab }) => {
             id: product.id,
             state: product.state,
             type: 0, // All chain products are standard pack for now
-            stars: product.price, // price maps to stars
+            stars: product.price, // price is GGUSD amount to pay
             starlet: product.starlets,
             ticket: product.ticket,
             bonus: 0,
@@ -143,12 +143,13 @@ const MainContent = ({ activeTab }) => {
             name: `${selectedProduct.starlets} Starlets Package`,
             starlets: selectedProduct.starlets,
             tickets: selectedProduct.ticket,
-            price: selectedProduct.price,
+            price: selectedProduct.price, // This is the GGUSD amount to pay
             currency: 'GGUSD',
             productType: 'starlets',
             // Add additional data for payment processing
-            amount: selectedProduct.starlets, // For compatibility
-            stars: selectedProduct.price,    // For compatibility
+            amount: selectedProduct.starlets, // Number of starlets
+            ggusdAmount: selectedProduct.price, // GGUSD amount to pay
+            stars: selectedProduct.price,    // For compatibility (actually GGUSD)
             optionId: selectedProduct.id
           };
           
@@ -439,7 +440,7 @@ const MainContent = ({ activeTab }) => {
                                         </div>
                                       </div>
                                       <div className="mk-market-ticket-price" style={{ opacity: isAvailable ? 1 : 0.5 }}>
-                                        {isLoading ? 'LOADING...' : (!isAvailable ? 'SOLD OUT' : `${option.stars} TELEGRAM STARS`)}
+                                        {isLoading ? 'LOADING...' : (!isAvailable ? 'SOLD OUT' : `${option.stars} GGUSD`)}
                                       </div>
                                     </div>
                                   </button>
