@@ -1,5 +1,6 @@
 import FSLAuthorization from 'fsl-authorization';
 import { Buffer } from 'buffer';
+import { API_CONFIG } from './fslConfig';
 
 /* global BigInt */
 
@@ -833,8 +834,8 @@ class FSLAuthService {
       
       console.log('✅ Custom data transaction successful:', result);
       
-      // Verify transaction và mint Starlets
-      await this.verifyAndMintStarlets(purchaseData.quantity || 1, result.transactionHash, chainId);
+      // Confirm transaction hash with backend API
+      const confirmResult = await this.confirmTransactionHash(result.transactionHash || result.hash || 'mock_tx_hash');
       
       return {
         success: true,
@@ -845,7 +846,9 @@ class FSLAuthService {
         starletAmount: purchaseData.quantity || 1,
         timestamp: new Date().toISOString(),
         customData: customData,
-        network: 'Amoy Testnet'
+        network: 'Amoy Testnet',
+        // Add backend confirmation data
+        confirmData: confirmResult
       };
       
     } catch (error) {
@@ -970,7 +973,80 @@ class FSLAuthService {
     }
   }
 
-  // Mock backend verification function
+  // Confirm transaction hash with backend API
+  async confirmTransactionHash(txHash) {
+    try {
+      console.log(`🔍 Confirming transaction hash: ${txHash}`);
+      
+      const response = await fetch(`${API_CONFIG.server_url}/api/app/confirmHash?token=${this.apiToken}&tx=${txHash}`);
+      const data = await response.json();
+      
+      console.log('📊 Confirm Hash Response:', data);
+      
+      if (data.code === 0) {
+        console.log('✅ Transaction confirmed successfully:', data.data);
+        return {
+          success: true,
+          ...data.data
+        };
+      } else if (data.code === 102002 || data.code === 102001) {
+        console.log('🔄 Token expired, attempting to refresh...');
+        // Token expired, attempt to refresh
+        const loginResult = await this.refreshToken();
+        if (loginResult.success) {
+          // Retry the API call
+          const retryResponse = await fetch(`${API_CONFIG.server_url}/api/app/confirmHash?token=${this.apiToken}&tx=${txHash}`);
+          const retryData = await retryResponse.json();
+          if (retryData.code === 0) {
+            console.log('✅ Transaction confirmed successfully (retry):', retryData.data);
+            return {
+              success: true,
+              ...retryData.data
+            };
+          } else {
+            console.error('❌ Failed to confirm transaction (retry):', retryData);
+            return {
+              success: false,
+              error: retryData.message || 'Failed to confirm transaction'
+            };
+          }
+        } else {
+          console.error('❌ Failed to refresh token');
+          return {
+            success: false,
+            error: 'Authentication failed'
+          };
+        }
+      } else {
+        console.error('❌ Failed to confirm transaction:', data);
+        return {
+          success: false,
+          error: data.message || 'Failed to confirm transaction'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error confirming transaction hash:', error);
+      return {
+        success: false,
+        error: error.message || 'Network error occurred'
+      };
+    }
+  }
+
+  // Refresh token method
+  async refreshToken() {
+    try {
+      // This should be implemented based on your authentication flow
+      // For now, return false to indicate token refresh failed
+      console.log('🔄 Token refresh not implemented yet');
+      return { success: false };
+    } catch (error) {
+      console.error('❌ Token refresh error:', error);
+      return { success: false };
+    }
+  }
+
+  // Mock backend verification function (keep for compatibility)
   async verifyAndMintStarlets(starletAmount, txHash, chainId) {
     console.log(`Verifying transaction ${txHash} on chain ${chainId} for ${starletAmount} starlets`);
     // In production, call your backend API here

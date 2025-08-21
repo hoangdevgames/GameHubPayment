@@ -66,10 +66,28 @@ const PaymentSuccess = ({ onReturn, transactionData }) => {
         <h1 className="success-title">PAYMENT SUCCESSFUL!</h1>
         
         <div className="success-message">
-          Your payment has been processed successfully. Your Starlets will be added to your account shortly.
+          Your payment has been processed successfully. 
+          {transactionData?.confirmData?.success ? 
+            'Your Starlets and Tickets have been added to your account!' : 
+            'Your Starlets will be added to your account shortly.'
+          }
         </div>
 
-        {purchaseData && (
+        {/* Show confirmed purchase data if available, otherwise show original purchase data */}
+        {transactionData?.confirmData?.success ? (
+          <div className="purchase-summary">
+            <div className="summary-item">
+              <span className="summary-label">Starlets Received:</span>
+              <span className="summary-value">{transactionData.confirmData.starlets} STARLETS</span>
+            </div>
+            {transactionData.confirmData.ticket > 0 && (
+              <div className="summary-item">
+                <span className="summary-label">Tickets Received:</span>
+                <span className="summary-value">{transactionData.confirmData.ticket} TICKETS</span>
+              </div>
+            )}
+          </div>
+        ) : purchaseData && (
           <div className="purchase-summary">
             <div className="summary-item">
               <span className="summary-label">Amount:</span>
@@ -92,22 +110,64 @@ const PaymentSuccess = ({ onReturn, transactionData }) => {
               <span className="transaction-label">Transaction ID:</span>
               <span className="transaction-value">{transactionData.transactionHash || transactionData.transactionId}</span>
             </div>
-            <div className="transaction-item">
-              <span className="transaction-label">Amount Paid:</span>
-              <span className="transaction-value">
-                {transactionData.amount} {transactionData.currency}
-              </span>
-            </div>
-            <div className="transaction-item">
-              <span className="transaction-label">Payment Method:</span>
-              <span className="transaction-value">
-                {transactionData.currency === 'GMT' ? 'Solana-GMT' : 'Credit Card'}
-              </span>
-            </div>
-            <div className="transaction-item">
-              <span className="transaction-label">Status:</span>
-              <span className="transaction-value success">Completed</span>
-            </div>
+            
+            {/* Show confirmed transaction data from backend if available */}
+            {transactionData.confirmData?.success ? (
+              <>
+                <div className="transaction-item">
+                  <span className="transaction-label">Order ID:</span>
+                  <span className="transaction-value">{transactionData.confirmData.orderId}</span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Starlets Received:</span>
+                  <span className="transaction-value">{transactionData.confirmData.starlets} STARLETS</span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Tickets Received:</span>
+                  <span className="transaction-value">{transactionData.confirmData.ticket} TICKETS</span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Amount Paid:</span>
+                  <span className="transaction-value">{transactionData.confirmData.price} {transactionData.currency}</span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Product ID:</span>
+                  <span className="transaction-value">{transactionData.confirmData.productId}</span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Transaction Time:</span>
+                  <span className="transaction-value">{new Date(transactionData.confirmData.time).toLocaleString()}</span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Status:</span>
+                  <span className="transaction-value success">
+                    {transactionData.confirmData.state === 100 ? 'Completed' : `State: ${transactionData.confirmData.state}`}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="transaction-item">
+                  <span className="transaction-label">Amount Paid:</span>
+                  <span className="transaction-value">
+                    {transactionData.amount} {transactionData.currency}
+                  </span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Payment Method:</span>
+                  <span className="transaction-value">
+                    {transactionData.currency === 'GMT' ? 'Solana-GMT' : 
+                     transactionData.currency === 'GGUSD' ? 'GGUSD-Amoy' : 'Credit Card'}
+                  </span>
+                </div>
+                <div className="transaction-item">
+                  <span className="transaction-label">Status:</span>
+                  <span className="transaction-value success">
+                    {transactionData.confirmData?.success === false ? 'Pending Confirmation' : 'Completed'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
