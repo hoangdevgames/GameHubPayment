@@ -978,7 +978,7 @@ class FSLAuthService {
     try {
       console.log(`🔍 Confirming transaction hash: ${txHash}`);
       
-      const response = await fetch(`${API_CONFIG.server_url}/api/app/confirmHash?token=${this.apiToken}&tx=${txHash}`);
+      const response = await fetch(`${API_CONFIG.server_url}/api/app/sys/confirmHash?pwd=pwd&token=${this.apiToken}&tx=${txHash}`);
       const data = await response.json();
       
       console.log('📊 Confirm Hash Response:', data);
@@ -995,7 +995,7 @@ class FSLAuthService {
         const loginResult = await this.refreshToken();
         if (loginResult.success) {
           // Retry the API call
-          const retryResponse = await fetch(`${API_CONFIG.server_url}/api/app/confirmHash?token=${this.apiToken}&tx=${txHash}`);
+          const retryResponse = await fetch(`${API_CONFIG.server_url}/api/app/sys/confirmHash?pwd=pwd&token=${this.apiToken}&tx=${txHash}`);
           const retryData = await retryResponse.json();
           if (retryData.code === 0) {
             console.log('✅ Transaction confirmed successfully (retry):', retryData.data);
