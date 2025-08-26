@@ -11,7 +11,7 @@ import { API_CONFIG } from './services/fslConfig';
 import fslAuthService from './services/fslAuth';
 
 const MainContent = ({ activeTab }) => {
-  const { user, apiToken, selectPackage } = useAuth();
+  const { user, apiToken, selectPackage, getIncomingUserData } = useAuth();
   const [tickets, setTickets] = useState(0);
   const [starlets, setStarlets] = useState(0);
   const [marketTab, setMarketTab] = useState('telegram'); // 'starlet' or 'telegram'
@@ -23,6 +23,22 @@ const MainContent = ({ activeTab }) => {
   const [nextClaimTime, setNextClaimTime] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Get incoming user data for display when not logged in
+  const incomingUserData = getIncomingUserData();
+  
+  // Use either logged in user or incoming data for display
+  const displayUser = user || (incomingUserData ? {
+    name: incomingUserData.source === 'gaminghub' 
+      ? incomingUserData.userData?.telegramFirstName || 'User'
+      : incomingUserData.userProfile?.email || 'User',
+    telegramUsername: incomingUserData.source === 'gaminghub' 
+      ? incomingUserData.userData?.telegramUsername 
+      : null,
+    fslId: incomingUserData.source === 'gaminghub' 
+      ? incomingUserData.userData?.fslId 
+      : incomingUserData.userProfile?.fslId
+  } : null);
   
   // Category expansion states
   const [standardPackExpanded, setStandardPackExpanded] = useState(true);
@@ -268,7 +284,7 @@ const MainContent = ({ activeTab }) => {
             <img src={avatar} alt="Profile" />
           </button>
           <div className="mk-greeting-text" onClick={handleProfileClick}>
-            GM {user?.name || user?.telegramUsername || 'User'}!
+            GM {displayUser?.name || displayUser?.telegramUsername || 'User'}!
           </div>
         </div>
       </div>
@@ -278,7 +294,7 @@ const MainContent = ({ activeTab }) => {
           <div className="mk-market-title-container">
           <div className="mk-market-title">MARKET</div>
 
-          {!user?.fslId && (
+          {!displayUser?.fslId && (
             <div className="mk-fsl-connect-section" onClick={handleConnectFSLID}>
               <div className="mk-fsl-connect-content">
                 <div className="mk-lock-icon"><img src={fslLogo} alt="FSL Logo" /></div>

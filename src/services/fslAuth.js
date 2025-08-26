@@ -165,10 +165,13 @@ class FSLAuthService {
     return this.TREASURY_ADDRESSES[chainId];
   }
 
-  // Verify FSL ID (đã có từ GamingHub)
-  async verifyFSLID(fslId) {
+  // Verify FSL ID (đã có từ GamingHub) - NO AUTO-INIT
+  async verifyFSLID(fslId, requireInit = false) {
     try {
-      await this.init();
+      // Only initialize FSL if explicitly required
+      if (requireInit) {
+        await this.init();
+      }
       
       // Trong thực tế, bạn sẽ verify FSL ID với backend
       // Ở đây tôi giả lập verification thành công

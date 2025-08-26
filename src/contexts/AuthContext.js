@@ -21,15 +21,10 @@ export const AuthProvider = ({ children }) => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [showInsufficientDataPopup, setShowInsufficientDataPopup] = useState(false);
   const [missingDataFields, setMissingDataFields] = useState([]);
+  const [incomingUserData, setIncomingUserData] = useState(null);
 
-  // Check if user is already authenticated on app load
+  // Check for incoming data from GamingHub or API on app load - NO AUTO-LOGIN
   useEffect(() => {
-    const currentUser = fslAuthService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      loadUserData();
-    }
-    
     // Check for incoming data from GamingHub or try new API first
     checkIncomingData();
   }, []);
@@ -47,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         const apiData = await marketUserDataService.fetchMarketUserData(token);
         
         if (apiData && marketUserDataService.isDataSufficient(apiData)) {
-          console.log('✅ New API data is sufficient, using it');
+          console.log('✅ New API data is sufficient, storing for later use');
           
           // Transform API data to userProfile structure
           const userProfile = marketUserDataService.transformApiDataToUserProfile(apiData);
@@ -63,11 +58,15 @@ export const AuthProvider = ({ children }) => {
             setShowInsufficientDataPopup(true);
           }
           
-          // Store the API token
+          // Store the API token and user data for later use
           setApiToken(token);
+          setIncomingUserData({
+            source: 'api',
+            userProfile: userProfile,
+            token: token
+          });
           
-          // Auto-login with API data
-          await autoLoginWithApiData(userProfile, token);
+          console.log('📦 API data stored, ready for payment process');
           return;
         } else {
           console.log('⚠️ New API data is insufficient, falling back to GamingHub parameters');
@@ -82,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const userData = JSON.parse(atob(userDataParam));
         
-        console.log('🔄 Fallback: Received data from GamingHub:', { userData, token });
+        console.log('🔄 Fallback: Received data from GamingHub, storing for later use');
         
         // Debug: Log wallet addresses received
         console.log('🔗 Received wallet addresses from GamingHub:');
@@ -90,11 +89,15 @@ export const AuthProvider = ({ children }) => {
         console.log('  Solana Address:', userData.userProfile?.solAddr);
         console.log('  API Token:', token);
         
-        // Store the API token
+        // Store the API token and user data for later use - NO AUTO-LOGIN
         setApiToken(token);
+        setIncomingUserData({
+          source: 'gaminghub',
+          userData: userData,
+          token: token
+        });
         
-        // Auto-login with received data
-        autoLoginWithGamingHubData(userData, token);
+        console.log('📦 GamingHub data stored, ready for payment process');
         
         // KHÔNG clear URL parameters để giữ data khi reload
         // window.history.replaceState({}, document.title, url.pathname + url.search);
@@ -106,145 +109,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const autoLoginWithGamingHubData = async (userData, token) => {
-    setLoading(true);
-    try {
-      // Set user data vào FSL Auth Service trước
-      fslAuthService.setUserFromGamingHub(userData);
-      
-      // Verify FSL ID first
-      const verificationResult = await fslAuthService.verifyFSLID(userData.fslId);
-      
-      if (verificationResult.success && verificationResult.verified) {
-        // Set user data
-        const user = {
-          id: userData.fslId,
-          address: verificationResult.userInfo?.address || '0x...',
-          name: userData.telegramFirstName || 'STEPN Player',
-          isConnected: true,
-          platform: userData.platform,
-          telegramUID: userData.telegramUID,
-          telegramUsername: userData.telegramUsername,
-          userProfile: userData.userProfile
-        };
-        
-        setUser(user);
-        
-        // Load user data
-        await loadUserData();
-        
-        console.log('Auto-login successful with GamingHub data');
-      } else {
-        console.error('FSL ID verification failed:', verificationResult.error);
-        // Don't throw error, just log it and continue with mock data
-        // In production, you might want to show an error message to user
-        
-        // Set user data with mock verification for demo purposes
-        const user = {
-          id: userData.fslId,
-          address: '0x' + Math.random().toString(36).substr(2, 40),
-          name: userData.telegramFirstName || 'STEPN Player',
-          isConnected: true,
-          platform: userData.platform,
-          telegramUID: userData.telegramUID,
-          telegramUsername: userData.telegramUsername,
-          userProfile: userData.userProfile
-        };
-        
-        setUser(user);
-        
-        console.log('Auto-login completed with mock verification (demo mode)');
-      }
-    } catch (error) {
-      console.error('Auto-login failed:', error);
-      // Don't throw error, just log it
-      // In production, you might want to show an error message to user
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const autoLoginWithApiData = async (userProfile, token) => {
-    setLoading(true);
-    try {
-      // Create user data structure compatible with existing code
-      const userData = {
-        fslId: userProfile.fslId,
-        telegramUID: userProfile.uid,
-        telegramFirstName: 'User', // Default name since not provided by API
-        platform: 'api',
-        userProfile: userProfile
-      };
-      
-      // Set user data vào FSL Auth Service
-      fslAuthService.setUserFromGamingHub(userData);
-      
-      // Verify FSL ID first
-      const verificationResult = await fslAuthService.verifyFSLID(userProfile.fslId);
-      
-      if (verificationResult.success && verificationResult.verified) {
-        // Set user data
-        const user = {
-          id: userProfile.fslId,
-          address: verificationResult.userInfo?.address || userProfile.evmAddr || '0x...',
-          name: userProfile.email || 'API User',
-          isConnected: true,
-          platform: 'api',
-          telegramUID: userProfile.uid,
-          telegramUsername: null,
-          userProfile: userProfile
-        };
-        
-        setUser(user);
-        
-        // Load user data
-        await loadUserData();
-        
-        console.log('✅ Auto-login successful with API data');
-      } else {
-        console.error('FSL ID verification failed:', verificationResult.error);
-        // Don't throw error, just log it and continue with mock data
-        // In production, you might want to show an error message to user
-        
-        // Set user data with mock verification for demo purposes
-        const user = {
-          id: userProfile.fslId,
-          address: userProfile.evmAddr || '0x' + Math.random().toString(36).substr(2, 40),
-          name: userProfile.email || 'API User',
-          isConnected: true,
-          platform: 'api',
-          telegramUID: userProfile.uid,
-          telegramUsername: null,
-          userProfile: userProfile
-        };
-        
-        setUser(user);
-        
-        console.log('✅ Auto-login completed with mock verification (demo mode)');
-      }
-    } catch (error) {
-      console.error('Auto-login failed:', error);
-      // Don't throw error, just log it
-      // In production, you might want to show an error message to user
-    } finally {
-      setLoading(false);
-    }
-  };
+  // REMOVED: autoLoginWithGamingHubData and autoLoginWithApiData functions
+  // These are no longer needed since we don't auto-login
 
   const loadUserData = async () => {
+    if (!user) return;
+    
     try {
-      const [balanceData, transactionData] = await Promise.all([
-        fslAuthService.getBalance(),
-        fslAuthService.getTransactionHistory()
-      ]);
-      
-      setBalance(balanceData);
+      // Only load transaction history, not balance (balance will be loaded when needed)
+      const transactionData = await fslAuthService.getTransactionHistory();
       setTransactions(transactionData);
+      
+      // Note: Balance is loaded separately when needed for payment
+      // We don't need to load FSL balance on app startup
     } catch (error) {
       console.error('Failed to load user data:', error);
     }
   };
 
+  // Manual login function - only called when user explicitly wants to login
   const signIn = async () => {
     setLoading(true);
     try {
@@ -253,7 +136,7 @@ export const AuthProvider = ({ children }) => {
       await loadUserData();
       return userData;
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('Sign in failed:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -265,7 +148,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setBalance(null);
     setTransactions([]);
-    setSelectedPackage(null);
   };
 
   const signMessage = async (message) => {
@@ -273,7 +155,7 @@ export const AuthProvider = ({ children }) => {
       const result = await fslAuthService.signMessage(message);
       return result;
     } catch (error) {
-      console.error('Sign message error:', error);
+      console.error('Sign message failed:', error);
       throw error;
     }
   };
@@ -283,21 +165,27 @@ export const AuthProvider = ({ children }) => {
       const result = await fslAuthService.callContract(contractParams);
       return result;
     } catch (error) {
-      console.error('Contract call error:', error);
+      console.error('Call contract failed:', error);
       throw error;
     }
   };
 
-  const refreshUserData = async () => {
-    if (user) {
-      await loadUserData();
-    }
+  // Function to get stored incoming data for payment process
+  const getIncomingUserData = () => {
+    return incomingUserData;
   };
 
+  // Function to clear incoming data after payment
+  const clearIncomingUserData = () => {
+    setIncomingUserData(null);
+  };
+
+  // Function to select a package for purchase
   const selectPackage = (packageData) => {
     setSelectedPackage(packageData);
   };
 
+  // Function to clear selected package
   const clearSelectedPackage = () => {
     setSelectedPackage(null);
   };
@@ -309,18 +197,24 @@ export const AuthProvider = ({ children }) => {
     transactions,
     apiToken,
     selectedPackage,
+    setSelectedPackage,
+    selectPackage,
+    clearSelectedPackage,
+    showInsufficientDataPopup,
+    missingDataFields,
+    setShowInsufficientDataPopup,
     signIn,
     signOut,
     signMessage,
     callContract,
-    refreshUserData,
-    selectPackage,
-    clearSelectedPackage,
-    isAuthenticated: !!user,
-    showInsufficientDataPopup,
-    missingDataFields,
-    setShowInsufficientDataPopup,
-    setMissingDataFields
+    getIncomingUserData,
+    clearIncomingUserData,
+    // Keep these for backward compatibility
+    loadUserData,
+    setUser,
+    setBalance,
+    setTransactions,
+    setApiToken
   };
 
   return (

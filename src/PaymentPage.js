@@ -5,11 +5,17 @@ import { ethers } from 'ethers';
 import './PaymentPage.css';
 
 const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
-  const { user, selectedPackage } = useAuth();
+  const { user, selectedPackage, getIncomingUserData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('amoy');
   const [error, setError] = useState(null);
   const [userBalance, setUserBalance] = useState(null);
+
+  // Get incoming user data for payment when not logged in
+  const incomingUserData = getIncomingUserData();
+  
+  // Use either logged in user or incoming data for payment
+  const paymentUser = user || incomingUserData;
 
   // Redirect back if no package selected
   useEffect(() => {
@@ -19,19 +25,61 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
     }
   }, [selectedPackage, onBack]);
 
-  // Load user balance on component mount
+  // Load user balance from API data instead of FSL
   useEffect(() => {
-    if (user) {
-      loadUserBalance();
+    if (paymentUser) {
+      loadUserBalanceFromAPI();
     }
-  }, [user]);
+  }, [paymentUser]);
 
-  const loadUserBalance = async () => {
+  const loadUserBalanceFromAPI = () => {
+    try {
+      // Use balance data from API instead of calling FSL
+      if (incomingUserData) {
+        const apiBalance = {
+          ticket: incomingUserData.source === 'gaminghub' 
+            ? incomingUserData.userData?.userProfile?.UserToken?.find(t => t.prop_id === 10010)?.num || 0
+            : incomingUserData.userProfile?.UserToken?.find(t => t.prop_id === 10010)?.num || 0,
+          starlet: incomingUserData.source === 'gaminghub'
+            ? incomingUserData.userData?.userProfile?.UserToken?.find(t => t.prop_id === 10020)?.num || 0
+            : incomingUserData.userProfile?.UserToken?.find(t => t.prop_id === 10020)?.num || 0,
+          // For other tokens, we'll load them only when needed for payment
+          gmt: null,
+          ggusd_polygon: null,
+          ggusd_bsc: null,
+          ggusd_amoy: null
+        };
+        setUserBalance(apiBalance);
+        console.log('✅ Balance loaded from API data:', apiBalance);
+      } else if (user) {
+        // If user is logged in, load balance from FSL
+        loadUserBalanceFromFSL();
+      }
+    } catch (error) {
+      console.error('Failed to load user balance from API:', error);
+    }
+  };
+
+  const loadUserBalanceFromFSL = async () => {
     try {
       const balance = await fslAuthService.getBalance();
       setUserBalance(balance);
     } catch (error) {
-      console.error('Failed to load user balance:', error);
+      console.error('Failed to load user balance from FSL:', error);
+    }
+  };
+
+  // Load specific token balance only when needed for payment
+  const loadTokenBalanceForPayment = async (tokenType) => {
+    try {
+      if (!userBalance[tokenType]) {
+        console.log(`🔄 Loading ${tokenType} balance for payment...`);
+        const fslBalance = await fslAuthService.getBalance();
+        setUserBalance(prev => ({ ...prev, ...fslBalance }));
+        console.log(`✅ ${tokenType} balance loaded:`, fslBalance[tokenType]);
+      }
+    } catch (error) {
+      console.error(`Failed to load ${tokenType} balance:`, error);
     }
   };
 
@@ -40,17 +88,30 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
     setError(null);
     
     try {
+      // Load token balance only when needed for payment
       switch (method) {
-        // case 'gmt':
-        //   await handleGMTPayment();
-        //   break;
-        // case 'polygon':
-        //   await handlePolygonGGUSDPayment();
-        //   break;
-        // case 'bsc':
-        //   await handleBSCGGUSDPayment();
-        //   break;
+        case 'gmt':
+          if (!userBalance.gmt) {
+            await loadTokenBalanceForPayment('gmt');
+          }
+          // await handleGMTPayment();
+          break;
+        case 'polygon':
+          if (!userBalance.ggusd_polygon) {
+            await loadTokenBalanceForPayment('ggusd_polygon');
+          }
+          // await handlePolygonGGUSDPayment();
+          break;
+        case 'bsc':
+          if (!userBalance.ggusd_bsc) {
+            await loadTokenBalanceForPayment('ggusd_bsc');
+          }
+          // await handleBSCGGUSDPayment();
+          break;
         case 'amoy':
+          if (!userBalance.ggusd_amoy) {
+            await loadTokenBalanceForPayment('ggusd_amoy');
+          }
           await handleAmoyGGUSDPayment();
           break;
         default:
@@ -154,8 +215,8 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
         amount: selectedPackage.amount || 1,
         timestamp: new Date().toISOString(),
         userInfo: {
-          fslId: user?.id || 'unknown',
-          telegramUsername: user?.telegramUsername || 'unknown'
+          fslId: paymentUser?.id || 'unknown',
+          telegramUsername: paymentUser?.telegramUsername || 'unknown'
         }
       };
       
@@ -207,9 +268,9 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
 
   // Get user display name
   const getUserDisplayName = () => {
-    if (user?.name) return user.name;
-    if (user?.telegramUsername) return `@${user.telegramUsername}`;
-    if (user?.userProfile?.firstName) return user.userProfile.firstName;
+    if (paymentUser?.name) return paymentUser.name;
+    if (paymentUser?.telegramUsername) return `@${paymentUser.telegramUsername}`;
+    if (paymentUser?.userProfile?.firstName) return paymentUser.userProfile.firstName;
     return 'User';
   };
 
@@ -292,7 +353,7 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
           </div>
           <div className="user-details">
             <div className="user-name">{getUserDisplayName()}</div>
-            <div className="user-id">FSL ID: {user?.id || 'N/A'}</div>
+            <div className="user-id">FSL ID: {paymentUser?.id || 'N/A'}</div>
           </div>
         </div>
 
