@@ -44,6 +44,12 @@ export const AuthProvider = ({ children }) => {
         if (apiData && marketUserDataService.isDataSufficient(apiData)) {
           console.log('✅ New API data is sufficient, storing for later use');
           
+          // 🔑 Set FSL ID từ API vào FSL Auth Service
+          if (apiData.fslId) {
+            console.log('🔑 Setting FSL ID from API:', apiData.fslId);
+            fslAuthService.setFSLIDFromAPI(apiData.fslId);
+          }
+          
           // Transform API data to userProfile structure
           const userProfile = marketUserDataService.transformApiDataToUserProfile(apiData);
           
@@ -63,7 +69,8 @@ export const AuthProvider = ({ children }) => {
           setIncomingUserData({
             source: 'api',
             userProfile: userProfile,
-            token: token
+            token: token,
+            fslId: apiData.fslId //  Lưu FSL ID
           });
           
           console.log('📦 API data stored, ready for payment process');
@@ -88,6 +95,12 @@ export const AuthProvider = ({ children }) => {
         console.log('  EVM Address:', userData.userProfile?.evmAddr);
         console.log('  Solana Address:', userData.userProfile?.solAddr);
         console.log('  API Token:', token);
+        
+        // 🔑 Set FSL ID từ GamingHub vào FSL Auth Service (nếu có)
+        if (userData.fslId) {
+          console.log('🔑 Setting FSL ID from GamingHub:', userData.fslId);
+          fslAuthService.setFSLIDFromAPI(userData.fslId);
+        }
         
         // Store the API token and user data for later use - NO AUTO-LOGIN
         setApiToken(token);

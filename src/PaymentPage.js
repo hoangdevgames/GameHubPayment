@@ -204,6 +204,18 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
     setLoading(true);
     setError(null);
     
+    // 🔑 Lấy FSL ID từ incomingUserData (từ API /app/marketUserData)
+    const expectedFSLID = incomingUserData?.fslId;
+    if (!expectedFSLID) {
+      throw new Error('FSL ID not available from API data');
+    }
+    
+    console.log('🔍 Starting payment with FSL ID verification...');
+    console.log('Expected FSL ID from API:', expectedFSLID);
+    
+    // 🔑 Đảm bảo FSL ID đã được set vào FSL Auth Service
+    fslAuthService.setFSLIDFromAPI(expectedFSLID);
+    
     // Flag to track if payment has timed out
     let isTimedOut = false;
     

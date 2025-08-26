@@ -29,6 +29,9 @@ class FSLAuthService {
     this.currentUser = null;
     this.isInitialized = false;
     this.isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+    
+    // Thêm property để lưu FSL ID từ API
+    this.apiFSLID = null;
 
     // EVM Chain configurations - copy từ FSL Integration Guide
     this.GGUSD_ABI = [
@@ -102,26 +105,68 @@ class FSLAuthService {
     };
   }
 
-  async init() {
+  async init(expectedFSLID = null) {
     if (this.isInitialized && this.fslAuth) return this.fslAuth;
 
     try {
-      this.fslAuth = await FSLAuthorization.init({
+      console.log('🔄 Initializing FSL Auth Service...');
+      console.log('🔑 FSL ID from API:', this.apiFSLID);
+      console.log('🔑 Expected FSL ID parameter:', expectedFSLID);
+      
+      // Truyền uid vào FSL SDK init nếu có
+      const initOptions = {
         responseType: 'code',
         appKey: 'MiniGame',
         redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
         scope: 'basic,wallet,stepn',
         state: 'gamehub_payment',
-        usePopup: true,
-        isApp: false,
+        usePopup: false,
+        isApp: true,
+        useModal: true,
         domain: 'https://9ijsflpfgm3.joysteps.io',
-      });
+      };
+      
+      // Nếu có FSL ID từ API, truyền vào init
+      if (this.apiFSLID) {
+        initOptions.uid = this.apiFSLID;
+        console.log('🔑 Passing FSL ID to FSL SDK init:', this.apiFSLID);
+      }
+      
+      this.fslAuth = await FSLAuthorization.init(initOptions);
 
+      // TEST LOGGING: Kiểm tra FSL SDK instance sau khi init
+      console.log('🔍 FSL SDK INIT RESULT:');
+      console.log('  FSL SDK instance:', this.fslAuth);
+      console.log('  FSL SDK type:', typeof this.fslAuth);
+      console.log('  FSL SDK constructor:', this.fslAuth?.constructor?.name);
+      console.log('  FSL SDK prototype:', this.fslAuth?.__proto__);
+      
+      // Test access các properties
+      console.log('  this.fslAuth.uid:', this.fslAuth?.uid);
+      console.log('  API FSL ID:', this.apiFSLID);
+      console.log('  FSL ID match:', this.fslAuth?.uid === this.apiFSLID);
+      console.log('  this.fslAuth.appKey:', this.fslAuth?.appKey);
+      console.log('  this.fslAuth.domain:', this.fslAuth?.domain);
+      
+      // Test access methods
+      console.log('  this.fslAuth.signIn:', typeof this.fslAuth?.signIn);
+      console.log('  this.fslAuth.signOut:', typeof this.fslAuth?.signOut);
+      console.log('  this.fslAuth.callEvmContractByCallData:', typeof this.fslAuth?.callEvmContractByCallData);
+      
+      // Test access internal properties
+      console.log('  this.fslAuth.sdkStorage:', this.fslAuth?.sdkStorage);
+      console.log('  this.fslAuth.inWhiteList:', this.fslAuth?.inWhiteList);
+      console.log('  this.fslAuth.handling:', this.fslAuth?.handling);
+      
+      // Test access tất cả properties
+      console.log('  All FSL SDK properties:', Object.getOwnPropertyNames(this.fslAuth || {}));
+      console.log('  All FSL SDK methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.fslAuth || {})));
+      
       this.isInitialized = true;
-      console.log('FSL Auth Service initialized successfully');
+      console.log('✅ FSL Auth Service initialized successfully');
       return this.fslAuth;
     } catch (error) {
-      console.error('Failed to initialize FSL Auth:', error);
+      console.error('❌ Failed to initialize FSL Auth:', error);
       throw error;
     }
   }
@@ -1898,6 +1943,16 @@ class FSLAuthService {
       view.setUint32(4, high, true);
     }
     return new Uint8Array(buffer);
+  }
+
+  // Thêm method để set FSL ID từ API
+  setFSLIDFromAPI(fslId) {
+    console.log('🔑 Setting FSL ID from API:', fslId);
+    this.apiFSLID = fslId;
+    
+    // Clear FSL SDK instance để force re-init với uid mới
+    this.fslAuth = null;
+    this.isInitialized = false;
   }
 }
 
