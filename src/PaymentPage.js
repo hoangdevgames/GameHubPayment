@@ -204,6 +204,17 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
     setLoading(true);
     setError(null);
     
+    // Flag to track if payment has timed out
+    let isTimedOut = false;
+    
+    // Set 2-minute timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Payment timeout after 2 minutes - auto canceling...');
+      isTimedOut = true; // Mark as timed out
+      setLoading(false);
+      setError('Payment timeout. The transaction is taking longer than expected. Please try again.');
+    }, 120000); // 120.000 milliseconds = 2 minutes
+    
     try {
       console.log('Processing Amoy GGUSD payment with custom data for:', selectedPackage);
       
@@ -236,6 +247,16 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
         encodedCustomData
       );
       
+      // Clear timeout if successful
+      clearTimeout(timeoutId);
+      
+      // Check if payment was already timed out - prevent race condition
+      if (isTimedOut) {
+        console.log('⚠️ Payment completed but was already timed out - ignoring success result');
+        console.log('⚠️ User should contact customer care for assistance');
+        return; // Don't process success if already timed out
+      }
+      
       if (result.success) {
         console.log('Amoy GGUSD payment with custom data successful:', result);
         setLoading(false);
@@ -244,9 +265,17 @@ const PaymentPage = ({ onSuccess, onFailed, onBack }) => {
         throw new Error(result.error || 'Amoy payment failed');
       }
     } catch (error) {
-      console.error('Amoy GGUSD payment with custom data error:', error);
-      setError(error.message);
-      setLoading(false);
+      // Clear timeout if there's an error
+      clearTimeout(timeoutId);
+      
+      // Only process error if not already timed out
+      if (!isTimedOut) {
+        console.error('Amoy GGUSD payment with custom data error:', error);
+        setError(error.message);
+        setLoading(false);
+      } else {
+        console.log('⚠️ Payment error occurred after timeout - ignoring error state update');
+      }
     }
   };
 
