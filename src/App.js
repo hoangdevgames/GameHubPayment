@@ -7,10 +7,17 @@ import PaymentPage from './PaymentPage';
 import PaymentSuccess from './PaymentSuccess';
 import PaymentFailed from './PaymentFailed';
 import StarletStore from './components/StarletStore';
+import InsufficientDataPopup from './components/InsufficientDataPopup';
 import './App.css';
 
 const AppContent = () => {
-  const { selectedPackage, clearSelectedPackage } = useAuth();
+  const { 
+    selectedPackage, 
+    clearSelectedPackage,
+    showInsufficientDataPopup,
+    missingDataFields,
+    setShowInsufficientDataPopup
+  } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [showPaymentView, setShowPaymentView] = useState(false);
   const [showSuccessView, setShowSuccessView] = useState(false);
@@ -98,6 +105,13 @@ const AppContent = () => {
       {/* {!showPaymentView && !showSuccessView && !showFailedView && (
         <BottomNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
       )} */}
+      
+      {/* Insufficient Data Warning Popup */}
+      <InsufficientDataPopup
+        isOpen={showInsufficientDataPopup}
+        missingFields={missingDataFields}
+        onClose={() => setShowInsufficientDataPopup(false)}
+      />
     </div>
   );
 };

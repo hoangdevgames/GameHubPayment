@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import fslAuthService from '../services/fslAuth';
+import marketUserDataService from '../services/marketUserDataService';
 
 const AuthContext = createContext();
 
@@ -18,6 +19,8 @@ export const AuthProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [apiToken, setApiToken] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [showInsufficientDataPopup, setShowInsufficientDataPopup] = useState(false);
+  const [missingDataFields, setMissingDataFields] = useState([]);
 
   // Check if user is already authenticated on app load
   useEffect(() => {
@@ -27,21 +30,59 @@ export const AuthProvider = ({ children }) => {
       loadUserData();
     }
     
-    // Check for incoming data from GamingHub
+    // Check for incoming data from GamingHub or try new API first
     checkIncomingData();
   }, []);
 
-  const checkIncomingData = () => {
+  const checkIncomingData = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const userDataParam = urlParams.get('userData');
     const source = urlParams.get('source');
     const token = urlParams.get('token');
     
+    // Try new API first if we have a token
+    if (token) {
+      try {
+        console.log('🔄 Attempting to fetch user data from new API...');
+        const apiData = await marketUserDataService.fetchMarketUserData(token);
+        
+        if (apiData && marketUserDataService.isDataSufficient(apiData)) {
+          console.log('✅ New API data is sufficient, using it');
+          
+          // Transform API data to userProfile structure
+          const userProfile = marketUserDataService.transformApiDataToUserProfile(apiData);
+          
+          // Check for critical missing fields and show popup if needed
+          const criticalMissingFields = [];
+          if (!apiData.solAddr) criticalMissingFields.push('Solana wallet address');
+          if (apiData.level === undefined || apiData.level === null) criticalMissingFields.push('User level');
+          if (!apiData.email) criticalMissingFields.push('Email address');
+          
+          if (criticalMissingFields.length > 0) {
+            setMissingDataFields(criticalMissingFields);
+            setShowInsufficientDataPopup(true);
+          }
+          
+          // Store the API token
+          setApiToken(token);
+          
+          // Auto-login with API data
+          await autoLoginWithApiData(userProfile, token);
+          return;
+        } else {
+          console.log('⚠️ New API data is insufficient, falling back to GamingHub parameters');
+        }
+      } catch (error) {
+        console.log('❌ New API failed, falling back to GamingHub parameters:', error.message);
+      }
+    }
+    
+    // Fallback to GamingHub parameters
     if (source === 'gaminghub' && userDataParam && token) {
       try {
         const userData = JSON.parse(atob(userDataParam));
         
-        console.log('Received data from GamingHub:', { userData, token });
+        console.log('🔄 Fallback: Received data from GamingHub:', { userData, token });
         
         // Debug: Log wallet addresses received
         console.log('🔗 Received wallet addresses from GamingHub:');
@@ -113,6 +154,73 @@ export const AuthProvider = ({ children }) => {
         setUser(user);
         
         console.log('Auto-login completed with mock verification (demo mode)');
+      }
+    } catch (error) {
+      console.error('Auto-login failed:', error);
+      // Don't throw error, just log it
+      // In production, you might want to show an error message to user
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const autoLoginWithApiData = async (userProfile, token) => {
+    setLoading(true);
+    try {
+      // Create user data structure compatible with existing code
+      const userData = {
+        fslId: userProfile.fslId,
+        telegramUID: userProfile.uid,
+        telegramFirstName: 'User', // Default name since not provided by API
+        platform: 'api',
+        userProfile: userProfile
+      };
+      
+      // Set user data vào FSL Auth Service
+      fslAuthService.setUserFromGamingHub(userData);
+      
+      // Verify FSL ID first
+      const verificationResult = await fslAuthService.verifyFSLID(userProfile.fslId);
+      
+      if (verificationResult.success && verificationResult.verified) {
+        // Set user data
+        const user = {
+          id: userProfile.fslId,
+          address: verificationResult.userInfo?.address || userProfile.evmAddr || '0x...',
+          name: userProfile.email || 'API User',
+          isConnected: true,
+          platform: 'api',
+          telegramUID: userProfile.uid,
+          telegramUsername: null,
+          userProfile: userProfile
+        };
+        
+        setUser(user);
+        
+        // Load user data
+        await loadUserData();
+        
+        console.log('✅ Auto-login successful with API data');
+      } else {
+        console.error('FSL ID verification failed:', verificationResult.error);
+        // Don't throw error, just log it and continue with mock data
+        // In production, you might want to show an error message to user
+        
+        // Set user data with mock verification for demo purposes
+        const user = {
+          id: userProfile.fslId,
+          address: userProfile.evmAddr || '0x' + Math.random().toString(36).substr(2, 40),
+          name: userProfile.email || 'API User',
+          isConnected: true,
+          platform: 'api',
+          telegramUID: userProfile.uid,
+          telegramUsername: null,
+          userProfile: userProfile
+        };
+        
+        setUser(user);
+        
+        console.log('✅ Auto-login completed with mock verification (demo mode)');
       }
     } catch (error) {
       console.error('Auto-login failed:', error);
@@ -208,7 +316,11 @@ export const AuthProvider = ({ children }) => {
     refreshUserData,
     selectPackage,
     clearSelectedPackage,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    showInsufficientDataPopup,
+    missingDataFields,
+    setShowInsufficientDataPopup,
+    setMissingDataFields
   };
 
   return (
