@@ -120,9 +120,8 @@ class FSLAuthService {
         redirectUri: 'https://hoangdevgames.github.io/GameHubPayment/callback',
         scope: 'basic,wallet,stepn',
         state: 'gamehub_payment',
-        usePopup: false,
-        isApp: true,
-        useModal: true,
+        usePopup: true,
+        isApp: false,
         domain: 'https://9ijsflpfgm3.joysteps.io',
       };
       
@@ -827,9 +826,7 @@ class FSLAuthService {
       console.log('📊 Purchase Data:', purchaseData);
       console.log('🔗 Chain ID:', chainId);
       console.log('📝 Custom Data:', customData);
-      
-      const fslAuth = await this.init();
-      
+            
       // Lấy contract và treasury addresses
       const contractAddress = this.GGUSD_CONTRACTS[chainId];
       const treasuryAddress = this.getTreasuryAddress(chainId);
@@ -871,6 +868,7 @@ class FSLAuthService {
       console.log('🔗 Final CallData:', callData);
       
       // Gọi FSL SDK với callData
+      const fslAuth = await this.init();
       const result = await fslAuth.callEvmContractByCallData({
         contractAddress: contractAddress,
         callData: callData,
@@ -1953,6 +1951,92 @@ class FSLAuthService {
     // Clear FSL SDK instance để force re-init với uid mới
     this.fslAuth = null;
     this.isInitialized = false;
+  }
+
+  // Tự động login khi khởi tạo
+  async autoLogin() {
+    try {
+      console.log('🔄 Auto-login with FSL SDK...');
+      
+      if (!this.fslAuth) {
+        console.log('⚠️ FSL SDK not initialized, skipping auto-login');
+        return;
+      }
+
+      // Kiểm tra xem user đã login chưa
+      if (this.currentUser && this.currentUser.isConnected) {
+        console.log('✅ User already logged in, skipping auto-login');
+        return;
+      }
+
+      // Gọi FSL SDK login
+      console.log('🔐 Calling FSL SDK login...');
+      const loginResult = await this.init();
+      
+      if (loginResult && loginResult.code) {
+        console.log('✅ FSL SDK auto-login successful:', loginResult);
+        
+        // Cập nhật current user
+        this.currentUser = {
+          id: loginResult.fslId || this.apiFSLID || 'demo_fsl_id',
+          name: loginResult.name || 'FSL User',
+          isConnected: true,
+          fslData: loginResult
+        };
+        
+        console.log('✅ Current user updated:', this.currentUser);
+      } else {
+        console.log('⚠️ FSL SDK auto-login returned no result, user may need manual login');
+      }
+      
+    } catch (error) {
+      console.warn('⚠️ FSL SDK auto-login failed (this is normal for new users):', error.message);
+      // Không throw error vì auto-login thất bại là bình thường
+    }
+  }
+
+  // Kiểm tra trạng thái login
+  async checkLoginStatus() {
+    try {
+      console.log('🔍 Checking FSL login status...');
+      
+      if (!this.fslAuth) {
+        console.log('⚠️ FSL SDK not initialized');
+        return { isLoggedIn: false, user: null };
+      }
+
+      // Kiểm tra current user
+      if (this.currentUser && this.currentUser.isConnected) {
+        console.log('✅ User is logged in:', this.currentUser);
+        return { isLoggedIn: true, user: this.currentUser };
+      }
+
+      // Kiểm tra FSL SDK storage
+      if (this.fslAuth.sdkStorage) {
+        try {
+          const userData = this.fslAuth.sdkStorage.getUserData();
+          if (userData && userData.isLoggedIn) {
+            console.log('✅ User found in FSL SDK storage:', userData);
+            this.currentUser = {
+              id: userData.fslId || this.apiFSLID || 'demo_fsl_id',
+              name: userData.name || 'FSL User',
+              isConnected: true,
+              fslData: userData
+            };
+            return { isLoggedIn: true, user: this.currentUser };
+          }
+        } catch (error) {
+          console.log('⚠️ Could not check FSL SDK storage:', error.message);
+        }
+      }
+
+      console.log('❌ User not logged in');
+      return { isLoggedIn: false, user: null };
+      
+    } catch (error) {
+      console.error('❌ Error checking login status:', error);
+      return { isLoggedIn: false, user: null };
+    }
   }
 }
 
