@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/GameHubPayment/static/css/main.b6f8cf1a.css",
-    "main.js": "/GameHubPayment/static/js/main.3c1fbec1.js",
+    "main.css": "/GameHubPayment/static/css/main.22673aeb.css",
+    "main.js": "/GameHubPayment/static/js/main.4d87033e.js",
     "static/js/453.ec6a1386.chunk.js": "/GameHubPayment/static/js/453.ec6a1386.chunk.js",
     "static/media/PPNeueMachina-InktrapBoldItalic.ttf": "/GameHubPayment/static/media/PPNeueMachina-InktrapBoldItalic.428743c4048618a2d77e.ttf",
     "static/media/PPNeueMachina-InktrapRegularItalic.ttf": "/GameHubPayment/static/media/PPNeueMachina-InktrapRegularItalic.d8206042331fe141994d.ttf",
@@ -45,12 +45,12 @@
     "static/media/ticket.svg": "/GameHubPayment/static/media/ticket.c8a052d29411b7224614107b13b307b4.svg",
     "index.html": "/GameHubPayment/index.html",
     "static/media/arrow_2.svg": "/GameHubPayment/static/media/arrow_2.1c00cee1b2df4c5d746a4c5ea2ae314b.svg",
-    "main.b6f8cf1a.css.map": "/GameHubPayment/static/css/main.b6f8cf1a.css.map",
-    "main.3c1fbec1.js.map": "/GameHubPayment/static/js/main.3c1fbec1.js.map",
+    "main.22673aeb.css.map": "/GameHubPayment/static/css/main.22673aeb.css.map",
+    "main.4d87033e.js.map": "/GameHubPayment/static/js/main.4d87033e.js.map",
     "453.ec6a1386.chunk.js.map": "/GameHubPayment/static/js/453.ec6a1386.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.b6f8cf1a.css",
-    "static/js/main.3c1fbec1.js"
+    "static/css/main.22673aeb.css",
+    "static/js/main.4d87033e.js"
   ]
 }
