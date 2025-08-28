@@ -10,7 +10,7 @@ import fslLogo from './images/FSLID_Login_Logo.png';
 import { API_CONFIG } from './services/fslConfig';
 import fslAuthService from './services/fslAuth';
 
-const MainContent = ({ activeTab }) => {
+const MainContent = ({ activeTab, incomingUserData }) => {
   const { user, apiToken, selectPackage } = useAuth();
   const [tickets, setTickets] = useState(0);
   const [starlets, setStarlets] = useState(0);
@@ -23,6 +23,10 @@ const MainContent = ({ activeTab }) => {
   const [nextClaimTime, setNextClaimTime] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // ✅ NEW: Add state to track FSL connection status
+  const [isFSLConnected, setIsFSLConnected] = useState(false);
+  const [fslUserInfo, setFslUserInfo] = useState(null);
   
   // Category expansion states
   const [standardPackExpanded, setStandardPackExpanded] = useState(true);
@@ -102,6 +106,39 @@ const MainContent = ({ activeTab }) => {
     // Fetch real data
     fetchChainProducts();
   }, [apiToken]);
+
+  // ✅ NEW: Check FSL connection status on component mount
+  useEffect(() => {
+    const checkFSLConnection = () => {
+      // Check if FSL user info exists in localStorage
+      const storedFslUser = localStorage.getItem('fsl_user_info');
+      if (storedFslUser) {
+        try {
+          const userInfo = JSON.parse(storedFslUser);
+          setFslUserInfo(userInfo);
+          setIsFSLConnected(true);
+          console.log('✅ FSL connection restored from localStorage:', userInfo);
+        } catch (error) {
+          console.error('Failed to parse stored FSL user info:', error);
+          localStorage.removeItem('fsl_user_info');
+        }
+      }
+    };
+
+    checkFSLConnection();
+  }, []);
+
+  // ✅ NEW: Check FSL Auth Service initialization status
+  useEffect(() => {
+    const checkFSLInitStatus = () => {
+      console.log('🔍 Checking FSL Auth Service initialization status...');
+      console.log('  fslAuthService.isInitialized:', fslAuthService.isInitialized);
+      console.log('  fslAuthService.fslAuth:', fslAuthService.fslAuth);
+    };
+
+    // Check immediately
+    checkFSLInitStatus();
+  }, []);
 
   // Add body class to prevent iOS overscrolling
   useEffect(() => {
@@ -278,15 +315,115 @@ const MainContent = ({ activeTab }) => {
           <div className="mk-market-title-container">
           <div className="mk-market-title">MARKET</div>
 
-          {!user?.fslId && (
-            <div className="mk-fsl-connect-section" onClick={handleConnectFSLID}>
-              <div className="mk-fsl-connect-content">
+          {/* FSL Connect Section - Only show when FSL Auth Service is not initialized */}
+          {!fslAuthService.isInitialized && (
+            <div className="mk-fsl-connect-section">
+              <div className="mk-fsl-connect-content" onClick={handleConnectFSLID}>
                 <div className="mk-lock-icon"><img src={fslLogo} alt="FSL Logo" /></div>
                 <div className="mk-fsl-text">
-                  <div className="mk-connect-title">CONNECT YOUR FSL ID</div>
-                  <div className="mk-connect-subtitle">STEPN OG SNEAKER HOLDERS CAN CLAIM 10 FREE STARLETS DAILY!</div>
+                  <div className="mk-connect-title">
+                    {isFSLConnected ? 'FSL ID CONNECTED' : 'CONNECT YOUR FSL ID'}
+                  </div>
+                  <div className="mk-connect-subtitle">
+                    {isFSLConnected 
+                      ? `Welcome back, ${fslUserInfo?.name || 'User'}!` 
+                      : incomingUserData?.source === 'gaminghub' 
+                        ? `Welcome ${incomingUserData.userData?.telegramFirstName || 'User'}! Connect your FSL ID to claim daily rewards.`
+                        : 'STEPN OG SNEAKER HOLDERS CAN CLAIM 10 FREE STARLETS DAILY!'
+                    }
+                  </div>
                 </div>
               </div>
+              
+              {/* FSL Login Button */}
+              <button 
+                className="mk-fsl-login-button"
+                onClick={async (e) => {
+                  e.stopPropagation(); // Prevent triggering handleConnectFSLID
+                  try {
+                    console.log('🔐 Manual FSL Login clicked...');
+                    setIsLoading(true);
+                    
+                    // // ✅ NEW: Only initialize FSL Auth Service when user actually clicks
+                    // if (!fslAuthService.isInitialized) {
+                    //   console.log('🔄 Initializing FSL Auth Service for manual login...');
+                      
+                    //   // If we have FSL ID from GamingHub, pass it to init
+                    //   if (incomingUserData?.source === 'gaminghub' && incomingUserData.userData?.fslId) {
+                    //     console.log('🔑 Using FSL ID from GamingHub for initialization:', incomingUserData.userData.fslId);
+                    //     await fslAuthService.init();
+                    //   } else {
+                    //     await fslAuthService.init();
+                    //   }
+                    // }
+                    
+                    // Gọi manual login
+                    const loginResult = await fslAuthService.signIn();
+                    console.log('✅ Manual FSL login result:', loginResult);
+                    
+                    // ✅ NEW: Store FSL user info in localStorage instead of reloading
+                    if (loginResult && loginResult.id) {
+                      const fslUserInfo = {
+                        fslId: loginResult.id,
+                        name: loginResult.name || 'FSL User',
+                        isConnected: true,
+                        loginTime: new Date().toISOString()
+                      };
+                      
+                      localStorage.setItem('fsl_user_info', JSON.stringify(fslUserInfo));
+                      setFslUserInfo(fslUserInfo);
+                      setIsFSLConnected(true);
+                      
+                      console.log('✅ FSL login successful, user info stored:', fslUserInfo);
+                      console.log('🎉 FSL ID connected successfully!');
+                      
+                      // Show success message
+                      alert('FSL ID connected successfully!');
+                    }
+                    
+                  } catch (error) {
+                    console.error('❌ Manual FSL login failed:', error);
+                    setError('FSL login failed. Please try again.');
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? 'CONNECTING...' : (isFSLConnected ? 'CONNECTED' : 'CONNECT FSL ID')}
+              </button>
+              
+              {/* Disconnect Button - Only show when connected */}
+              {isFSLConnected && (
+                <button 
+                  className="mk-fsl-disconnect-button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                      console.log('🔓 Disconnecting FSL ID...');
+                      
+                      // Sign out from FSL Auth Service
+                      await fslAuthService.signOut();
+                      
+                      // Clear localStorage
+                      localStorage.removeItem('fsl_user_info');
+                      
+                      // Clear state
+                      setFslUserInfo(null);
+                      setIsFSLConnected(false);
+                      
+                      console.log('✅ FSL ID disconnected successfully');
+                      alert('FSL ID disconnected successfully!');
+                      
+                    } catch (error) {
+                      console.error('❌ FSL disconnect failed:', error);
+                      alert(`Disconnect failed: ${error.message}`);
+                    }
+                  }}
+                >
+                  DISCONNECT FSL ID
+                </button>
+              )}
             </div>
           )}
           </div>

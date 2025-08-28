@@ -230,43 +230,20 @@ class FSLAuthService {
     }
   }
 
-  // Get balance using FSL SDK
+  // Get balance - chỉ focus vào GGUSD Amoy payment
   async getBalance() {
     try {
-      console.log('🔄 Starting getBalance()...');
-      await this.init();
+      console.log('🔄 Starting getBalance() - Focus on GGUSD Amoy only...');
       
-      // Lấy balance thực tế từ tất cả chains
-      console.log('📊 Getting wallet info...');
+      // Lấy wallet info từ userProfile (không gọi FSL SDK)
+      console.log('📊 Getting wallet info from userProfile...');
       const walletInfo = await this.getAllWalletInfo();
       console.log('✅ Wallet info received:', walletInfo);
       
-      // Lấy GGUSD balances
-      console.log('💰 Getting GGUSD balances...');
+      // Chỉ lấy GGUSD Amoy balance
+      console.log('💰 Getting GGUSD Amoy balance only...');
       
-      let ggusd_polygon = 0;
-      let ggusd_bsc = 0;
       let ggusd_amoy = 0;
-      
-      if (walletInfo.wallets.polygon) {
-        console.log('🔷 Getting Polygon GGUSD balance for:', walletInfo.wallets.polygon);
-        try {
-          ggusd_polygon = await this.getPolygonGGUSDBalance(walletInfo.wallets.polygon);
-          console.log('✅ Polygon GGUSD balance:', ggusd_polygon);
-        } catch (error) {
-          console.error('❌ Polygon GGUSD balance error:', error);
-        }
-      }
-      
-      if (walletInfo.wallets.bsc) {
-        console.log('🟡 Getting BSC GGUSD balance for:', walletInfo.wallets.bsc);
-        try {
-          ggusd_bsc = await this.getBSCGGUSDBalance(walletInfo.wallets.bsc);
-          console.log('✅ BSC GGUSD balance:', ggusd_bsc);
-        } catch (error) {
-          console.error('❌ BSC GGUSD balance error:', error);
-        }
-      }
       
       if (walletInfo.wallets.amoy) {
         console.log('🟢 Getting Amoy GGUSD balance for:', walletInfo.wallets.amoy);
@@ -275,28 +252,25 @@ class FSLAuthService {
           console.log('✅ Amoy GGUSD balance:', ggusd_amoy);
         } catch (error) {
           console.error('❌ Amoy GGUSD balance error:', error);
+          ggusd_amoy = 0;
         }
+      } else {
+        console.log('⚠️ No Amoy wallet address available');
       }
       
       const result = {
-        // GMT balances
-        gmt: walletInfo.balances.solanaGMT || 0,
-        
-        // GGUSD balances
-        ggusd_polygon: ggusd_polygon,
-        ggusd_bsc: ggusd_bsc,
+        // Chỉ focus vào GGUSD Amoy
         ggusd_amoy: ggusd_amoy,
         
-        // Wallet addresses
-        walletAddresses: {
-          solana: walletInfo.wallets.solana,
-          polygon: walletInfo.wallets.polygon,
-          bsc: walletInfo.wallets.bsc,
-          amoy: walletInfo.wallets.amoy,
-        }
+        // Wallet address
+        walletAddress: walletInfo.wallets.amoy,
+        
+        // Chain info
+        chain: 'amoy',
+        chainId: 80002
       };
       
-      console.log('🎯 Final balance result:', result);
+      console.log('🎯 Final balance result (Amoy GGUSD only):', result);
       return result;
       
     } catch (error) {
@@ -304,10 +278,10 @@ class FSLAuthService {
       console.log('🔄 Falling back to mock data...');
       // Fallback to mock data if real balance fails
       const mockResult = {
-        gmt: 1000 + Math.random() * 500,
-        ggusd_polygon: 100 + Math.random() * 50,
-        ggusd_bsc: 100 + Math.random() * 50,
         ggusd_amoy: 100 + Math.random() * 50,
+        walletAddress: '0x' + Math.random().toString(36).substr(2, 40),
+        chain: 'amoy',
+        chainId: 80002
       };
       console.log('🎭 Mock data result:', mockResult);
       return mockResult;
@@ -1802,6 +1776,7 @@ class FSLAuthService {
 
   /**
    * Lấy tất cả wallet addresses và balances
+   * Chỉ focus vào GGUSD Amoy payment, không gọi FSL SDK
    */
   async getAllWalletInfo() {
     try {
@@ -1816,61 +1791,34 @@ class FSLAuthService {
         timestamp: new Date().toISOString()
       };
 
-      // Get Solana wallet and GMT balance
-      try {
-        console.log('⚡ Getting Solana wallet and GMT balance...');
-        const solanaInfo = await this.getSolanaGMTBalanceWithAddress();
-        walletInfo.wallets.solana = solanaInfo.walletAddress;
-        walletInfo.balances.solanaGMT = solanaInfo.balance;
-        console.log('✅ Solana wallet info retrieved:', solanaInfo);
-      } catch (error) {
-        console.warn('⚠️ Could not get Solana wallet info:', error.message);
-        console.error('❌ Solana error details:', error);
-        walletInfo.wallets.solana = null;
-        walletInfo.balances.solanaGMT = 0;
-      }
-
-      // Get Polygon wallet and GMT balance
-      try {
-        console.log('🔷 Getting Polygon wallet and GMT balance...');
-        const polygonInfo = await this.getPolygonGMTBalanceWithAddress();
-        walletInfo.wallets.polygon = polygonInfo.walletAddress;
-        walletInfo.balances.polygonGMT = polygonInfo.balance;
-        console.log('✅ Polygon wallet info retrieved:', polygonInfo);
-      } catch (error) {
-        console.warn('⚠️ Could not get Polygon wallet info:', error.message);
-        console.error('❌ Polygon error details:', error);
-        walletInfo.wallets.polygon = null;
-        walletInfo.balances.polygonGMT = 0;
-      }
-
-      // Get Amoy wallet and GMT balance
-      try {
-        console.log('🟢 Getting Amoy wallet and GMT balance...');
-        const amoyInfo = await this.getAmoyGMTBalanceWithAddress();
-        walletInfo.wallets.amoy = amoyInfo.walletAddress;
-        walletInfo.balances.amoyGMT = amoyInfo.balance;
-        console.log('✅ Amoy wallet info retrieved:', amoyInfo);
-      } catch (error) {
-        console.warn('⚠️ Could not get Amoy wallet info:', error.message);
-        console.error('❌ Amoy error details:', error);
+      // Chỉ lấy Amoy wallet address từ userProfile (không gọi FSL SDK)
+      if (this.currentUser?.userProfile?.evmAddr) {
+        console.log('✅ Got EVM address from userProfile:', this.currentUser.userProfile.evmAddr);
+        walletInfo.wallets.amoy = this.currentUser.userProfile.evmAddr;
+        walletInfo.wallets.polygon = this.currentUser.userProfile.evmAddr; // Cùng address cho EVM chains
+        walletInfo.wallets.bsc = this.currentUser.userProfile.evmAddr;    // Cùng address cho EVM chains
+      } else {
+        console.log('⚠️ No EVM address found in userProfile');
         walletInfo.wallets.amoy = null;
-        walletInfo.balances.amoyGMT = 0;
-      }
-
-      // Get BSC wallet (optional)
-      try {
-        console.log('🟡 Getting BSC wallet address...');
-        const bscAddress = await this.getCurrentWalletAddress('bsc');
-        walletInfo.wallets.bsc = bscAddress;
-        console.log('✅ BSC wallet address retrieved:', bscAddress);
-      } catch (error) {
-        console.warn('⚠️ Could not get BSC wallet:', error.message);
-        console.error('❌ BSC error details:', error);
+        walletInfo.wallets.polygon = null;
         walletInfo.wallets.bsc = null;
       }
 
-      console.log('🎯 Complete wallet info:', walletInfo);
+      // Chỉ lấy Solana address từ userProfile (không gọi FSL SDK)
+      if (this.currentUser?.userProfile?.solAddr) {
+        console.log('✅ Got Solana address from userProfile:', this.currentUser.userProfile.solAddr);
+        walletInfo.wallets.solana = this.currentUser.userProfile.solAddr;
+      } else {
+        console.log('⚠️ No Solana address found in userProfile');
+        walletInfo.wallets.solana = null;
+      }
+
+      // Set balances to 0 (sẽ được tính toán riêng trong getBalance)
+      walletInfo.balances.solanaGMT = 0;
+      walletInfo.balances.polygonGMT = 0;
+      walletInfo.balances.amoyGMT = 0;
+
+      console.log('🎯 Complete wallet info (from userProfile only):', walletInfo);
       return walletInfo;
       
     } catch (error) {
