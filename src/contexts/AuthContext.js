@@ -34,6 +34,36 @@ export const AuthProvider = ({ children }) => {
     const userDataParam = urlParams.get('userData');
     const source = urlParams.get('source');
     const token = urlParams.get('token');
+
+    // �� NEW: Check for FSL ID access token from hash fragment
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=')) {
+      try {
+        console.log('🔑 FSL ID redirect detected with hash:', hash);
+        
+        // Parse hash fragment (remove # and parse as URLSearchParams)
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const state = hashParams.get('state');
+        
+        console.log('🔑 FSL ID Access Token:', accessToken);
+        console.log('🔑 FSL ID State:', state);
+        
+        // Store FSL ID access token for later use
+        if (accessToken) {
+          // You can store this in localStorage or state as needed
+          localStorage.setItem('fsl_access_token', accessToken);
+          console.log('✅ FSL ID access token stored');
+          
+          // Clear the hash from URL to clean up
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        }
+        
+        // Continue with existing logic...
+      } catch (error) {
+        console.error('Failed to parse FSL ID hash fragment:', error);
+      }
+    }
     
     // Try new API first if we have a token
     if (token) {
