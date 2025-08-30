@@ -145,18 +145,19 @@ const OAuthLoginButton = ({ onLoginSuccess, onLoginError, className = '' }) => {
    */
   useEffect(() => {
     const checkOAuthCallback = () => {
-      // Check if we have an access token from OAuth callback
-      const accessToken = localStorage.getItem('fsl_access_token');
+      // ❌ REMOVED: Access token should only be set in AuthContext
+      // const accessToken = localStorage.getItem('fsl_access_token');  // REMOVED
       
-      if (accessToken && !isAuthenticated) {
-        console.log('🔄 OAuth callback detected, verifying user identity...');
-        
-        // Set the access token in the service
-        oauthFSLAuthService.accessToken = accessToken;
-        
-        // Verify user identity
-        verifyUserIdentity();
-      }
+      // ❌ REMOVED: This logic should only be in AuthContext
+      // if (accessToken && !isAuthenticated) {  // REMOVED
+      //   console.log('🔄 OAuth callback detected, verifying user identity...');  // REMOVED
+      //   
+      //   // ❌ REMOVED: Access token should only be set in AuthContext
+      //   // oauthFSLAuthService.setAccessToken(accessToken);  // REMOVED
+      //   
+      //   // Verify user identity
+      //   verifyUserIdentity();  // REMOVED
+      // }  // REMOVED
     };
 
     // Check immediately
@@ -184,8 +185,8 @@ const OAuthLoginButton = ({ onLoginSuccess, onLoginError, className = '' }) => {
       if (event.data.type === 'fsl_oauth_success') {
         console.log('✅ OAuth success message received:', event.data);
         
-        // Set the access token
-        oauthFSLAuthService.accessToken = event.data.accessToken;
+        // ❌ REMOVED: Access token should only be set in AuthContext
+        // oauthFSLAuthService.setAccessToken(event.data.accessToken);  // REMOVED
         
         // Verify user identity
         verifyUserIdentity();

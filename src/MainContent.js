@@ -55,7 +55,7 @@ const MainContent = ({ activeTab }) => {
   useEffect(() => {
     const fetchChainProducts = async () => {
       if (!apiToken) {
-        console.log('No API token available, skipping chain products fetch');
+        console.log('No API token availabled, skipping chain products fetch');
         return;
       }
       
@@ -195,70 +195,8 @@ const MainContent = ({ activeTab }) => {
     }
   }, [incomingUserData]);
 
-  // ✅ NEW: Handle OAuth callback when user returns from FSL OAuth
-  useEffect(() => {
-    const handleOAuthCallback = async () => {
-      try {
-        // Check if we have an access token from OAuth callback
-        const accessToken = localStorage.getItem('fsl_access_token');
-        
-        if (accessToken && !isFSLConnected) {
-          console.log('🔄 OAuth callback detected, processing...');
-          
-          // Import and use OAuth service
-          const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
-          
-          // Set the access token
-          oauthFSLAuthService.accessToken = accessToken;
-          
-          // Verify user identity
-          const verificationResult = await oauthFSLAuthService.verifyUserIdentity();
-          
-          if (verificationResult.success) {
-            console.log('✅ OAuth user verification successful:', verificationResult.user);
-            
-            // Update FSL connection status
-            const fslUserInfo = {
-              fslId: verificationResult.user.fslId,
-              name: verificationResult.user.fslProfile?.nickname || verificationResult.user.fslProfile?.username || 'FSL User',
-              isConnected: true,
-              loginTime: new Date().toISOString()
-            };
-            
-            localStorage.setItem('fsl_user_info', JSON.stringify(fslUserInfo));
-            setFslUserInfo(fslUserInfo);
-            setIsFSLConnected(true);
-            
-            console.log('🎉 FSL ID connected successfully via OAuth!');
-            alert('FSL ID connected successfully via OAuth!');
-            
-          } else {
-            console.error('❌ OAuth user verification failed:', verificationResult.error);
-            setError(`OAuth verification failed: ${verificationResult.error}`);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error handling OAuth callback:', error);
-        setError('OAuth callback processing failed. Please try again.');
-      }
-    };
-
-    // Check for OAuth callback on component mount
-    handleOAuthCallback();
-    
-    // Also check when storage changes (for cross-tab sync)
-    const handleStorageChange = (e) => {
-      if (e.key === 'fsl_access_token') {
-        handleOAuthCallback();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [isFSLConnected]);
+  // ❌ REMOVED: OAuth callback handling should only be in AuthContext
+  // This logic has been moved to AuthContext to ensure single source of truth
 
   // Add body class to prevent iOS overscrolling
   useEffect(() => {

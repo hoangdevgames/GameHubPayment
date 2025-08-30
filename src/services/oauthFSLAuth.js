@@ -22,6 +22,7 @@ class OAuthFSLAuthService {
     this.APP_KEY = 'MiniGame';
     this.REDIRECT_URI = window.location.href; // Use current web URL
     
+    this.apiToken = null; // New property for API token
 
   }
 
@@ -65,7 +66,8 @@ class OAuthFSLAuthService {
       const fragment = window.location.hash.substring(1);
       const params = new URLSearchParams(fragment);
       
-      this.accessToken = params.get('access_token');
+              // ❌ REMOVED: Direct accessToken assignment
+        // this.accessToken = params.get('access_token');  // REMOVED
       const state = params.get('state');
       const error = params.get('error');
       
@@ -79,11 +81,11 @@ class OAuthFSLAuthService {
         throw new Error('No access token received from OAuth');
       }
       
-      // Store access token
-      localStorage.setItem('fsl_access_token', this.accessToken);
-      localStorage.setItem('fsl_oauth_timestamp', Date.now().toString());
+      // Store access token in instance only - NO localStorage
+      // localStorage.setItem('fsl_access_token', this.accessToken);  // REMOVED
+      // localStorage.setItem('fsl_oauth_timestamp', Date.now().toString());  // REMOVED
       
-      console.log('✅ OAuth callback successful, access token stored');
+      console.log('✅ OAuth callback successful, access token stored in instance only');
       
       return {
         success: true,
@@ -101,31 +103,34 @@ class OAuthFSLAuthService {
   }
 
   /**
+   * Set access token from external source (e.g., AuthContext)
+   * ⚠️ IMPORTANT: This method will NEVER write to localStorage
+   * It only updates the instance token to prevent conflicts
+   */
+  setAccessToken(token) {
+    console.log('🔑 Setting access token from external source:', token.substring(0, 10) + '...');
+    this.accessToken = token;
+    
+    // ❌ NEVER write to localStorage - only use instance token
+    // This prevents conflicts with old tokens
+    console.log('✅ Access token set to instance (not stored in localStorage)');
+  }
+
+  /**
    * Get stored access token or trigger re-authentication
+   * ⚠️ IMPORTANT: This method will NEVER fallback to localStorage
+   * It only returns the current instance token or throws an error
    */
   async getAccessToken() {
     try {
-      // Check if we have a valid access token
-      const storedToken = localStorage.getItem('fsl_access_token');
-      const timestamp = localStorage.getItem('fsl_oauth_timestamp');
-      
-      if (storedToken && timestamp) {
-        const tokenAge = Date.now() - parseInt(timestamp);
-        const tokenLifetime = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        
-        if (tokenAge < tokenLifetime) {
-          this.accessToken = storedToken;
-          console.log('✅ Using stored access token');
-          return this.accessToken;
-        } else {
-          console.log('⚠️ Access token expired, clearing...');
-          this.clearStoredTokens();
-        }
+      // 🔑 ONLY use current instance token - NO localStorage fallback
+      if (this.accessToken) {
+        console.log('✅ Using current instance access token:', this.accessToken.substring(0, 10) + '...');
+        return this.accessToken;
       }
       
-      // No valid token, need to authenticate
-      console.log('🔄 No valid access token, redirecting to OAuth...');
-      await this.authenticateWithOAuth();
+      // ❌ NO localStorage fallback - throw error if no token
+      throw new Error('No access token available. Please set token via setAccessToken() first.');
       
     } catch (error) {
       console.error('❌ Failed to get access token:', error);
@@ -135,12 +140,16 @@ class OAuthFSLAuthService {
 
   /**
    * Clear stored OAuth tokens
+   * ⚠️ IMPORTANT: This method will NOT clear instance tokens
+   * It only clears localStorage to prevent conflicts
    */
   clearStoredTokens() {
     localStorage.removeItem('fsl_access_token');
     localStorage.removeItem('fsl_oauth_timestamp');
-    this.accessToken = null;
-    console.log('🗑️ Stored tokens cleared');
+    // ❌ DO NOT clear instance tokens - keep current working tokens
+    // this.accessToken = null;  // REMOVED
+    // this.apiToken = null;     // REMOVED
+    console.log('🗑️ localStorage tokens cleared (instance tokens preserved)');
   }
 
   /**
@@ -213,12 +222,22 @@ class OAuthFSLAuthService {
   async getFSLUserProfile() {
     try {
       console.log('📡 Getting FSL user profile...');
+      console.log('🔗 API URL:', this.FSL_USER_PROFILE_URL);
+      
+      // 🔑 Ensure we have the latest access token
+      if (!this.accessToken) {
+        throw new Error('No access token available. Please set token via setAccessToken() first.');
+      }
+      
+      console.log('🔑 Access Token:', this.accessToken);
+      console.log('🔑 Request Headers:', {
+        'Authorization': `Bearer ${this.accessToken}`,
+      });
       
       const response = await fetch(this.FSL_USER_PROFILE_URL, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json'
         }
       });
       
@@ -244,29 +263,31 @@ class OAuthFSLAuthService {
     try {
       console.log('📡 Getting market user data...');
       
-      // This should call your existing /app/marketUserData API
-      // You'll need to implement this based on your current implementation
-      const response = await fetch(`${API_CONFIG.server_url}/api/app/marketUserData`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add any required headers (auth tokens, etc.)
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Market API error: ${response.status} ${response.statusText}`);
+      // Use marketUserDataService instead of direct API call
+      // This ensures consistency with the rest of the app
+      if (!this.apiToken) {
+        throw new Error('No API token available for market user data');
       }
       
-      const data = await response.json();
-      console.log('✅ Market user data received:', data);
+      // Import and use marketUserDataService
+      const { default: marketUserDataService } = await import('./marketUserDataService');
+      const apiData = await marketUserDataService.fetchMarketUserData(this.apiToken);
       
-      return data;
+      console.log('✅ Market user data received:', apiData);
+      return apiData;
       
     } catch (error) {
       console.error('❌ Failed to get market user data:', error);
       throw error;
     }
+  }
+
+  /**
+   * Set API token for market user data calls
+   */
+  setApiToken(token) {
+    console.log('🔑 Setting API token for market user data:', token);
+    this.apiToken = token;
   }
 
 
@@ -306,7 +327,32 @@ class OAuthFSLAuthService {
     this.currentUser = null;
     this.fslAuth = null;
     this.isInitialized = false;
-    console.log('✅ User logged out successfully');
+    // ❌ DO NOT clear instance tokens - keep current working tokens
+    // this.accessToken = null;  // REMOVED
+    // this.apiToken = null;     // REMOVED
+    console.log('✅ User logged out successfully (instance tokens preserved)');
+  }
+
+  /**
+   * Debug method to show current token state
+   */
+  debugTokenState() {
+    console.log('🔍 OAuth FSL Auth Service Token State:');
+    console.log('  Instance Access Token:', this.accessToken ? this.accessToken.substring(0, 10) + '...' : 'null');
+    console.log('  Instance API Token:', this.apiToken ? this.apiToken.substring(0, 10) + '...' : 'null');
+    console.log('  localStorage Access Token:', localStorage.getItem('fsl_access_token') ? localStorage.getItem('fsl_access_token').substring(0, 10) + '...' : 'null');
+    console.log('  localStorage Timestamp:', localStorage.getItem('fsl_oauth_timestamp'));
+  }
+
+  /**
+   * Force clear instance tokens (use with caution)
+   * This should only be called when you want to completely reset the service
+   */
+  forceClearInstanceTokens() {
+    console.log('⚠️ Force clearing instance tokens...');
+    this.setAccessToken(null);  // Use setter method
+    this.apiToken = null;
+    console.log('✅ Instance tokens cleared');
   }
 }
 

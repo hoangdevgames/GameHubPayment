@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import fslAuthService from '../services/fslAuth';
 import marketUserDataService from '../services/marketUserDataService';
+import oauthFSLAuthService from '../services/oauthFSLAuth';
 
 const AuthContext = createContext();
 
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     const userDataParam = urlParams.get('userData');
     const source = urlParams.get('source');
     const token = urlParams.get('token');
-
+    
     // �� NEW: Check for FSL ID access token from hash fragment
     const hash = window.location.hash;
     if (hash && hash.includes('access_token=')) {
@@ -51,9 +52,26 @@ export const AuthProvider = ({ children }) => {
         
         // Store FSL ID access token for later use
         if (accessToken) {
-          // You can store this in localStorage or state as needed
+          // Store in localStorage
           localStorage.setItem('fsl_access_token', accessToken);
           console.log('✅ FSL ID access token stored');
+          
+          // 🔑 SYNC: Update OAuth FSL Auth Service with new token
+          oauthFSLAuthService.setAccessToken(accessToken);
+          console.log('✅ OAuth FSL Auth Service updated with new token');
+          
+          // 🔍 Verify user identity immediately after getting access token
+          try {
+            console.log('🔍 Verifying user identity with new access token...');
+            const verificationResult = await oauthFSLAuthService.verifyUserIdentity();
+            if (verificationResult.success) {
+              console.log('✅ User identity verified successfully:', verificationResult.user);
+            } else {
+              console.warn('⚠️ User identity verification failed:', verificationResult.error);
+            }
+          } catch (error) {
+            console.error('❌ Error during user identity verification:', error);
+          }
           
           // Clear the hash from URL to clean up
           window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
@@ -64,7 +82,7 @@ export const AuthProvider = ({ children }) => {
         console.error('Failed to parse FSL ID hash fragment:', error);
       }
     }
-    
+
     // Try new API first if we have a token
     if (token) {
       try {
@@ -96,6 +114,24 @@ export const AuthProvider = ({ children }) => {
           
           // Store the API token and user data for later use
           setApiToken(token);
+          
+          // 🔑 SYNC: Update OAuth FSL Auth Service with API token
+          oauthFSLAuthService.setApiToken(token);
+          console.log('✅ OAuth FSL Auth Service updated with API token');
+          
+          // 🔍 Verify user identity immediately after setting API token
+          try {
+            console.log('🔍 Verifying user identity with API token...');
+            const verificationResult = await oauthFSLAuthService.verifyUserIdentity();
+            if (verificationResult.success) {
+              console.log('✅ User identity verified successfully:', verificationResult.user);
+            } else {
+              console.warn('⚠️ User identity verification failed:', verificationResult.error);
+            }
+          } catch (error) {
+            console.error('❌ Error during user identity verification:', error);
+          }
+          
           setIncomingUserData({
             source: 'api',
             userProfile: userProfile,
@@ -134,6 +170,24 @@ export const AuthProvider = ({ children }) => {
         
         // Store the API token and user data for later use - NO AUTO-LOGIN
         setApiToken(token);
+        
+        // 🔑 SYNC: Update OAuth FSL Auth Service with API token
+        oauthFSLAuthService.setApiToken(token);
+        console.log('✅ OAuth FSL Auth Service updated with API token');
+        
+        // 🔍 Verify user identity immediately after setting API token
+        try {
+          console.log('🔍 Verifying user identity with GamingHub API token...');
+          const verificationResult = await oauthFSLAuthService.verifyUserIdentity();
+          if (verificationResult.success) {
+            console.log('✅ User identity verified successfully:', verificationResult.user);
+          } else {
+            console.warn('⚠️ User identity verification failed:', verificationResult.error);
+          }
+        } catch (error) {
+          console.error('❌ Error during user identity verification:', error);
+        }
+        
         setIncomingUserData({
           source: 'gaminghub',
           userData: userData,
