@@ -20,7 +20,7 @@ class OAuthFSLAuthService {
     this.FSL_OAUTH_URL = 'https://9ijsflpfgm3.joysteps.io/api/account/oauth/authorize';
     this.FSL_USER_PROFILE_URL = 'https://9ijsflpfgm3.joysteps.io/api/account/party/user';
     this.APP_KEY = 'MiniGame';
-    this.REDIRECT_URI = window.location.origin + window.location.pathname; // Use current web URL
+    this.REDIRECT_URI = window.location.href; // Use current web URL
     
 
   }
