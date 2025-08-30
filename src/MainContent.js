@@ -195,6 +195,71 @@ const MainContent = ({ activeTab }) => {
     }
   }, [incomingUserData]);
 
+  // ✅ NEW: Handle OAuth callback when user returns from FSL OAuth
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      try {
+        // Check if we have an access token from OAuth callback
+        const accessToken = localStorage.getItem('fsl_access_token');
+        
+        if (accessToken && !isFSLConnected) {
+          console.log('🔄 OAuth callback detected, processing...');
+          
+          // Import and use OAuth service
+          const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
+          
+          // Set the access token
+          oauthFSLAuthService.accessToken = accessToken;
+          
+          // Verify user identity
+          const verificationResult = await oauthFSLAuthService.verifyUserIdentity();
+          
+          if (verificationResult.success) {
+            console.log('✅ OAuth user verification successful:', verificationResult.user);
+            
+            // Update FSL connection status
+            const fslUserInfo = {
+              fslId: verificationResult.user.fslId,
+              name: verificationResult.user.fslProfile?.nickname || verificationResult.user.fslProfile?.username || 'FSL User',
+              isConnected: true,
+              loginTime: new Date().toISOString()
+            };
+            
+            localStorage.setItem('fsl_user_info', JSON.stringify(fslUserInfo));
+            setFslUserInfo(fslUserInfo);
+            setIsFSLConnected(true);
+            
+            console.log('🎉 FSL ID connected successfully via OAuth!');
+            alert('FSL ID connected successfully via OAuth!');
+            
+          } else {
+            console.error('❌ OAuth user verification failed:', verificationResult.error);
+            setError(`OAuth verification failed: ${verificationResult.error}`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error handling OAuth callback:', error);
+        setError('OAuth callback processing failed. Please try again.');
+      }
+    };
+
+    // Check for OAuth callback on component mount
+    handleOAuthCallback();
+    
+    // Also check when storage changes (for cross-tab sync)
+    const handleStorageChange = (e) => {
+      if (e.key === 'fsl_access_token') {
+        handleOAuthCallback();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [isFSLConnected]);
+
   // Add body class to prevent iOS overscrolling
   useEffect(() => {
     // Add class when component mounts
@@ -390,56 +455,28 @@ const MainContent = ({ activeTab }) => {
                 </div>
               </div>
               
-                            {/* FSL Login Button */}
+                            {/* FSL Login Button - OAuth Version */}
               <button 
                 className="mk-fsl-login-button"
                 onClick={async (e) => {
                   e.stopPropagation(); // Prevent triggering handleConnectFSLID
                   try {
-                    console.log('🔐 Manual FSL Login clicked...');
+                    console.log('🔐 OAuth FSL Login clicked...');
                     setIsLoading(true);
                     
-                    // ✅ NEW: Only initialize FSL Auth Service when user actually clicks
-                    if (!fslAuthService.isInitialized) {
-                      console.log('🔄 Initializing FSL Auth Service for manual login...');
-                      
-                      // If we have FSL ID from GamingHub, pass it to init
-                      if (incomingUserData?.source === 'gaminghub' && incomingUserData.userData?.fslId) {
-                        console.log('🔑 Using FSL ID from GamingHub for initialization:', incomingUserData.userData.fslId);
-                        await fslAuthService.init(incomingUserData.userData.fslId);
-                      } else {
-                        await fslAuthService.init();
-                      }
-                    }
+                    // ✅ NEW: Use OAuth instead of FSL SDK
+                    // Import OAuth service
+                    const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
                     
-                    // Gọi manual login
-                    const loginResult = await fslAuthService.signIn();
-                    console.log('✅ Manual FSL login result:', loginResult);
+                    // Start OAuth flow
+                    await oauthFSLAuthService.authenticateWithOAuth();
                     
-                    // ✅ NEW: Store FSL user info in localStorage instead of reloading
-                    if (loginResult && loginResult.id) {
-                      const fslUserInfo = {
-                        fslId: loginResult.id,
-                        name: loginResult.name || 'FSL User',
-                        isConnected: true,
-                        loginTime: new Date().toISOString()
-                      };
-                      
-                      localStorage.setItem('fsl_user_info', JSON.stringify(fslUserInfo));
-                      setFslUserInfo(fslUserInfo);
-                      setIsFSLConnected(true);
-                      
-                      console.log('✅ FSL login successful, user info stored:', fslUserInfo);
-                      console.log('🎉 FSL ID connected successfully!');
-                      
-                      // Show success message
-                      alert('FSL ID connected successfully!');
-                    }
+                    // Note: User will be redirected to FSL OAuth, then back to this page
+                    // The OAuth callback will be handled by the service
                     
                   } catch (error) {
-                    console.error('❌ Manual FSL login failed:', error);
-                    setError('FSL login failed. Please try again.');
-                  } finally {
+                    console.error('❌ OAuth FSL login failed:', error);
+                    setError('OAuth login failed. Please try again.');
                     setIsLoading(false);
                   }
                 }}
@@ -459,13 +496,18 @@ const MainContent = ({ activeTab }) => {
                       
                       // Clear localStorage
                       localStorage.removeItem('fsl_user_info');
+                      localStorage.removeItem('fsl_access_token');
+                      localStorage.removeItem('fsl_oauth_timestamp');
+                      localStorage.removeItem('fsl_oauth_state');
                       
                       // Clear state
                       setIsFSLConnected(false);
                       setFslUserInfo(null);
                       
-                      // Sign out from FSL service
-                      await fslAuthService.signOut();
+                      // Sign out from FSL service (if initialized)
+                      if (fslAuthService.isInitialized) {
+                        await fslAuthService.signOut();
+                      }
                       
                       console.log('✅ FSL ID disconnected successfully');
                       alert('FSL ID disconnected successfully!');
