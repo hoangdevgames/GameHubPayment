@@ -198,9 +198,17 @@ const MainContent = ({ activeTab }) => {
     }
   }, [incomingUserData]);
 
-  // ✅ NEW: Set up FSL verification success callback
+  // ✅ NEW: Set up FSL verification success callback (only once)
   useEffect(() => {
+    let isCallbackSet = false; // Flag to prevent duplicate callback setup
+    
     const setupFSLVerificationCallback = async () => {
+      // Prevent duplicate callback setup
+      if (isCallbackSet) {
+        console.log('🔄 FSL verification callback already set up, skipping...');
+        return;
+      }
+      
       try {
         // Import OAuth FSL Auth service
         const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
@@ -216,14 +224,20 @@ const MainContent = ({ activeTab }) => {
           }
         });
         
-        console.log('✅ FSL verification callback set up successfully');
+        isCallbackSet = true; // Mark as set up
+        console.log('✅ FSL verification callback set up successfully (first time only)');
       } catch (error) {
         console.error('❌ Failed to set up FSL verification callback:', error);
       }
     };
 
     setupFSLVerificationCallback();
-  }, []);
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isCallbackSet = false;
+    };
+  }, []); // Empty dependency array ensures this runs only once
 
   // ❌ REMOVED: OAuth callback handling should only be in AuthContext
   // This logic has been moved to AuthContext to ensure single source of truth
@@ -456,43 +470,7 @@ const MainContent = ({ activeTab }) => {
                 {isLoading ? 'CONNECTING...' : (isFSLConnected ? 'CONNECTED' : 'CONNECT FSL ID')}
               </button>
               
-              {/* FSL Disconnect Button - Show if connected */}
-              {isFSLConnected && (
-                <button 
-                  className="mk-fsl-disconnect-button"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      console.log('🔓 Disconnecting FSL ID...');
-                      
-                      // Clear localStorage
-                      localStorage.removeItem('fsl_user_info');
-                      localStorage.removeItem('fsl_access_token');
-                      localStorage.removeItem('fsl_oauth_timestamp');
-                      localStorage.removeItem('fsl_oauth_state');
-                      
-                      // Clear state
-                      setIsFSLConnected(false);
-                      setFslUserInfo(null);
-                      setIsFSLVerified(false); // ✅ NEW: Reset verification status
-                      
-                      // Sign out from FSL service (if initialized)
-                      if (fslAuthService.isInitialized) {
-                        await fslAuthService.signOut();
-                      }
-                      
-                      console.log('✅ FSL ID disconnected successfully');
-                      alert('FSL ID disconnected successfully!');
-                      
-                    } catch (error) {
-                      console.error('❌ Failed to disconnect FSL ID:', error);
-                      setError('Failed to disconnect FSL ID. Please try again.');
-                    }
-                  }}
-                >
-                  DISCONNECT FSL ID
-                </button>
-              )}
+              
             </div>
           )}
           </div>
