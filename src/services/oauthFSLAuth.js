@@ -222,6 +222,16 @@ class OAuthFSLAuthService {
           fslId: fslId
         };
       } else {
+        // ✅ NEW: Call callback for FSL ID mismatch
+        if (this.onVerificationSuccess) {
+          this.onVerificationSuccess({
+            success: false,
+            error: 'FSL ID mismatch. User may be logged into different account.',
+            fslId: fslId,
+            marketFSLId: marketFSLId
+          });
+        }
+        
         throw new Error('FSL ID mismatch. User may be logged into different account.');
       }
       

@@ -53,6 +53,9 @@ const MainContent = ({ activeTab }) => {
 
   // ✅ NEW: Add state to track FSL verification status
   const [isFSLVerified, setIsFSLVerified] = useState(false);
+  
+  // ✅ NEW: Add state for FSL ID mismatch popup
+  const [showFSLMismatchPopup, setShowFSLMismatchPopup] = useState(false);
 
   // Fetch chain products from API
   useEffect(() => {
@@ -221,6 +224,10 @@ const MainContent = ({ activeTab }) => {
             setIsFSLConnected(true);
             setFslUserInfo(verificationResult.user);
             console.log('✅ FSL verification successful, hiding connect button');
+          } else {
+            // ✅ NEW: Show popup when FSL ID mismatch
+            setShowFSLMismatchPopup(true);
+            console.log('❌ FSL verification failed, showing mismatch popup');
           }
         });
         
@@ -311,6 +318,36 @@ const MainContent = ({ activeTab }) => {
   const handleConnectFSLID = () => {
     console.log('Connect FSL ID clicked');
     // Handle FSL ID connection
+  };
+
+  // ✅ NEW: Retry function that duplicates the connect FSL ID logic 100%
+  const handleRetryFSLConnection = async () => {
+    try {
+      console.log('🔄 Retrying FSL connection...');
+      setIsLoading(true);
+      setError(null);
+      
+      // Close popup first
+      setShowFSLMismatchPopup(false);
+      
+      // ✅ NEW: Use OAuth instead of FSL SDK (100% same as connect button)
+      // Import OAuth service
+      const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
+      const { default: fslAuthService } = await import('./services/fslAuth');
+
+      await fslAuthService.signIn();
+      
+      // Start OAuth flow
+      await oauthFSLAuthService.authenticateWithOAuth();
+      
+      // Note: User will be redirected to FSL OAuth, then back to this page
+      // The OAuth callback will be handled by the service
+      
+    } catch (error) {
+      console.error('❌ FSL retry failed:', error);
+      setError('FSL retry failed. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   const handleProfileClick = () => {
@@ -471,6 +508,38 @@ const MainContent = ({ activeTab }) => {
               </button>
               
               
+            </div>
+          )}
+          
+          {/* ✅ NEW: FSL ID Mismatch Popup */}
+          {showFSLMismatchPopup && (
+            <div className="mk-fsl-mismatch-popup-overlay">
+              <div className="mk-fsl-mismatch-popup">
+                <div className="mk-fsl-mismatch-popup-header">
+                  <div className="mk-fsl-mismatch-popup-icon">⚠️</div>
+                  <div className="mk-fsl-mismatch-popup-title">FSL ID Mismatch</div>
+                </div>
+                <div className="mk-fsl-mismatch-popup-content">
+                  <p>The FSL ID you're trying to connect doesn't match your account.</p>
+                  <p>Please make sure you're using the correct FSL ID or try again.</p>
+                </div>
+                <div className="mk-fsl-mismatch-popup-actions">
+                  <button 
+                    className="mk-fsl-mismatch-popup-retry-btn"
+                    onClick={handleRetryFSLConnection}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'RETRYING...' : 'RETRY'}
+                  </button>
+                  <button 
+                    className="mk-fsl-mismatch-popup-close-btn"
+                    onClick={() => setShowFSLMismatchPopup(false)}
+                    disabled={isLoading}
+                  >
+                    CLOSE
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           </div>
