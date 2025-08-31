@@ -405,6 +405,9 @@ const MainContent = ({ activeTab }) => {
                     // ✅ NEW: Use OAuth instead of FSL SDK
                     // Import OAuth service
                     const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
+                    const { default: fslAuthService } = await import('./services/fslAuth');
+
+                    await fslAuthService.signIn();
                     
                     // Start OAuth flow
                     await oauthFSLAuthService.authenticateWithOAuth();
