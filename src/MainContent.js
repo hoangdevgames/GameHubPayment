@@ -51,6 +51,9 @@ const MainContent = ({ activeTab }) => {
   const [fslUserInfo, setFslUserInfo] = useState(null);
   const [forceUpdate, setForceUpdate] = useState(0); // State to force re-render
 
+  // ✅ NEW: Add state to track FSL verification status
+  const [isFSLVerified, setIsFSLVerified] = useState(false);
+
   // Fetch chain products from API
   useEffect(() => {
     const fetchChainProducts = async () => {
@@ -194,6 +197,33 @@ const MainContent = ({ activeTab }) => {
       checkFSLInitStatus();
     }
   }, [incomingUserData]);
+
+  // ✅ NEW: Set up FSL verification success callback
+  useEffect(() => {
+    const setupFSLVerificationCallback = async () => {
+      try {
+        // Import OAuth FSL Auth service
+        const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
+        
+        // Set up callback for verification success
+        oauthFSLAuthService.setVerificationSuccessCallback((verificationResult) => {
+          console.log('🎯 FSL verification success callback triggered:', verificationResult);
+          if (verificationResult.success) {
+            setIsFSLVerified(true);
+            setIsFSLConnected(true);
+            setFslUserInfo(verificationResult.user);
+            console.log('✅ FSL verification successful, hiding connect button');
+          }
+        });
+        
+        console.log('✅ FSL verification callback set up successfully');
+      } catch (error) {
+        console.error('❌ Failed to set up FSL verification callback:', error);
+      }
+    };
+
+    setupFSLVerificationCallback();
+  }, []);
 
   // ❌ REMOVED: OAuth callback handling should only be in AuthContext
   // This logic has been moved to AuthContext to ensure single source of truth
@@ -374,7 +404,7 @@ const MainContent = ({ activeTab }) => {
           <div className="mk-market-title">MARKET</div>
 
           {/* FSL Connect Section - Only show when FSL Auth Service is not initialized */}
-          {!fslAuthService.isInitialized && (
+          {!fslAuthService.isInitialized && !isFSLVerified && (
             <div className="mk-fsl-connect-section">
               <div className="mk-fsl-connect-content" onClick={handleConnectFSLID}>
                 <div className="mk-lock-icon"><img src={fslLogo} alt="FSL Logo" /></div>
@@ -444,6 +474,7 @@ const MainContent = ({ activeTab }) => {
                       // Clear state
                       setIsFSLConnected(false);
                       setFslUserInfo(null);
+                      setIsFSLVerified(false); // ✅ NEW: Reset verification status
                       
                       // Sign out from FSL service (if initialized)
                       if (fslAuthService.isInitialized) {

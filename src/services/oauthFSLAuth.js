@@ -24,6 +24,14 @@ class OAuthFSLAuthService {
     
     this.apiToken = null; // New property for API token
 
+    // ✅ NEW: Add callback for verification success
+    this.onVerificationSuccess = null;
+
+  }
+
+  // ✅ NEW: Method to set verification success callback
+  setVerificationSuccessCallback(callback) {
+    this.onVerificationSuccess = callback;
   }
 
   /**
@@ -198,6 +206,16 @@ class OAuthFSLAuthService {
         };
         
         console.log('✅ User identity verified:', this.currentUser);
+        
+        // ✅ NEW: Call callback if verification is successful
+        if (this.onVerificationSuccess) {
+          this.onVerificationSuccess({
+            success: true,
+            user: this.currentUser,
+            fslId: fslId
+          });
+        }
+        
         return {
           success: true,
           user: this.currentUser,
