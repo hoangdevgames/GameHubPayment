@@ -1133,18 +1133,16 @@ html::-webkit-scrollbar-track {
   display: flex;
   align-items: center;
   padding: 8px;
-  background: rgba(0, 0, 0, 0.5);
+  background: url('./images/market-item-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   gap: 8px;
   border-bottom: 1px solid #0000FF;
   flex: 1;
   min-height: 55px;
   backdrop-filter: blur(5px);
   position: relative;
-  background: linear-gradient(
-    225deg, /* hướng để màu nằm ở góc phải trên */
-    rgba(0, 15, 239, 1) 0%, 
-    rgba(0, 15, 239, 0) 66%
-  );
 }
 
 .mk-market-ticket-icon {
@@ -1156,6 +1154,8 @@ html::-webkit-scrollbar-track {
   flex-shrink: 0;
   background: transparent;
   position: relative;
+  left: -7px;
+  transform: scale(1.6);
 }
 
 .mk-market-ticket-icon::after {

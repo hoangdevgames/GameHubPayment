@@ -19,8 +19,7 @@ const MainContent = ({ activeTab }) => {
   const [chainProducts, setChainProducts] = useState([]);
   const [telegramReceiveAddress, setTelegramReceiveAddress] = useState('');
   const [lineReceiveAddress, setLineReceiveAddress] = useState('');
-  const [isFreeItemClaimed, setIsFreeItemClaimed] = useState(false);
-  const [nextClaimTime, setNextClaimTime] = useState(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   
@@ -267,45 +266,32 @@ const MainContent = ({ activeTab }) => {
       
       console.log('Purchase clicked:', { amount, stars, price, optionId });
       
-      if (optionId === 'free') {
-        // Handle free item claim
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Find the selected product from chainProducts
+      const selectedProduct = chainProducts.find(product => product.id === optionId);
+      
+      if (selectedProduct) {
+        // Create package data for payment
+        const packageData = {
+          id: selectedProduct.id,
+          name: `${selectedProduct.starlets} Starlets Package`,
+          starlets: selectedProduct.starlets,
+          tickets: selectedProduct.ticket,
+          price: selectedProduct.price, // This is the GGUSD amount to pay
+          currency: 'GGUSD',
+          productType: 'starlets',
+          // Add additional data for payment processing
+          amount: selectedProduct.starlets, // Number of starlets
+          ggusdAmount: selectedProduct.price, // GGUSD amount to pay
+          stars: selectedProduct.price,    // For compatibility (actually GGUSD)
+          optionId: selectedProduct.id
+        };
         
-        setIsFreeItemClaimed(true);
-        // Update user stats
-        setTickets(prev => prev + 1);
-        setStarlets(prev => prev + 50);
+        console.log('Selecting package for payment:', packageData);
         
-        // Show success message
-        alert('Free item claimed successfully!');
+        // Select package and trigger redirect to PaymentPage
+        selectPackage(packageData);
       } else {
-        // Find the selected product from chainProducts
-        const selectedProduct = chainProducts.find(product => product.id === optionId);
-        
-        if (selectedProduct) {
-          // Create package data for payment
-          const packageData = {
-            id: selectedProduct.id,
-            name: `${selectedProduct.starlets} Starlets Package`,
-            starlets: selectedProduct.starlets,
-            tickets: selectedProduct.ticket,
-            price: selectedProduct.price, // This is the GGUSD amount to pay
-            currency: 'GGUSD',
-            productType: 'starlets',
-            // Add additional data for payment processing
-            amount: selectedProduct.starlets, // Number of starlets
-            ggusdAmount: selectedProduct.price, // GGUSD amount to pay
-            stars: selectedProduct.price,    // For compatibility (actually GGUSD)
-            optionId: selectedProduct.id
-          };
-          
-          console.log('Selecting package for payment:', packageData);
-          
-          // Select package and trigger redirect to PaymentPage
-          selectPackage(packageData);
-        } else {
-          throw new Error('Selected product not found');
-        }
+        throw new Error('Selected product not found');
       }
     } catch (err) {
       setError('Purchase failed. Please try again.');
@@ -468,7 +454,7 @@ const MainContent = ({ activeTab }) => {
                       ? `Welcome back, ${fslUserInfo?.name || 'User'}!` 
                       : incomingUserData?.source === 'gaminghub' 
                         ? `Welcome ${incomingUserData.userData?.telegramFirstName || 'User'}! Connect your FSL ID to claim daily rewards.`
-                        : 'STEPN OG SNEAKER HOLDERS CAN CLAIM 10 FREE STARLETS DAILY!'
+                        : 'Welcome! Connect your FSL ID to access the marketplace.'
                     }
                   </div>
                 </div>
@@ -587,7 +573,7 @@ const MainContent = ({ activeTab }) => {
                       const isExpanded = getExpansionState(type);
                       const options = groupedOptions[type] || [];
                       
-                      // Skip empty sections except Standard Pack (type 0) which should always show for free item
+                      // Skip empty sections except Standard Pack (type 0)
                       if (options.length === 0 && type !== 0) {
                         return null;
                       }
@@ -618,35 +604,6 @@ const MainContent = ({ activeTab }) => {
                             <div className="mk-corner mk-bottom-right"></div>
                             
                             <div className="mk-starlet-grid">
-                              {/* Show free item only in Standard Pack (type 0) */}
-                              {type === 0 && (
-                                <button 
-                                  className={`mk-market-ticket-button ${isFreeItemClaimed ? 'sold-out' : ''}`} 
-                                  onClick={() => !isFreeItemClaimed && handleStarletPurchase(50, 0, 'FREE', 'free')}
-                                  disabled={isFreeItemClaimed || isLoading}
-                                >
-                                  <div className="mk-market-ticket-button-image-container">
-                                    <div className="mk-market-ticket-content">
-                                      <div className="mk-market-ticket-icon">
-                                        <img src={starlet} alt="Starlet" style={{ opacity: isFreeItemClaimed ? 0.5 : 1 }} />
-                                      </div>
-                                      <div className="mk-market-ticket-info">
-                                        <div className="mk-market-ticket-text">
-                                          <div className="mk-market-ticket-amount" style={{ opacity: isFreeItemClaimed ? 0.5 : 1 }}>50</div>
-                                          <div className="mk-market-ticket-label" style={{ opacity: isFreeItemClaimed ? 0.5 : 1 }}>STARLETS</div>
-                                        </div>
-                                        <div className="mk-market-ticket-bonus">
-                                          <span>X1</span>&nbsp;<span>TICKETS</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="mk-market-ticket-price">
-                                      {isLoading ? 'LOADING...' : (isFreeItemClaimed ? 'SOLD OUT' : 'FREE')}
-                                    </div>
-                                  </div>
-                                </button>
-                              )}
-                              
                               {/* Show regular options */}
                               {options.map((option) => {
                                 // Check if option is available (state 0 = available, 1 = unavailable)
