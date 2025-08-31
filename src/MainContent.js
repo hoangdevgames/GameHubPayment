@@ -652,6 +652,7 @@ const MainContent = ({ activeTab }) => {
                                 // Check if option is available (state 0 = available, 1 = unavailable)
                                 const isAvailable = option.state === 0 && option.canBuy;
                                 
+                                const isFSLVerifiedForPurchase = !(!fslAuthService.isInitialized && !isFSLVerified); // Always disabled for now                                
                                 // Calculate bonus for special offers using new API data
                                 let bonusText = null;
                                 if (option.bonus > 0) {
@@ -665,13 +666,13 @@ const MainContent = ({ activeTab }) => {
                                 return (
                                   <button 
                                     key={option.id}
-                                    className={`mk-market-ticket-button ${!isAvailable ? 'sold-out' : ''}`}
-                                    onClick={() => isAvailable && handleStarletPurchase(option.starlet, option.stars, null, option.id)}
-                                    disabled={!isAvailable || isLoading}
+                                    className={`mk-market-ticket-button ${!isAvailable || !isFSLVerifiedForPurchase ? 'sold-out' : ''}`}
+                                    onClick={() => isAvailable && isFSLVerifiedForPurchase && handleStarletPurchase(option.starlet, option.stars, null, option.id)}
+                                    disabled={!isAvailable || !isFSLVerifiedForPurchase || isLoading}
                                   >
                                     {/* Bonus box in top-left corner */}
                                     {option.bonus > 0 && type !== 0 && (
-                                      <div className="mk-market-ticket-bonus-corner" style={{ opacity: isAvailable ? 1 : 0.5 }}>
+                                      <div className="mk-market-ticket-bonus-corner" style={{ opacity: isAvailable && isFSLVerifiedForPurchase ? 1 : 0.5 }}>
                                         <div className="mk-market-ticket-bonus-corner-text">
                                           {type === 20 ? `${option.bonusPercentage}% VALUE` : `BONUS: ${option.bonus}`}
                                         </div>
@@ -680,20 +681,22 @@ const MainContent = ({ activeTab }) => {
                                     <div className="mk-market-ticket-button-image-container">
                                       <div className="mk-market-ticket-content">
                                         <div className="mk-market-ticket-icon">
-                                          <img src={starlet} alt="Starlet" style={{ opacity: isAvailable ? 1 : 0.5 }} />
+                                          <img src={starlet} alt="Starlet" style={{ opacity: isAvailable && isFSLVerifiedForPurchase ? 1 : 0.5 }} />
                                         </div>
                                         <div className="mk-market-ticket-info">
                                           <div className="mk-market-ticket-text">
-                                            <div className="mk-market-ticket-amount" style={{ opacity: isAvailable ? 1 : 0.5 }}>{option.starlet}</div>
-                                            <div className="mk-market-ticket-label" style={{ opacity: isAvailable ? 1 : 0.5 }}>STARLETS</div>
+                                            <div className="mk-market-ticket-amount" style={{ opacity: isAvailable && isFSLVerifiedForPurchase ? 1 : 0.5 }}>{option.starlet}</div>
+                                            <div className="mk-market-ticket-label" style={{ opacity: isAvailable && isFSLVerifiedForPurchase ? 1 : 0.5 }}>STARLETS</div>
                                           </div>
-                                          <div className="mk-market-ticket-bonus" style={{ opacity: isAvailable ? 1 : 0.5 }}>
+                                          <div className="mk-market-ticket-bonus" style={{ opacity: isAvailable && isFSLVerifiedForPurchase ? 1 : 0.5 }}>
                                             <span>X{option.ticket}</span>&nbsp;<span>TICKETS</span>
                                           </div>
                                         </div>
                                       </div>
-                                      <div className="mk-market-ticket-price" style={{ opacity: isAvailable ? 1 : 0.5 }}>
-                                        {isLoading ? 'LOADING...' : (!isAvailable ? 'SOLD OUT' : `${option.stars} GGUSD`)}
+                                      <div className="mk-market-ticket-price" style={{ opacity: isAvailable && isFSLVerifiedForPurchase ? 1 : 0.5 }}>
+                                        {isLoading ? 'LOADING...' : 
+                                         (!isAvailable ? 'SOLD OUT' : 
+                                          (!isFSLVerifiedForPurchase ? 'FSL ID NOT CONNECTED' : `${option.stars} GGUSD`))}
                                       </div>
                                     </div>
                                   </button>
