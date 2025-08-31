@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "./static/css/main.a5f952f3.css",
-    "main.js": "./static/js/main.c6473545.js",
+    "main.css": "./static/css/main.0f0097ff.css",
+    "main.js": "./static/js/main.a939c7de.js",
     "static/js/453.ec6a1386.chunk.js": "./static/js/453.ec6a1386.chunk.js",
     "static/media/PPNeueMachina-InktrapBoldItalic.ttf": "./static/media/PPNeueMachina-InktrapBoldItalic.428743c4048618a2d77e.ttf",
     "static/media/PPNeueMachina-InktrapRegularItalic.ttf": "./static/media/PPNeueMachina-InktrapRegularItalic.d8206042331fe141994d.ttf",
@@ -41,16 +41,17 @@
     "static/media/PPNeueMachina-PlainThin.ttf": "./static/media/PPNeueMachina-PlainThin.d6746b933117ca4f8d13.ttf",
     "static/media/Sora-VariableFont_wght.ttf": "./static/media/Sora-VariableFont_wght.e56298aec2e944c699d8.ttf",
     "static/media/FSLID_Login_Logo.png": "./static/media/FSLID_Login_Logo.07ed1adca04347f27a3e.png",
+    "static/media/market-item-bg.png": "./static/media/market-item-bg.8a95dd83095a3059b447.png",
     "static/media/background_2.png": "./static/media/background_2.918666a42017fdd3946e.png",
     "static/media/ticket.svg": "./static/media/ticket.c8a052d29411b7224614107b13b307b4.svg",
     "index.html": "./index.html",
     "static/media/arrow_2.svg": "./static/media/arrow_2.1c00cee1b2df4c5d746a4c5ea2ae314b.svg",
-    "main.a5f952f3.css.map": "./static/css/main.a5f952f3.css.map",
-    "main.c6473545.js.map": "./static/js/main.c6473545.js.map",
+    "main.0f0097ff.css.map": "./static/css/main.0f0097ff.css.map",
+    "main.a939c7de.js.map": "./static/js/main.a939c7de.js.map",
     "453.ec6a1386.chunk.js.map": "./static/js/453.ec6a1386.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a5f952f3.css",
-    "static/js/main.c6473545.js"
+    "static/css/main.0f0097ff.css",
+    "static/js/main.a939c7de.js"
   ]
 }
