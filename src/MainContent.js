@@ -321,7 +321,10 @@ const MainContent = ({ activeTab }) => {
       const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
       const { default: fslAuthService } = await import('./services/fslAuth');
 
-      await fslAuthService.signIn();
+      // ✅ NEW: Clear all FSL login data before OAuth authentication
+      console.log('🧹 Clearing all FSL login data before OAuth retry...');
+      const clearResult = await fslAuthService.clearAllFSLLoginData();
+      console.log('🧹 Clear result:', clearResult);
       
       // Start OAuth flow
       await oauthFSLAuthService.authenticateWithOAuth();
@@ -473,6 +476,11 @@ const MainContent = ({ activeTab }) => {
                     // Import OAuth service
                     const { default: oauthFSLAuthService } = await import('./services/oauthFSLAuth');
                     const { default: fslAuthService } = await import('./services/fslAuth');
+
+                    // ✅ NEW: Clear all FSL login data before OAuth authentication
+                    console.log('🧹 Clearing all FSL login data before OAuth...');
+                    const clearResult = await fslAuthService.clearAllFSLLoginData();
+                    console.log('🧹 Clear result:', clearResult);
 
                     await fslAuthService.signIn();
                     
