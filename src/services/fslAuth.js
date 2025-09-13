@@ -2038,6 +2038,93 @@ class FSLAuthService {
       return { isLoggedIn: false, user: null };
     }
   }
+
+  // ✅ NEW: Clear all FSL login data before OAuth authentication
+  async clearAllFSLLoginData() {
+    try {
+      console.log('🧹 Clearing all FSL login data...');
+      
+      // 1. Clear FSL SDK signOut (clears token and calls logout API)
+      if (this.fslAuth) {
+        try {
+          console.log('🔐 Calling FSL SDK signOut...');
+          await this.fslAuth.signOut();
+          console.log('✅ FSL SDK signOut completed');
+        } catch (error) {
+          console.warn('⚠️ FSL SDK signOut failed (may not be logged in):', error.message);
+        }
+      }
+
+      // 2. Clear FSL SDK storage (clear all user data)
+      if (this.fslAuth && this.fslAuth.sdkStorage) {
+        try {
+          console.log('🗑️ Clearing FSL SDK storage...');
+          this.fslAuth.sdkStorage.clearAll();
+          console.log('✅ FSL SDK storage cleared');
+        } catch (error) {
+          console.warn('⚠️ FSL SDK storage clear failed:', error.message);
+        }
+      }
+
+      // 3. Clear local storage FSL data
+      try {
+        console.log('🧽 Clearing localStorage FSL data...');
+        
+        // Clear FSL user info
+        localStorage.removeItem('fsl_user_info');
+        
+        // Clear all FSL-related localStorage items
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (
+            key.startsWith('fsl_') || 
+            key.includes('fsl') || 
+            /^\d{4,}$/.test(key) // FSL user IDs (4+ digits)
+          )) {
+            keysToRemove.push(key);
+          }
+        }
+        
+        keysToRemove.forEach(key => {
+          console.log(`🗑️ Removing localStorage key: ${key}`);
+          localStorage.removeItem(key);
+        });
+        
+        console.log(`✅ Cleared ${keysToRemove.length} FSL-related localStorage items`);
+      } catch (error) {
+        console.warn('⚠️ localStorage clear failed:', error.message);
+      }
+
+      // 4. Reset service state
+      console.log('🔄 Resetting FSL Auth Service state...');
+      this.currentUser = null;
+      this.fslAuth = null;
+      this.isInitialized = false;
+      this.apiFSLID = null;
+      
+      console.log('✅ All FSL login data cleared successfully');
+      
+      return {
+        success: true,
+        message: 'All FSL login data cleared successfully',
+        clearedItems: {
+          fslSDKSignOut: true,
+          fslSDKStorage: true,
+          localStorage: true,
+          serviceState: true
+        }
+      };
+      
+    } catch (error) {
+      console.error('❌ Error clearing FSL login data:', error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to clear some FSL login data'
+      };
+    }
+  }
 }
 
 const fslAuthService = new FSLAuthService();

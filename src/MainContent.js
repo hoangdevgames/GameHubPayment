@@ -326,6 +326,8 @@ const MainContent = ({ activeTab }) => {
       const clearResult = await fslAuthService.clearAllFSLLoginData();
       console.log('🧹 Clear result:', clearResult);
       
+      await fslAuthService.signIn();
+      
       // Start OAuth flow
       await oauthFSLAuthService.authenticateWithOAuth();
       
